@@ -19,8 +19,9 @@ class SensorMeasure(Enum):
     HUMIDITY = 3
     PRESSURE = 4
     VIBRATION = 5
-    CO2 = 6
-    SOUND = 7
+    CO = 6
+    CO2 = 7
+    SOUND = 8
 
 
 SENSOR_MEASURE_COLOR_MAP = {
@@ -329,7 +330,7 @@ class SimulatedCOSensor(SimulatedSensor):
 
     def __init__(self, instance_id: str, name: str, location: SensorLocation,
                  initial_mode: SensorMode = SensorMode.LOW):
-        super().__init__(instance_id, name, location, SensorMeasure.CO2, SensorUnit.PPM, initial_mode)
+        super().__init__(instance_id, name, location, SensorMeasure.CO, SensorUnit.PPM, initial_mode)
 
     @SimulatedSensor.update_current_value_after_sensing
     def sense(self) -> float:
