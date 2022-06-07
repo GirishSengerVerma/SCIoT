@@ -119,9 +119,8 @@ class SimulatedSensor(ABC):
         return json.dumps({
             "instance_id": self.instance_id,
             "timestamp": datetime.now().strftime("%d-%m-%YT%H:%M:%S"),
-            "value": {
-                self.unit.name.lower(): self.current_value
-            }
+            "unit": self.unit.name.lower(),
+            "value": self.current_value
         })
 
     def get_metadata_mqtt_topic_name(self) -> str:
