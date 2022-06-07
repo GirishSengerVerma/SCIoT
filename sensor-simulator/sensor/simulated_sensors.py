@@ -85,7 +85,6 @@ class SimulatedSensor(ABC):
         self.unit = unit
         self.mode = initial_mode
         self.current_value = 0.0
-        self.last_sensed_date = None
 
     def __str__(self):
         return "{} ({}): Sensing {} in {} at {}. Current mode: {}" \
@@ -101,7 +100,6 @@ class SimulatedSensor(ABC):
         def wrapper(self):
             sensed_value = fn(self)
             self.current_value = sensed_value
-            self.last_sensed_date = datetime.now()
             return sensed_value
 
         return wrapper
@@ -119,7 +117,7 @@ class SimulatedSensor(ABC):
     def get_telemetry_data_mqtt_message(self) -> str:
         return json.dumps({
             "instance_id": self.instance_id,
-            "timestamp": self.last_sensed_date.strftime("%d-%m-%YT%H:%M:%S"),
+            "timestamp": datetime.now().strftime("%d-%m-%YT%H:%M:%S"),
             "value": {
                 self.unit.name.lower(): self.current_value
             }
@@ -131,6 +129,7 @@ class SimulatedSensor(ABC):
     def get_metadata_mqtt_message(self) -> str:
         return json.dumps({
             "instance_id": self.instance_id,
+            "timestamp": datetime.now().strftime("%d-%m-%YT%H:%M:%S"),
             "name": self.name,
             "location": self.location.name.lower(),
             "mode": self.mode.name.lower()
