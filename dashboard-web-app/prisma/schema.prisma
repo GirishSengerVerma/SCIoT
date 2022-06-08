@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Sensor {
+  id                  Int                   @id @default(autoincrement())
+  instanceId          String                @unique
+  createdAt           DateTime              @default(now())
+  isPhysical          Boolean               @default(false)
+  SensorMetaData      SensorMetaData[]
+  SensorTelemetryData SensorTelemetryData[]
+}
+
+enum SensorLocation {
+  STUTTGART_VAIHINGEN_OFFICE
+  STUTTGART_KILLESBERG_PARK
+  STUTTGART_MAX_EYTH_SEE
+}
+
+enum SensorMode {
+  PHYSICAL
+  EXTREMELY_LOW
+  LOW
+  MEDIUM
+  HIGH
+  EXTREMELY_HIGH
+}
+
+model SensorMetaData {
+  id         Int            @id @default(autoincrement())
+  sensor     Sensor         @relation(fields: [instanceId], references: [instanceId])
+  instanceId String
+  timestamp  DateTime
+  name       String
+  location   SensorLocation
+  mode       SensorMode
+}
+
+enum SensorMeasure {
+  TEMPERATURE
+  WIND_SPEED
+  HUMIDITY
+  PRESSURE
+  VIBRATION
+  CO
+  CO2
+  SOUND
+}
+
+enum SensorUnit {
+  DEGREES_CELSIUS
+  KILOMETERS_PER_HOUR
+  PERCENTAGE
+  HPA
+  RICHTER_MAGNITUDE
+  PPM
+  DB
+}
+
+model SensorTelemetryData {
+  id         Int        @id @default(autoincrement())
+  sensor     Sensor     @relation(fields: [instanceId], references: [instanceId])
+  instanceId String
+  timestamp  DateTime
+  unit       SensorUnit
+  value      Decimal
+}
+
+enum WeatherEventType {
+  STORM
+  TORNADO
+  HAIL_STORM
+  THUNDER_STORM
+  HURRICANE
+  BLIZZARD
+  HIGH_WATER
+  FLOOD
+  COLD
+  HEAT
+  WILD_FIRE
+  EARTH_QUAKE
+  BAD_AIR
+}
+
+enum WeatherEventRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  EXTREME
+}
+
+model WeatherEvent {
+  id        Int                   @id @default(autoincrement())
+  location  SensorLocation
+  type      WeatherEventType
+  riskLevel WeatherEventRiskLevel @default(LOW)
+  start     DateTime              @default(now())
+  end       DateTime?
+}
