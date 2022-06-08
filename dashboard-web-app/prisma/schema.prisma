@@ -98,10 +98,17 @@ enum WeatherEventRiskLevel {
 }
 
 model WeatherEvent {
-  id        Int                   @id @default(autoincrement())
-  location  SensorLocation
-  type      WeatherEventType
-  riskLevel WeatherEventRiskLevel @default(LOW)
-  start     DateTime              @default(now())
-  end       DateTime?
+  id               Int                @id @default(autoincrement())
+  location         SensorLocation
+  type             WeatherEventType
+  WeatherEventRisk WeatherEventRisk[]
+}
+
+model WeatherEventRisk {
+  id             Int                   @id @default(autoincrement())
+  weatherEvent   WeatherEvent          @relation(fields: [weatherEventId], references: [id])
+  weatherEventId Int
+  riskLevel      WeatherEventRiskLevel @default(LOW)
+  start          DateTime              @default(now())
+  end            DateTime?
 }
