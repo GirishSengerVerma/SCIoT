@@ -30,7 +30,8 @@ SENSOR_MEASURE_COLOR_MAP = {
     SensorMeasure.HUMIDITY: 'cornflowerblue',
     SensorMeasure.PRESSURE: 'hotpink',
     SensorMeasure.VIBRATION: 'saddlebrown',
-    SensorMeasure.CO2: 'black',
+    SensorMeasure.CO2: 'grey',
+    SensorMeasure.CO: 'black',
     SensorMeasure.SOUND: 'green'
 }
 
