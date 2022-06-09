@@ -6,7 +6,8 @@ from typing import Callable, Optional
 
 from prettytable import PrettyTable
 
-from sensor.simulated_sensors import SENSOR_UNIT_REPRESENTATION_MAP, SimulatedSensor, SensorMode, SensorLocation
+from sensor.simulated_sensors import SENSOR_UNIT_REPRESENTATION_MAP, SimulatedSensor, SensorSimulationMode, \
+    SensorLocation, SensorSimulationBehavior
 from sensor.simulator import Simulator
 
 
@@ -88,7 +89,7 @@ class CLI:
     def enter_main_menu(self):
         def ui(screen):
             selected_item_index = 0
-            menu = ['Monitor current sensor values', 'Change the mode of a specific sensor', 'Exit']
+            menu = ['Monitor current sensor values', 'Change the mode & behavior of a specific sensor', 'Exit']
 
             init_screen(screen)
 
@@ -106,7 +107,7 @@ class CLI:
                 if selected_item_index == 0:
                     self.enter_monitor_menu()
                 elif selected_item_index == 1:
-                    self.enter_change_sensor_mode_select_menu()
+                    self.enter_change_sensor_mode_and_behavior_select_menu()
                 elif selected_item_index == 2:
                     self.exit_screen(screen)
 
@@ -123,12 +124,12 @@ class CLI:
             init_screen(screen)
 
             sensor_table = PrettyTable()
-            sensor_table.field_names = ['ID', 'Name', 'Location', 'Mode', 'Measure', 'Value', 'Unit']
+            sensor_table.field_names = ['ID', 'Name', 'Location', 'Mode', 'Behavior', 'Measure', 'Value', 'Unit']
             sensor_table_height = 3 + len(SensorLocation) + len(self.simulator.sensors) + 1
 
             update_thread_running = True
 
-            # TODO Allow changing sensor mode directly by selecting table row
+            # TODO Allow changing sensor mode & behavior directly by selecting table row
 
             def update(screen_to_update):
                 @CLI.ensure_terminal_size
@@ -142,10 +143,10 @@ class CLI:
                     for location in SensorLocation:
                         sensors_at_location = self.simulator.get_sensors_at_location_sorted(location)
                         sensor_table.add_rows([[sensor.instance_id, sensor.name, sensor.location.name,
-                                                sensor.mode.name, sensor.measure.name,
+                                                sensor.mode.name, sensor.behavior.name, sensor.measure.name,
                                                 sensor.current_value, SENSOR_UNIT_REPRESENTATION_MAP[sensor.unit]]
                                                for sensor in sensors_at_location])
-                        sensor_table.add_row(['—' * x for x in [6, 35, 25, 13, 12, 20, 18]])
+                        sensor_table.add_row(['—' * x for x in [6, 35, 25, 13, 13, 12, 20, 18]])
 
                     i = 0
                     for sensor_table_line in sensor_table.get_string().splitlines():
@@ -176,7 +177,7 @@ class CLI:
 
         curses.wrapper(ui)
 
-    def enter_change_sensor_mode_select_menu(self):
+    def enter_change_sensor_mode_and_behavior_select_menu(self):
         def ui(screen):
             selected_item_index = 0
 
@@ -193,7 +194,7 @@ class CLI:
             def update(_):
                 screen.erase()
                 screen.border(0)
-                screen.addstr(2, 5, 'SENSOR SIMULATOR: Select Sensor to change Mode for',
+                screen.addstr(2, 5, 'SENSOR SIMULATOR: Select Sensor to change Mode & Behavior for',
                               curses.A_BOLD | curses.A_UNDERLINE | curses.color_pair(1))
                 print_menu(screen, menu, selected_item_index)
                 screen.refresh()
@@ -205,7 +206,7 @@ class CLI:
                 else:  # Sensor selected
                     selected_sensor = next(filter(lambda sensor: sensor.__str__() == menu[selected_item_index],
                                                   self.simulator.sensors))
-                    self.enter_change_sensor_mode_edit_menu(selected_sensor)
+                    self.enter_change_sensor_mode_and_behavior_edit_menu(selected_sensor)
 
             self.is_loop_active = True
 
@@ -215,26 +216,35 @@ class CLI:
 
         curses.wrapper(ui)
 
-    def enter_change_sensor_mode_edit_menu(self, sensor: SimulatedSensor):
+    def enter_change_sensor_mode_and_behavior_edit_menu(self, sensor: SimulatedSensor):
         def ui(screen):
             selected_item_index = 0
 
-            menu = list(map(lambda m: m.name, SensorMode)) + ['', 'Back to Sensor Selection']
+            menu = []
+            for mode in SensorSimulationMode:
+                for behavior in SensorSimulationBehavior:
+                    menu.append(mode.name + ' (' + behavior.name + ')')
+                menu.append('')
+            menu += ['', 'Back to Sensor Selection']
+
             confirm_menu = ['Yes', 'No']
 
             init_screen(screen)
 
-            new_mode_to_confirm: Optional[SensorMode] = None
+            new_mode_to_confirm: Optional[SensorSimulationMode] = None
+            new_behavior_to_confirm: Optional[SensorSimulationBehavior] = None
 
             @CLI.ensure_terminal_size
             def update(_):
                 screen.erase()
                 screen.border(0)
-                screen.addstr(2, 5, 'SENSOR SIMULATOR: Change Sensor Mode',
+                screen.addstr(2, 5, 'SENSOR SIMULATOR: Change Sensor Mode & Behavior',
                               curses.A_BOLD | curses.A_UNDERLINE | curses.color_pair(1))
                 screen.addstr(4, 5, 'Selected Sensor: ' + sensor.__str__())
                 if new_mode_to_confirm:
-                    screen.addstr(6, 5, 'Change the mode to ' + new_mode_to_confirm.name + '?')
+                    screen.addstr(6, 5,
+                                  'Change the mode & behavior to ' + new_mode_to_confirm.name
+                                  + ' (' + new_behavior_to_confirm.name + ') ?')
                     print_menu(screen, confirm_menu, selected_item_index, start_y=7)
                 else:
                     print_menu(screen, menu, selected_item_index, start_y=6)
@@ -242,25 +252,42 @@ class CLI:
 
             def on_submit():
                 nonlocal new_mode_to_confirm
+                nonlocal new_behavior_to_confirm
                 nonlocal selected_item_index
 
                 if new_mode_to_confirm:
-                    if selected_item_index == 0:  # Accept mode change
+                    if selected_item_index == 0:  # Accept mode & behavior change
                         sensor.change_mode(new_mode_to_confirm)
+                        sensor.change_behavior(new_behavior_to_confirm)
                         self.simulator.mqtt_client.client.publish(sensor.get_metadata_mqtt_topic_name(),
                                                                   sensor.get_metadata_mqtt_message())
                         self.enter_main_menu()
                         return 0
-                    elif selected_item_index == 1:  # Reject mode change
+                    elif selected_item_index == 1:  # Reject mode & behavior change
                         new_mode_to_confirm = None
+                        new_behavior_to_confirm = None
                         return 0
                 else:
                     if selected_item_index == len(menu) - 1:  # Back
                         self.is_loop_active = False
-                        self.enter_change_sensor_mode_select_menu()
+                        self.enter_change_sensor_mode_and_behavior_select_menu()
                         return 0
-                    else:  # New sensor mode selected
-                        new_mode_to_confirm = list(SensorMode)[selected_item_index]
+                    else:  # New sensor mode & behavior selected
+                        selected_item = menu[selected_item_index]
+                        new_mode_to_confirm = next(
+                            filter(
+                                lambda m: m.name.lower() == selected_item.split(' ')[0].lower(),
+                                SensorSimulationMode
+                            )
+                        )
+                        new_behavior_to_confirm = next(
+                            filter(
+                                lambda b:
+                                    b.name.lower() == selected_item.split(' ')[1]
+                                    .replace('(', '').replace(')', '').lower(),
+                                SensorSimulationBehavior
+                            )
+                        )
                         return 1
 
             self.is_loop_active = True

@@ -4,7 +4,7 @@ from threading import Thread
 
 from cli.cli import CLI
 from mqtt.mqtt import MQTTClient
-from sensor.simulated_sensors import SimulatedTemperatureSensor, SensorMode, SimulatedWindSensor, \
+from sensor.simulated_sensors import SimulatedTemperatureSensor, SensorSimulationMode, SimulatedWindSensor, \
     SimulatedHumiditySensor, \
     SimulatedPressureSensor, SimulatedVibrationSensor, SimulatedCO2Sensor, SimulatedCOSensor, SensorLocation
 from sensor.simulator import Simulator
@@ -21,51 +21,51 @@ if __name__ == '__main__':
 
     # Stuttgart Vaihingen Office
     ts1 = SimulatedTemperatureSensor("TS01", "Temperature at Vaihingen Office",
-                                     SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorMode.MEDIUM)
+                                     SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.MEDIUM)
     ws1 = SimulatedWindSensor("WS01", "Wind Speed at Vaihingen Office",
-                              SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorMode.EXTREMELY_LOW)
+                              SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.EXTREMELY_LOW)
     hs1 = SimulatedHumiditySensor("HS01", "Relative Humidity at Vaihingen Office",
-                                  SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorMode.LOW)
+                                  SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.LOW)
     ps1 = SimulatedPressureSensor("PS01", "Air pressure at Vaihingen Office",
-                                  SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorMode.MEDIUM)
+                                  SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.MEDIUM)
     vs1 = SimulatedVibrationSensor("VS01", "Vibration at Vaihingen Office",
-                                   SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorMode.EXTREMELY_LOW)
+                                   SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.EXTREMELY_LOW)
     co2s1 = SimulatedCO2Sensor("CO2S01", "CO2 at Vaihingen Office",
-                               SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorMode.MEDIUM)
+                               SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.MEDIUM)
     cos1 = SimulatedCOSensor("COS01", "CO at Vaihingen Office",
-                             SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorMode.LOW)
+                             SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.LOW)
 
     # Stuttgart Killesbergpark
     ts2 = SimulatedTemperatureSensor("TS02", "Temperature at Killesbergpark",
-                                     SensorLocation.STUTTGART_KILLESBERG_PARK, SensorMode.LOW)
+                                     SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.LOW)
     ws2 = SimulatedWindSensor("WS02", "Wind Speed at Killesbergpark",
-                              SensorLocation.STUTTGART_KILLESBERG_PARK, SensorMode.MEDIUM)
+                              SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.MEDIUM)
     hs2 = SimulatedHumiditySensor("HS02", "Relative Humidity at Killesbergpark",
-                                  SensorLocation.STUTTGART_KILLESBERG_PARK, SensorMode.LOW)
+                                  SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.LOW)
     ps2 = SimulatedPressureSensor("PS02", "Air pressure at Killesbergpark",
-                                  SensorLocation.STUTTGART_KILLESBERG_PARK, SensorMode.LOW)
+                                  SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.LOW)
     vs2 = SimulatedVibrationSensor("VS02", "Vibration at Killesbergpark",
-                                   SensorLocation.STUTTGART_KILLESBERG_PARK, SensorMode.LOW)
+                                   SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.LOW)
     co2s2 = SimulatedCO2Sensor("CO2S02", "CO2 at Killesbergpark",
-                               SensorLocation.STUTTGART_KILLESBERG_PARK, SensorMode.EXTREMELY_LOW)
+                               SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.EXTREMELY_LOW)
     cos2 = SimulatedCOSensor("COS02", "CO at Killesbergpark",
-                             SensorLocation.STUTTGART_KILLESBERG_PARK, SensorMode.EXTREMELY_LOW)
+                             SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.EXTREMELY_LOW)
 
     # Stuttgart Max Eyth See
     ts3 = SimulatedTemperatureSensor("TS03", "Temperature at Max Eyth See",
-                                     SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorMode.HIGH)
+                                     SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.HIGH)
     ws3 = SimulatedWindSensor("WS03", "Wind Speed at Max Eyth See",
-                              SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorMode.HIGH)
+                              SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.HIGH)
     hs3 = SimulatedHumiditySensor("HS01", "Relative Humidity at Max Eyth See",
-                                  SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorMode.HIGH)
+                                  SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.HIGH)
     ps3 = SimulatedPressureSensor("PS03", "Air pressure at Max Eyth See",
-                                  SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorMode.HIGH)
+                                  SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.HIGH)
     vs3 = SimulatedVibrationSensor("VS03", "Vibration at Max Eyth See",
-                                   SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorMode.LOW)
+                                   SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.LOW)
     co2s3 = SimulatedCO2Sensor("CO2S03", "CO2 at Max Eyth See",
-                               SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorMode.EXTREMELY_LOW)
+                               SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.EXTREMELY_LOW)
     cos3 = SimulatedCOSensor("COS03", "CO at Max Eyth See",
-                             SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorMode.EXTREMELY_LOW)
+                             SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.EXTREMELY_LOW)
 
     # Initialize the simulator
     simulator = Simulator(UPDATE_INTERVAL_IN_MS, mqtt_client)
