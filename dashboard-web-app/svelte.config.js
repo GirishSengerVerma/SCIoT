@@ -3,7 +3,7 @@ import preprocess from 'svelte-preprocess';
 import path from 'path';
 import { defineConfig } from 'vite';
 
-import { persistDataServicePlugin } from './persistDataService.js';
+import { persistDataServicePlugin } from './services/persistDataService.js';
 
 const loadViteConfig = () => {
 	return defineConfig({

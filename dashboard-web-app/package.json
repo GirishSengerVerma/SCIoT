@@ -5,7 +5,7 @@
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",
 		"package": "svelte-kit package",
-		"preview": "npx concurrently \"npx run-func persistDataService.js initializePersistDataService\" \"svelte-kit preview\"",
+		"preview": "npx concurrently \"npx run-func ./services/persistDataService.js initializePersistDataService\" \"svelte-kit preview\"",
 		"prepare": "svelte-kit sync",
 		"start": "node ./server",
 		"check": "svelte-check --tsconfig ./tsconfig.json",

@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 
 import { handler } from '../build/handler.js'
-import { initializePersistDataService } from '../persistDataService.js';
+import { initializePersistDataService } from '../services/persistDataService.js';
 
 console.log('Starting Production Server Persist Data Service..\n');
 initializePersistDataService();
