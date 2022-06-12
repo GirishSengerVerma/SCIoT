@@ -2,7 +2,7 @@ import json
 from datetime import datetime, timezone
 from enum import Enum
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Callable, Optional
 
 from scipy.stats import truncnorm
 
@@ -71,6 +71,10 @@ class SensorSimulationBehavior(Enum):
     DECREASING = 3
 
 
+def derive_instance_id(location: SensorLocation, measure: SensorMeasure):
+    return ''.join([part[0] for part in location.name.split('_')]) + '_' + measure.name + '_S'
+
+
 def truncnorm_value(min_value: float, max_value: float, mean: float, sd: float) -> float:
     """ Generate a random temperature value based on a truncated normal distribution based on the given parameters."""
     # TODO SESI Smoothly transition from old value to next value using delta time
@@ -109,11 +113,11 @@ class SimulatedSensor(ABC):
         The sensor provides a function to sense the current value that must be implemented by the concrete class.
     """
 
-    def __init__(self, instance_id: str, name: str, location: SensorLocation,
+    def __init__(self, instance_id: Optional[str], name: str, location: SensorLocation,
                  measure: SensorMeasure, unit: SensorUnit,
                  initial_mode: SensorSimulationMode, initial_behavior: SensorSimulationBehavior,
                  time_step: float = 0.01):
-        self.instance_id = instance_id
+        self.instance_id = instance_id if instance_id else derive_instance_id(location, measure)
         self.name = name
         self.location = location
         self.measure = measure
@@ -188,9 +192,10 @@ class SimulatedTemperatureSensor(SimulatedSensor):
         of this distribution (min, max, mean, standard deviation) differ based on the current sensor mode.
     """
 
-    def __init__(self, instance_id: str, name: str, location: SensorLocation,
+    def __init__(self, name: str, location: SensorLocation,
                  initial_mode: SensorSimulationMode = SensorSimulationMode.MEDIUM,
-                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED):
+                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED,
+                 instance_id: Optional[str] = None):
         super().__init__(instance_id, name, location, SensorMeasure.TEMPERATURE, SensorUnit.DEGREES_CELSIUS,
                          initial_mode, initial_behavior)
 
@@ -234,9 +239,10 @@ class SimulatedWindSensor(SimulatedSensor):
         (e.g. see https://www.dwd.de/DE/service/lexikon/Functions/glossar.html?lv2=100310&lv3=100390)
     """
 
-    def __init__(self, instance_id: str, name: str, location: SensorLocation,
+    def __init__(self, name: str, location: SensorLocation,
                  initial_mode: SensorSimulationMode = SensorSimulationMode.LOW,
-                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED):
+                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED,
+                 instance_id: Optional[str] = None):
         super().__init__(instance_id, name, location, SensorMeasure.WIND_SPEED, SensorUnit.KILOMETERS_PER_HOUR,
                          initial_mode, initial_behavior)
 
@@ -278,9 +284,10 @@ class SimulatedHumiditySensor(SimulatedSensor):
         of this distribution (min, max, mean, standard deviation) differ based on the current sensor mode.
     """
 
-    def __init__(self, instance_id: str, name: str, location: SensorLocation,
+    def __init__(self, name: str, location: SensorLocation,
                  initial_mode: SensorSimulationMode = SensorSimulationMode.MEDIUM,
-                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED):
+                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED,
+                 instance_id: Optional[str] = None):
         super().__init__(instance_id, name, location, SensorMeasure.HUMIDITY, SensorUnit.PERCENTAGE,
                          initial_mode, initial_behavior)
 
@@ -325,9 +332,10 @@ class SimulatedPressureSensor(SimulatedSensor):
             https://www.outdoor-magazin.com/klettern/trocken-bleiben-mehr-uebers-wetter-wissen/
     """
 
-    def __init__(self, instance_id: str, name: str, location: SensorLocation,
+    def __init__(self, name: str, location: SensorLocation,
                  initial_mode: SensorSimulationMode = SensorSimulationMode.MEDIUM,
-                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED):
+                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED,
+                 instance_id: Optional[str] = None):
         super().__init__(instance_id, name, location, SensorMeasure.PRESSURE, SensorUnit.HPA,
                          initial_mode, initial_behavior)
 
@@ -371,9 +379,10 @@ class SimulatedVibrationSensor(SimulatedSensor):
         https://www.aktion-deutschland-hilft.de/de/fachthemen/natur-humanitaere-katastrophen/erdbeben/richterskala-ab-staerke-5-wird-es-gefaehrlich/
     """
 
-    def __init__(self, instance_id: str, name: str, location: SensorLocation,
+    def __init__(self, name: str, location: SensorLocation,
                  initial_mode: SensorSimulationMode = SensorSimulationMode.EXTREMELY_LOW,
-                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED):
+                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED,
+                 instance_id: Optional[str] = None):
         super().__init__(instance_id, name, location, SensorMeasure.VIBRATION,
                          SensorUnit.RICHTER_MAGNITUDE, initial_mode, initial_behavior)
 
@@ -420,9 +429,10 @@ class SimulatedCO2Sensor(SimulatedSensor):
         https://www.ffb.kit.edu/download/CD-FFB_IMK_Ber._Nr._137_Gaskonzentration_waehrend_eines_Flashovers.pdf
     """
 
-    def __init__(self, instance_id: str, name: str, location: SensorLocation,
+    def __init__(self, name: str, location: SensorLocation,
                  initial_mode: SensorSimulationMode = SensorSimulationMode.LOW,
-                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED):
+                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED,
+                 instance_id: Optional[str] = None):
         super().__init__(instance_id, name, location, SensorMeasure.CO2, SensorUnit.PPM,
                          initial_mode, initial_behavior)
 
@@ -469,9 +479,10 @@ class SimulatedCOSensor(SimulatedSensor):
         https://de.wikipedia.org/wiki/Kohlenstoffmonoxid
     """
 
-    def __init__(self, instance_id: str, name: str, location: SensorLocation,
+    def __init__(self, name: str, location: SensorLocation,
                  initial_mode: SensorSimulationMode = SensorSimulationMode.LOW,
-                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED):
+                 initial_behavior: SensorSimulationBehavior = SensorSimulationBehavior.NORMAL_DISTRIBUTED,
+                 instance_id: Optional[str] = None):
         super().__init__(instance_id, name, location, SensorMeasure.CO, SensorUnit.PPM,
                          initial_mode, initial_behavior)
 
@@ -505,5 +516,5 @@ class SimulatedCOSensor(SimulatedSensor):
         else:
             raise RuntimeError("Unexpected sensor mode: " + self.mode.name)
 
-# TODO SESI Implement simulated sensors for
+# TODO SESI Consider implementing simulated sensors for
 #       SOUND
