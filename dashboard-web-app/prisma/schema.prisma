@@ -25,6 +25,17 @@ enum SensorLocation {
   STUTTGART_MAX_EYTH_SEE
 }
 
+enum SensorMeasure {
+  TEMPERATURE
+  WIND_SPEED
+  HUMIDITY
+  PRESSURE
+  VIBRATION
+  CO
+  CO2
+  SOUND
+}
+
 enum SensorSimulationMode {
   EXTREMELY_LOW
   LOW
@@ -46,19 +57,9 @@ model SensorMetaData {
   timestamp          DateTime
   name               String
   location           SensorLocation
+  measure            SensorMeasure
   simulationMode     SensorSimulationMode?
   simulationBehavior SensorSimulationBehavior?
-}
-
-enum SensorMeasure {
-  TEMPERATURE
-  WIND_SPEED
-  HUMIDITY
-  PRESSURE
-  VIBRATION
-  CO
-  CO2
-  SOUND
 }
 
 enum SensorUnit {
