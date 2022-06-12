@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from abc import ABC, abstractmethod
 from typing import Callable
@@ -73,7 +73,7 @@ class SensorSimulationBehavior(Enum):
 
 def truncnorm_value(min_value: float, max_value: float, mean: float, sd: float) -> float:
     """ Generate a random temperature value based on a truncated normal distribution based on the given parameters."""
-    # TODO Smoothly transition from old value to next value using delta time
+    # TODO SESI Smoothly transition from old value to next value using delta time
     return truncnorm.rvs((min_value - mean) / sd,
                                  (max_value - mean) / sd, 
                                  loc=mean, scale=sd)
@@ -160,9 +160,9 @@ class SimulatedSensor(ABC):
 
     def get_telemetry_data_mqtt_message(self) -> str:
         return json.dumps({
-            "instance_id": self.instance_id,
-            "timestamp": datetime.now().strftime("%d-%m-%YT%H:%M:%S"),
-            "unit": self.unit.name.lower(),
+            "instanceId": self.instance_id,
+            "timestamp": datetime.utcnow().replace(tzinfo=timezone.utc).isoformat(),
+            "unit": self.unit.name,
             "value": self.current_value
         })
 
@@ -171,12 +171,13 @@ class SimulatedSensor(ABC):
 
     def get_metadata_mqtt_message(self) -> str:
         return json.dumps({
-            "instance_id": self.instance_id,
-            "timestamp": datetime.now().strftime("%d-%m-%YT%H:%M:%S"),
+            "instanceId": self.instance_id,
+            "timestamp": datetime.utcnow().replace(tzinfo=timezone.utc).isoformat(),
             "name": self.name,
-            "location": self.location.name.lower(),
-            "simulationMode": self.mode.name.lower(),
-            "simulationBehavior": self.behavior.name.lower()
+            "location": self.location.name,
+            "measure": self.measure.name,
+            "simulationMode": self.mode.name,
+            "simulationBehavior": self.behavior.name
         })
 
 
@@ -504,5 +505,5 @@ class SimulatedCOSensor(SimulatedSensor):
         else:
             raise RuntimeError("Unexpected sensor mode: " + self.mode.name)
 
-# TODO Implement simulated sensors for
+# TODO SESI Implement simulated sensors for
 #       SOUND

@@ -19,52 +19,54 @@ if __name__ == '__main__':
     mqtt_client_thread = Thread(target=mqtt_client.loop)
     mqtt_client_thread.start()
 
+    # TODO SESI Directly dirive instance ids from given sensor type and data!
+
     # Stuttgart Vaihingen Office
-    ts1 = SimulatedTemperatureSensor("TS01", "Temperature at Vaihingen Office",
+    ts1 = SimulatedTemperatureSensor("SVO_TEMPERATURE_S", "Temperature at Vaihingen Office",
                                      SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.MEDIUM)
-    ws1 = SimulatedWindSensor("WS01", "Wind Speed at Vaihingen Office",
+    ws1 = SimulatedWindSensor("SVO_WIND_SPEED_S", "Wind Speed at Vaihingen Office",
                               SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.EXTREMELY_LOW)
-    hs1 = SimulatedHumiditySensor("HS01", "Relative Humidity at Vaihingen Office",
+    hs1 = SimulatedHumiditySensor("SVO_HUMIDITY_S", "Relative Humidity at Vaihingen Office",
                                   SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.LOW)
-    ps1 = SimulatedPressureSensor("PS01", "Air pressure at Vaihingen Office",
+    ps1 = SimulatedPressureSensor("SVO_PRESSURE_S", "Air pressure at Vaihingen Office",
                                   SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.MEDIUM)
-    vs1 = SimulatedVibrationSensor("VS01", "Vibration at Vaihingen Office",
+    vs1 = SimulatedVibrationSensor("SVO_VIBRATION_S", "Vibration at Vaihingen Office",
                                    SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.EXTREMELY_LOW)
-    co2s1 = SimulatedCO2Sensor("CO2S01", "CO2 at Vaihingen Office",
+    co2s1 = SimulatedCO2Sensor("SVO_CO2_S", "CO2 at Vaihingen Office",
                                SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.MEDIUM)
-    cos1 = SimulatedCOSensor("COS01", "CO at Vaihingen Office",
+    cos1 = SimulatedCOSensor("SVO_CO_S", "CO at Vaihingen Office",
                              SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.LOW)
 
     # Stuttgart Killesbergpark
-    ts2 = SimulatedTemperatureSensor("TS02", "Temperature at Killesbergpark",
+    ts2 = SimulatedTemperatureSensor("SKP_TEMPERATURE_S", "Temperature at Killesbergpark",
                                      SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.LOW)
-    ws2 = SimulatedWindSensor("WS02", "Wind Speed at Killesbergpark",
+    ws2 = SimulatedWindSensor("SKP_WIND_SPEED_S", "Wind Speed at Killesbergpark",
                               SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.MEDIUM)
-    hs2 = SimulatedHumiditySensor("HS02", "Relative Humidity at Killesbergpark",
+    hs2 = SimulatedHumiditySensor("SKP_HUMIDITY_S", "Relative Humidity at Killesbergpark",
                                   SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.LOW)
-    ps2 = SimulatedPressureSensor("PS02", "Air pressure at Killesbergpark",
+    ps2 = SimulatedPressureSensor("SKP_PRESSURE_S", "Air pressure at Killesbergpark",
                                   SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.LOW)
-    vs2 = SimulatedVibrationSensor("VS02", "Vibration at Killesbergpark",
+    vs2 = SimulatedVibrationSensor("SKP_VIBRATION_S", "Vibration at Killesbergpark",
                                    SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.LOW)
-    co2s2 = SimulatedCO2Sensor("CO2S02", "CO2 at Killesbergpark",
+    co2s2 = SimulatedCO2Sensor("SKP_CO2_S", "CO2 at Killesbergpark",
                                SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.EXTREMELY_LOW)
-    cos2 = SimulatedCOSensor("COS02", "CO at Killesbergpark",
+    cos2 = SimulatedCOSensor("SKP_CO_S", "CO at Killesbergpark",
                              SensorLocation.STUTTGART_KILLESBERG_PARK, SensorSimulationMode.EXTREMELY_LOW)
 
     # Stuttgart Max Eyth See
-    ts3 = SimulatedTemperatureSensor("TS03", "Temperature at Max Eyth See",
+    ts3 = SimulatedTemperatureSensor("SMES_TEMPERATURE_S", "Temperature at Max Eyth See",
                                      SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.HIGH)
-    ws3 = SimulatedWindSensor("WS03", "Wind Speed at Max Eyth See",
+    ws3 = SimulatedWindSensor("SMES_WIND_SPEED_S", "Wind Speed at Max Eyth See",
                               SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.HIGH)
-    hs3 = SimulatedHumiditySensor("HS01", "Relative Humidity at Max Eyth See",
+    hs3 = SimulatedHumiditySensor("SMES_HUMIDITY_S", "Relative Humidity at Max Eyth See",
                                   SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.HIGH)
-    ps3 = SimulatedPressureSensor("PS03", "Air pressure at Max Eyth See",
+    ps3 = SimulatedPressureSensor("SMES_PRESSURE_S", "Air pressure at Max Eyth See",
                                   SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.HIGH)
-    vs3 = SimulatedVibrationSensor("VS03", "Vibration at Max Eyth See",
+    vs3 = SimulatedVibrationSensor("SMES_VIBRATION_S", "Vibration at Max Eyth See",
                                    SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.LOW)
-    co2s3 = SimulatedCO2Sensor("CO2S03", "CO2 at Max Eyth See",
+    co2s3 = SimulatedCO2Sensor("SMES_CO2_S", "CO2 at Max Eyth See",
                                SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.EXTREMELY_LOW)
-    cos3 = SimulatedCOSensor("COS03", "CO at Max Eyth See",
+    cos3 = SimulatedCOSensor("SMES_CO_S", "CO at Max Eyth See",
                              SensorLocation.STUTTGART_MAX_EYTH_SEE, SensorSimulationMode.EXTREMELY_LOW)
 
     # Initialize the simulator
@@ -95,6 +97,9 @@ if __name__ == '__main__':
     simulator.add_sensor(vs3)
     simulator.add_sensor(co2s3)
     simulator.add_sensor(cos3)
+
+    # Announce sensors by sending metadata MQTT message
+    simulator.announce_sensors()
 
     # Add callback listener for incoming MQTT messages to simulator
     mqtt_client.add_listener(simulator.on_mqtt_message)

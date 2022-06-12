@@ -15,7 +15,7 @@ class MQTTClient:
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.client.tls_set(MQTT_CA_CERT_FILE_PATH)
-        # TODO If we have problems using TLS on different machines, consider disable host checking:
+        # TODO SESI If we have problems using TLS on different machines, consider disable host checking:
         # self.client.tls_insecure_set(True)
         self.client.username_pw_set(username, password)
         self.client.connect(MQTT_BROKER_COMMON_NAME, MQTT_OVER_TLS_PORT)

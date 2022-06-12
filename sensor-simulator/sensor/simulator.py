@@ -33,13 +33,18 @@ class Simulator:
     def add_sensor(self, sensor: SimulatedSensor):
         self.sensors.append(sensor)
 
+    def announce_sensors(self):
+        for sensor in self.sensors:
+            self.mqtt_client.client.publish(sensor.get_metadata_mqtt_topic_name(),
+                                            sensor.get_metadata_mqtt_message())
+
     def on_mqtt_message(self, client, userdata, msg):
         if not msg.topic.startswith('sensors/metadata/'):
             return
 
         mqtt_message = json.loads(msg.payload)
 
-        sensor = next(filter(lambda s: s.instance_id.lower() == mqtt_message['instance_id'].lower(), self.sensors))
+        sensor = next(filter(lambda s: s.instance_id.lower() == mqtt_message['instanceId'].lower(), self.sensors))
 
         mode = next(filter(lambda m: m.name.lower() == mqtt_message['simulationMode']
                            .lower(), SensorSimulationMode))

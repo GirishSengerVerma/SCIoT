@@ -129,7 +129,7 @@ class CLI:
 
             update_thread_running = True
 
-            # TODO Allow changing sensor mode & behavior directly by selecting table row
+            # TODO SESI Allow changing sensor mode & behavior directly by selecting table row
 
             def update(screen_to_update):
                 @CLI.ensure_terminal_size
