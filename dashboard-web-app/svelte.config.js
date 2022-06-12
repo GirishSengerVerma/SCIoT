@@ -1,9 +1,9 @@
-import adapter from '@sveltejs/adapter-auto';
+import adapter from '@sveltejs/adapter-node';
 import preprocess from 'svelte-preprocess';
 import path from 'path';
 import { defineConfig } from 'vite';
 
-import { persistDataService } from './persistDataService.js';
+import { persistDataServicePlugin } from './persistDataService.js';
 
 const loadViteConfig = () => {
 	return defineConfig({
@@ -12,7 +12,7 @@ const loadViteConfig = () => {
 				$root: path.resolve('./src')
 			}
 		},
-        plugins: [persistDataService],
+        plugins: [persistDataServicePlugin],
     });
 };
 

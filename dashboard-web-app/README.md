@@ -51,12 +51,18 @@ npx prisma studio
 
 ## Building
 
-To create a production version of your app:
+To create a production version of the app, run:
 
 ```bash
 npm run build
 ```
 
-You can preview the production build with `npm run preview`.
+You can preview the production build by running `npm run preview`.
 
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+## Run in Production
+
+To run the production version of the app, run:
+
+```bash
+npm start
+```

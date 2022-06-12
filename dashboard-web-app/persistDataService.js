@@ -38,15 +38,17 @@ const sensorMeasuresToSimulate = [
     SensorMeasure.CO2,
 ]
 
-export const persistDataService = {
+export const persistDataServicePlugin = {
     name: 'persistDataService',
     configureServer(server) {
-        const initialize = async () => {
-            await initializePrisma();
-            initializeMQTTClient();
-        }
-        initialize(); 
+        console.log('Starting Development Server Persist Data Service..\n');
+        initializePersistDataService(); 
     },
+}
+
+export const initializePersistDataService = async () => {
+    await initializePrisma();
+    initializeMQTTClient();
 }
 
 const initializePrisma = async () => {
