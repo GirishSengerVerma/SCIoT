@@ -8,9 +8,9 @@ manually add it to the path. You can check if the installation was successful by
 `mosquitto -h` in a terminal.
 
 ## Configure Firewall
-Make sure that the fireall on your OS allows incoming traffic on the following ports used for MQTT transport:
+TODO: Is this needed if we run everything on local machine?
+Make sure that the fireall on your OS allows incoming traffic on the following port used for MQTTS transport:
 - 8883
-- 9883
 
 ## Server Key
 Make sure that the `server.key` file is placed inside the `certs` directory. Also note that due to using TLS host checking,
