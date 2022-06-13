@@ -105,10 +105,11 @@ enum WeatherEventRiskLevel {
 }
 
 model WeatherEvent {
-  id               Int                @id @default(autoincrement())
-  location         SensorLocation
-  type             WeatherEventType
-  WeatherEventRisk WeatherEventRisk[]
+  id                 Int                  @id @default(autoincrement())
+  location           SensorLocation
+  type               WeatherEventType
+  WeatherEventRisk   WeatherEventRisk[]
+  WeatherEventAction WeatherEventAction[]
 }
 
 model WeatherEventRisk {
@@ -118,4 +119,30 @@ model WeatherEventRisk {
   riskLevel      WeatherEventRiskLevel @default(LOW)
   start          DateTime              @default(now())
   end            DateTime?
+}
+
+enum WeatherEventActionType {
+  PLANNING_INCREASE_RISK_LEVEL
+  PLANNING_DECREASE_RISK_LEVEL
+  ALERT_LOCALS_BY_LIGHT
+  ALERT_LOCALS_BY_SOUND
+  ALERT_LOCALS_BY_DEVICE_NOTIFICATION
+  ALERT_AUTHORITIES_BY_DEVICE_NOTIFICATION
+  COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL
+  COUNTER_MEASURE_LOCK_DOWN_LOCATION
+  COUNTER_MEASURE_REOPEN_LOCATION
+  COUNTER_MEASURE_MOVE_UNITS_REQUEST
+  COUNTER_MEASURE_MOVE_UNITS_RESPONSE
+}
+
+model WeatherEventAction {
+  id                    Int                    @id @default(autoincrement())
+  weatherEvent          WeatherEvent           @relation(fields: [weatherEventId], references: [id])
+  weatherEventId        Int
+  timestamp             DateTime               @default(now())
+  type                  WeatherEventActionType
+  wasManuallyTaken      Boolean                @default(false)
+  moveUnitsFromLocation SensorLocation?
+  moveUnitsToLocation   SensorLocation?
+  moveUnitsAmount       Int?
 }
