@@ -1,5 +1,6 @@
 # MQTT Broker (Mosquitto)
 
+
 ## Install 
 Install the Eclipse Mosquitto MQTT Broker on your OS as described in 
 [Eclipse Mosquitto](https://mosquitto.org/download/)
@@ -13,7 +14,8 @@ Make sure that the fireall on your OS allows incoming traffic on the following p
 - 8883
 
 ## Server Key
-Make sure that the `server.key` file is placed inside the `certs` directory. Also note that due to using TLS host checking,
+Extract the encrypted `server.zip` archive inside the `certs` folder using the repository master encryption password. Note that the
+archive MUST be extracted inplace (i.e. no new folder is created). Also note that due to using TLS host checking,
 the server certificate can only be used by Tobias-PC. If you want to run the server on another machine, generate a new server
 certificate and key for this machine as described in [Generate new Server Key](https://mosquitto.org/man/mosquitto-tls-7.html).
 You can test if everything works by executing the following command
