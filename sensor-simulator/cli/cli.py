@@ -35,20 +35,22 @@ def print_menu(screen, menu_items: list[str], selected_item_index: int, start_x:
 def handle_menu_interaction(screen, menu: list[str], selected_item_index: int, on_submit: Callable):
     key = screen.getch()
 
-    if key == curses.KEY_UP:
+    # see https://github.com/microsoft/vscode/issues/112405 for an explanation of our key handling
+
+    if key == curses.KEY_UP or key == curses.KEY_A2: # up arrow
         if selected_item_index == 0:
             return len(menu) - 1
         else:
             new_selected_item_index = selected_item_index - 1
-            if not menu[new_selected_item_index]:  # skip empty line
+            while not menu[new_selected_item_index]:  # skip empty lines
                 new_selected_item_index -= 1
             return new_selected_item_index
-    elif key == curses.KEY_DOWN:
+    elif key == curses.KEY_DOWN or key == curses.KEY_C2: # down arrow
         if selected_item_index == len(menu) - 1:
             return 0
         else:
             new_selected_item_index = selected_item_index + 1
-            if not menu[new_selected_item_index]:  # skip empty line
+            while not menu[new_selected_item_index]:  # skip empty lines
                 new_selected_item_index += 1
             return new_selected_item_index
     elif key == curses.KEY_ENTER or key in [10, 13]:  # enter key
@@ -225,7 +227,7 @@ class CLI:
                 for behavior in SensorSimulationBehavior:
                     menu.append(mode.name + ' (' + behavior.name + ')')
                 menu.append('')
-            menu += ['', 'Back to Sensor Selection']
+            menu += ['Back to Sensor Selection']
 
             confirm_menu = ['Yes', 'No']
 
