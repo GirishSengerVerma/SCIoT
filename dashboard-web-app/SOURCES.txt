@@ -1,3 +1,6 @@
 SVG Icons:
-https://feathericons.com/
-https://heroicons.dev/
+    https://feathericons.com/
+    https://heroicons.dev/
+
+Favicon:
+    https://favicon.io/emoji-favicons/chart-decreasing/ (licensed under CC-BY 4.0)

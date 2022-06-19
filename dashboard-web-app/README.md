@@ -2,6 +2,15 @@
 
 ## Setup
 
+### VS Code
+
+Add the following extensions in your VS Code:
+- Svelte for VS Code
+- Prisma
+- Tailwind CSS IntelliSense
+- ESLint
+- Prettier - Code formatter
+
 ### Prisma + Prettier
 
 see (Tutorial)[https://github.com/prisma/prisma/issues/1761#issuecomment-741951775]
