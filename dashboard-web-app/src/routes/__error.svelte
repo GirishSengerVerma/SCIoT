@@ -14,21 +14,9 @@
 	export let title: string
 </script>
 
-<div class="error">
-	<h1>{title}</h1>
-	<span class="emoji">⚠️</span>
+<div class="flex h-screen justify-center items-center">
+	<div class="text-center">
+		<h1 class="text-5xl font-bold underline">{title}</h1>
+		<p class="text-[50vw] md:text-[20rem]">⚠️</p>
+	</div>
 </div>
-
-<style>
-	.error {
-		height: 100vh;
-		display: grid;
-		gap: var(--spacing-32);
-		place-content: center;
-		place-items: center;
-	}
-
-    .emoji {
-        font-size: 20rem;
-    }
-</style>
