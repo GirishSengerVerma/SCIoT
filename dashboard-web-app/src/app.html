@@ -9,6 +9,21 @@
 		<link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
 		<link rel="manifest" href="/favicon/site.webmanifest">
 		%sveltekit.head%
+
+		<script>
+            // Needed to be initialized here to avoid FOUC.
+			// The Svelte store in '$root/stores/themeStore.ts' will then be initialized by 
+			// investigating document.documentElement.classList
+			const storedDarkMode = 'theme' in localStorage && localStorage.getItem('theme') === 'dark';
+			const systemPreferenceDarkMode = !('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches;
+			const initialTheme = (storedDarkMode || systemPreferenceDarkMode) ? 'dark' : 'light';
+			
+			if (initialTheme === 'dark' && !document.documentElement.classList.contains('dark')) {
+            	document.documentElement.classList.add('dark')
+            } else if (initialTheme === 'light' && document.documentElement.classList.contains('dark')) {
+            	document.documentElement.classList.remove('dark')
+			}
+        </script>
 	</head>
 	<body>
 		<div>%sveltekit.body%</div>
