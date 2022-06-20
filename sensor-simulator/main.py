@@ -1,7 +1,8 @@
 import os
-import sys
 from threading import Thread
 
+from dotenv import load_dotenv, find_dotenv
+import psycopg2
 from cli.cli import CLI
 from mqtt.mqtt import MQTTClient
 from sensor.simulated_sensors import SimulatedTemperatureSensor, SensorSimulationMode, SimulatedWindSensor, \
@@ -19,8 +20,29 @@ if __name__ == '__main__':
     mqtt_client_thread = Thread(target=mqtt_client.loop)
     mqtt_client_thread.start()
 
-    # TODO SESI Directly dirive instance ids from given sensor type and data!
+    # Setup PostgreSQL client
+    load_dotenv(find_dotenv())
 
+    connection = psycopg2.connect(
+        host=os.getenv("DATABASE_HOST"),
+        database=os.getenv("DATABASE_NAME"),
+        user=os.getenv("DATABASE_USERNAME"),
+        password=os.getenv("DATABASE_PASSWORD"),
+        port=os.getenv("DATABASE_PORT"),
+        sslmode='verify-full',
+    )
+
+    cursor = connection.cursor()
+    cursor.execute("SELECT version();")
+    record = cursor.fetchone()
+
+    connection.commit()
+
+    connection.close()
+
+    # Load all simulated sensors
+    # TODO Load all sensors and their newest metadata entry from SQL and initialize simulator using this data Then: Remove below
+    
     # Stuttgart Vaihingen Office
     ts1 = SimulatedTemperatureSensor("Temperature at Vaihingen Office",
                                      SensorLocation.STUTTGART_VAIHINGEN_OFFICE, SensorSimulationMode.MEDIUM)
