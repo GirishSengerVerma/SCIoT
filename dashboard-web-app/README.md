@@ -5,19 +5,19 @@
 ### VS Code
 
 Add the following extensions in your VS Code:
-- Svelte for VS Code
-- Prisma
-- Tailwind CSS IntelliSense
-- ESLint
-- Prettier - Code formatter
+- [Svelte for VS Code](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode)
+- [Prisma](https://marketplace.visualstudio.com/items?itemName=Prisma.prisma)
+- [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
+- [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
+- [Prettier - Code formatter](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
 
 ### Prisma + Prettier
 
-see (Tutorial)[https://github.com/prisma/prisma/issues/1761#issuecomment-741951775]
+see [Tutorial](https://github.com/prisma/prisma/issues/1761#issuecomment-741951775)
 
 ### Environment Properties
 
-Make sure that a `.env` file exists in the main directory of this project that contains:
+Extract the contents of the encrypted archive `.env.zip`. Make sure that you extract the contents inplace, i.e. the `.env` file is placed in the main directory of this project (and not in a new folder) and make sure the `.env` file contains:
 
 - an entry `DATABASE_URL` for the SQL database connection string
 - an entry `MQTT_USERNAME` containing the username for the MQTT connection to the broker
