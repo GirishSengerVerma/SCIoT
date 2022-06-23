@@ -54,7 +54,7 @@ model SensorMetaData {
   id                 Int                       @id @default(autoincrement())
   sensor             Sensor                    @relation(fields: [instanceId], references: [instanceId])
   instanceId         String
-  timestamp          DateTime
+  timestamp          DateTime                  @default(now())
   name               String
   location           SensorLocation
   measure            SensorMeasure

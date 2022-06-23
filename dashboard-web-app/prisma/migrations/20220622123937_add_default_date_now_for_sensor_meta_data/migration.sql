@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "SensorMetaData" ALTER COLUMN "timestamp" SET DEFAULT CURRENT_TIMESTAMP;
