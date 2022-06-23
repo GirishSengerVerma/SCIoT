@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import * as mqtt from "mqtt";
-import { PrismaClient, SensorLocation, SensorMeasure, SensorSimulationBehavior, SensorSimulationMode } from '@prisma/client';
+import { PrismaClient, Location, SensorMeasure, SensorSimulationBehavior, SensorSimulationMode } from '@prisma/client';
 
 import { assert } from 'console';
 
@@ -8,7 +8,7 @@ export const persistDataServicePlugin = {
     name: 'persistDataService',
     configureServer(server) {
         console.log('Starting Development Server Persist Data Service..\n');
-        initializePersistDataService(); 
+        initializePersistDataService();
     },
 }
 
@@ -26,7 +26,7 @@ const initialSensorsDataSKP = [
         metadata: { 
             instanceId: 'SKP_TEMPERATURE_S',
             name: 'Temperature at Stuttgart Killesbergpark',
-            location: SensorLocation.STUTTGART_KILLESBERG_PARK,
+            location: Location.STUTTGART_KILLESBERG_PARK,
             measure: SensorMeasure.TEMPERATURE,
             simulationMode: SensorSimulationMode.LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -40,7 +40,7 @@ const initialSensorsDataSKP = [
         metadata: { 
             instanceId: 'SKP_WIND_SPEED_S',
             name: 'Wind Speed at Stuttgart Killesbergpark',
-            location: SensorLocation.STUTTGART_KILLESBERG_PARK,
+            location: Location.STUTTGART_KILLESBERG_PARK,
             measure: SensorMeasure.WIND_SPEED,
             simulationMode: SensorSimulationMode.MEDIUM,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -54,7 +54,7 @@ const initialSensorsDataSKP = [
         metadata: { 
             instanceId: 'SKP_HUMIDITY_S',
             name: 'Humidity at Stuttgart Killesbergpark',
-            location: SensorLocation.STUTTGART_KILLESBERG_PARK,
+            location: Location.STUTTGART_KILLESBERG_PARK,
             measure: SensorMeasure.HUMIDITY,
             simulationMode: SensorSimulationMode.LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -68,7 +68,7 @@ const initialSensorsDataSKP = [
         metadata: { 
             instanceId: 'SKP_PRESSURE_S',
             name: 'Pressure at Stuttgart Killesbergpark',
-            location: SensorLocation.STUTTGART_KILLESBERG_PARK,
+            location: Location.STUTTGART_KILLESBERG_PARK,
             measure: SensorMeasure.PRESSURE,
             simulationMode: SensorSimulationMode.LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -82,7 +82,7 @@ const initialSensorsDataSKP = [
         metadata: { 
             instanceId: 'SKP_VIBRATION_S',
             name: 'Vibration at Stuttgart Killesbergpark',
-            location: SensorLocation.STUTTGART_KILLESBERG_PARK,
+            location: Location.STUTTGART_KILLESBERG_PARK,
             measure: SensorMeasure.VIBRATION,
             simulationMode: SensorSimulationMode.LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -96,7 +96,7 @@ const initialSensorsDataSKP = [
         metadata: { 
             instanceId: 'SKP_CO2_S',
             name: 'CO2 at Stuttgart Killesbergpark',
-            location: SensorLocation.STUTTGART_KILLESBERG_PARK,
+            location: Location.STUTTGART_KILLESBERG_PARK,
             measure: SensorMeasure.CO2,
             simulationMode: SensorSimulationMode.EXTREMELY_LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -110,7 +110,7 @@ const initialSensorsDataSKP = [
         metadata: { 
             instanceId: 'SKP_CO_S',
             name: 'CO at Stuttgart Killesbergpark',
-            location: SensorLocation.STUTTGART_KILLESBERG_PARK,
+            location: Location.STUTTGART_KILLESBERG_PARK,
             measure: SensorMeasure.CO,
             simulationMode: SensorSimulationMode.EXTREMELY_LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -127,7 +127,7 @@ const initialSensorsDataSVO = [
         metadata: { 
             instanceId: 'SVO_TEMPERATURE_S',
             name: 'Temperature at Stuttgart Vaihingen Office',
-            location: SensorLocation.STUTTGART_VAIHINGEN_OFFICE,
+            location: Location.STUTTGART_VAIHINGEN_OFFICE,
             measure: SensorMeasure.TEMPERATURE,
             simulationMode: SensorSimulationMode.MEDIUM,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -141,7 +141,7 @@ const initialSensorsDataSVO = [
         metadata: { 
             instanceId: 'SVO_WIND_SPEED_S',
             name: 'Wind Speed at Stuttgart Vaihingen Office',
-            location: SensorLocation.STUTTGART_VAIHINGEN_OFFICE,
+            location: Location.STUTTGART_VAIHINGEN_OFFICE,
             measure: SensorMeasure.WIND_SPEED,
             simulationMode: SensorSimulationMode.EXTREMELY_LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -155,7 +155,7 @@ const initialSensorsDataSVO = [
         metadata: { 
             instanceId: 'SVO_HUMIDITY_S',
             name: 'Humidity at Stuttgart Vaihingen Office',
-            location: SensorLocation.STUTTGART_VAIHINGEN_OFFICE,
+            location: Location.STUTTGART_VAIHINGEN_OFFICE,
             measure: SensorMeasure.HUMIDITY,
             simulationMode: SensorSimulationMode.LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -169,7 +169,7 @@ const initialSensorsDataSVO = [
         metadata: { 
             instanceId: 'SVO_PRESSURE_S',
             name: 'Pressure at Stuttgart Vaihingen Office',
-            location: SensorLocation.STUTTGART_VAIHINGEN_OFFICE,
+            location: Location.STUTTGART_VAIHINGEN_OFFICE,
             measure: SensorMeasure.PRESSURE,
             simulationMode: SensorSimulationMode.MEDIUM,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -183,7 +183,7 @@ const initialSensorsDataSVO = [
         metadata: { 
             instanceId: 'SVO_VIBRATION_S',
             name: 'Vibration at Stuttgart Vaihingen Office',
-            location: SensorLocation.STUTTGART_VAIHINGEN_OFFICE,
+            location: Location.STUTTGART_VAIHINGEN_OFFICE,
             measure: SensorMeasure.VIBRATION,
             simulationMode: SensorSimulationMode.EXTREMELY_LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -197,7 +197,7 @@ const initialSensorsDataSVO = [
         metadata: { 
             instanceId: 'SVO_CO2_S',
             name: 'CO2 at Stuttgart Vaihingen Office',
-            location: SensorLocation.STUTTGART_VAIHINGEN_OFFICE,
+            location: Location.STUTTGART_VAIHINGEN_OFFICE,
             measure: SensorMeasure.CO2,
             simulationMode: SensorSimulationMode.MEDIUM,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -211,7 +211,7 @@ const initialSensorsDataSVO = [
         metadata: { 
             instanceId: 'SVO_CO_S',
             name: 'CO at Stuttgart Vaihingen Office',
-            location: SensorLocation.STUTTGART_VAIHINGEN_OFFICE,
+            location: Location.STUTTGART_VAIHINGEN_OFFICE,
             measure: SensorMeasure.CO,
             simulationMode: SensorSimulationMode.LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -228,7 +228,7 @@ const initialSensorsDataSMES = [
         metadata: { 
             instanceId: 'SMES_TEMPERATURE_S',
             name: 'Temperature at Stuttgart Max Eyth See',
-            location: SensorLocation.STUTTGART_MAX_EYTH_SEE,
+            location: Location.STUTTGART_MAX_EYTH_SEE,
             measure: SensorMeasure.TEMPERATURE,
             simulationMode: SensorSimulationMode.HIGH,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -242,7 +242,7 @@ const initialSensorsDataSMES = [
         metadata: { 
             instanceId: 'SMES_WIND_SPEED_S',
             name: 'Wind Speed at Stuttgart Max Eyth See',
-            location: SensorLocation.STUTTGART_MAX_EYTH_SEE,
+            location: Location.STUTTGART_MAX_EYTH_SEE,
             measure: SensorMeasure.WIND_SPEED,
             simulationMode: SensorSimulationMode.HIGH,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -256,7 +256,7 @@ const initialSensorsDataSMES = [
         metadata: { 
             instanceId: 'SMES_HUMIDITY_S',
             name: 'Humidity at Stuttgart Max Eyth See',
-            location: SensorLocation.STUTTGART_MAX_EYTH_SEE,
+            location: Location.STUTTGART_MAX_EYTH_SEE,
             measure: SensorMeasure.HUMIDITY,
             simulationMode: SensorSimulationMode.HIGH,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -270,7 +270,7 @@ const initialSensorsDataSMES = [
         metadata: { 
             instanceId: 'SMES_PRESSURE_S',
             name: 'Pressure at Stuttgart Max Eyth See',
-            location: SensorLocation.STUTTGART_MAX_EYTH_SEE,
+            location: Location.STUTTGART_MAX_EYTH_SEE,
             measure: SensorMeasure.PRESSURE,
             simulationMode: SensorSimulationMode.HIGH,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -284,7 +284,7 @@ const initialSensorsDataSMES = [
         metadata: { 
             instanceId: 'SMES_VIBRATION_S',
             name: 'Vibration at Stuttgart Max Eyth See',
-            location: SensorLocation.STUTTGART_MAX_EYTH_SEE,
+            location: Location.STUTTGART_MAX_EYTH_SEE,
             measure: SensorMeasure.VIBRATION,
             simulationMode: SensorSimulationMode.LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -298,7 +298,7 @@ const initialSensorsDataSMES = [
         metadata: { 
             instanceId: 'SMES_CO2_S',
             name: 'CO2 at Stuttgart Max Eyth See',
-            location: SensorLocation.STUTTGART_MAX_EYTH_SEE,
+            location: Location.STUTTGART_MAX_EYTH_SEE,
             measure: SensorMeasure.CO2,
             simulationMode: SensorSimulationMode.EXTREMELY_LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
@@ -312,7 +312,7 @@ const initialSensorsDataSMES = [
         metadata: { 
             instanceId: 'SMES_CO_S',
             name: 'CO at Stuttgart Max Eyth See',
-            location: SensorLocation.STUTTGART_MAX_EYTH_SEE,
+            location: Location.STUTTGART_MAX_EYTH_SEE,
             measure: SensorMeasure.CO,
             simulationMode: SensorSimulationMode.EXTREMELY_LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
