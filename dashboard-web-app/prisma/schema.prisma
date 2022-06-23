@@ -19,10 +19,11 @@ model Sensor {
   SensorTelemetryData SensorTelemetryData[]
 }
 
-enum SensorLocation {
+enum Location {
   STUTTGART_VAIHINGEN_OFFICE
   STUTTGART_KILLESBERG_PARK
   STUTTGART_MAX_EYTH_SEE
+  AUTHORITIES_HUB
 }
 
 enum SensorMeasure {
@@ -56,7 +57,7 @@ model SensorMetaData {
   instanceId         String
   timestamp          DateTime                  @default(now())
   name               String
-  location           SensorLocation
+  location           Location
   measure            SensorMeasure
   simulationMode     SensorSimulationMode?
   simulationBehavior SensorSimulationBehavior?
@@ -106,7 +107,7 @@ enum WeatherEventRiskLevel {
 
 model WeatherEvent {
   id                 Int                  @id @default(autoincrement())
-  location           SensorLocation
+  location           Location
   type               WeatherEventType
   WeatherEventRisk   WeatherEventRisk[]
   WeatherEventAction WeatherEventAction[]
@@ -142,7 +143,7 @@ model WeatherEventAction {
   timestamp             DateTime               @default(now())
   type                  WeatherEventActionType
   wasManuallyTaken      Boolean                @default(false)
-  moveUnitsFromLocation SensorLocation?
-  moveUnitsToLocation   SensorLocation?
+  moveUnitsFromLocation Location?
+  moveUnitsToLocation   Location?
   moveUnitsAmount       Int?
 }
