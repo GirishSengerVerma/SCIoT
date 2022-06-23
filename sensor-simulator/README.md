@@ -17,4 +17,4 @@
 
 ## Run
 
-Then start the program using the `Sensor Simulator (main.py)` run configuration and input the credentials for the MQTT broker in the interactive terminal. You should now see the main menu that can be interacted with using the arrow keys and the enter key.
+Then start the program using the `Sensor Simulator (main.py)` run configuration. You should now see the main menu that can be interacted with using the arrow keys and the enter key.

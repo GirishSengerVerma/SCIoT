@@ -9,11 +9,12 @@ all relevant credentials. Note that the archive MUST be extracted inplace (i.e. 
 
 To run the final application system, perform the following steps:
 
-1. Navigate to the `mqtt-broker` directory and follow the steps described
-in the `README.md` file there to setup and start the Mosquitto MQTT broker.
+1. Make sure the MQTT Remote Broker Server is up and running.
 
-2. Navigate to the `dashboard-web-app` directory and follow the steps described
+2. Make sure the PostgreSQL Remote Database Server is up and running.
+
+3. Navigate to the `dashboard-web-app` directory and follow the steps described
 in the `README.md` file there to setup and start the Dashboard Web App (DWA).
 
-3. Navigate to the `sensor-simulator` directory and follow the steps described
+4. Navigate to the `sensor-simulator` directory and follow the steps described
 in the `README.md` file there to setup and start the Sensor Simulator program.

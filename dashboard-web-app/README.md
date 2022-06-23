@@ -27,19 +27,21 @@ Extract the contents of the encrypted archive `.env.zip`. Make sure that you ext
 
 ### Prisma Schema Migration
 
-After making the changes in the `schema.prisma` file, run the following command to run the corresponding migration in the database:
+After making changes in the `schema.prisma` file, run the following command to run the corresponding migration in the database:
 
 ```bash
 npx prisma migrate dev
 ```
 
-After that, you can regenerate the Prisma Client by running the following command
+### Building the Prisma Client
+
+After making a schema migration or before first running the dev server, you must regenerate the Prisma Client by running the following command
 
 ```bash
 npx prisma generate
 ```
 
-## Run Dev Server
+### Run Dev Server
 
 Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
 
@@ -50,7 +52,7 @@ npm run dev
 npm run dev -- --open
 ```
 
-## Explore Data
+### Explore Data
 
 To explore the data stored in our database, you can use the following Prisma command to open an interactive web application as follows:
 

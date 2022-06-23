@@ -1,32 +1,50 @@
+import certifi
+import time
 from typing import Callable
 
 import paho.mqtt.client as mqtt
-
-
-MQTT_BROKER_COMMON_NAME = 'Tobias-PC'
-MQTT_OVER_TLS_PORT = 8883
-MQTT_CA_CERT_FILE_PATH = 'ca.crt'
+from paho.mqtt.client import ssl
 
 
 class MQTTClient:
-    def __init__(self, username: str, password: str):
-        self.is_running = True
+    def __init__(self, host: str, port: int, username: str, password: str):
+        self.connected = False
+        self.connection_failed = False
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
-        self.client.tls_set(MQTT_CA_CERT_FILE_PATH)
-        # TODO SESI If we have problems using TLS on different machines, consider disable host checking:
-        # self.client.tls_insecure_set(True)
+
+        self.client.tls_set(ca_certs=certifi.where(), tls_version=ssl.PROTOCOL_TLSv1_2)
         self.client.username_pw_set(username, password)
-        self.client.connect(MQTT_BROKER_COMMON_NAME, MQTT_OVER_TLS_PORT)
+
+        try:
+            self.client.connect(host, port)
+            self.client.loop_start()
+        except Exception as e:
+            print('Connection to MQTT broker failed:')
+            raise e
+
+        print('Connecting to MQTT broker..')
+        while not self.connected and not self.connection_failed:
+            print('Still waiting for connection..')
+            time.sleep(1)
+
+        if self.connection_failed:
+            self.client.loop_stop()
+            quit()
+
+        self.client.loop_start()
         self.client.subscribe('sensors/metadata/+/+')
         self.listeners = []
 
     def on_connect(self, client, userdata, flags, rc):
-        pass
+        if rc == 0:
+            self.connected = True
+        else:
+            self.connection_failed = True
 
     def on_disconnect(self, client, userdata, rc):
-        self.is_running = False
+        self.connected = False
 
     def on_message(self, client, userdata, msg):
         for listener in self.listeners:
@@ -35,10 +53,7 @@ class MQTTClient:
     def add_listener(self, listener: Callable):
         self.listeners.append(listener)
 
-    def loop(self):
-        while self.is_running:
-            self.client.loop()
-
     def disconnect(self):
+        self.connected = False
+        self.client.loop_stop()
         self.client.disconnect()
-        self.is_running = False

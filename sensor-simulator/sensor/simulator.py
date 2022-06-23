@@ -42,19 +42,22 @@ class Simulator:
         if not msg.topic.startswith('sensors/metadata/'):
             return
 
-        mqtt_message = json.loads(msg.payload)
+        try:
+            mqtt_message = json.loads(msg.payload)
 
-        sensor = next(filter(lambda s: s.instance_id.lower() == mqtt_message['instanceId'].lower(), self.sensors))
+            sensor = next(filter(lambda s: s.instance_id.lower() == mqtt_message['instanceId'].lower(), self.sensors))
 
-        mode = next(filter(lambda m: m.name.lower() == mqtt_message['simulationMode']
-                           .lower(), SensorSimulationMode))
-        if sensor.mode != mode:
-            sensor.change_mode(mode)
+            mode = next(filter(lambda m: m.name.lower() == mqtt_message['simulationMode']
+                               .lower(), SensorSimulationMode))
+            if sensor.mode != mode:
+                sensor.change_mode(mode)
 
-        behavior = next(filter(lambda b: b.name.lower() == mqtt_message['simulationBehavior']
-                               .lower(), SensorSimulationBehavior))
-        if sensor.behavior != behavior:
-            sensor.change_behavior(behavior)
+            behavior = next(filter(lambda b: b.name.lower() == mqtt_message['simulationBehavior']
+                                   .lower(), SensorSimulationBehavior))
+            if sensor.behavior != behavior:
+                sensor.change_behavior(behavior)
+        except Exception as e:
+            print('Error while processing incoming MQTT message (', msg, ')', e)
 
     def start(self):
         self.is_running = True
