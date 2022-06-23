@@ -35,6 +35,8 @@ enum SensorMeasure {
   CO
   CO2
   SOUND
+  WATER_LEVEL
+  RAIN
 }
 
 enum SensorSimulationMode {
@@ -71,6 +73,8 @@ enum SensorUnit {
   RICHTER_MAGNITUDE
   PPM
   DB
+  METERS
+  BOOLEAN
 }
 
 model SensorTelemetryData {
