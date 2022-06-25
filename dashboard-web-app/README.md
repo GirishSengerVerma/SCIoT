@@ -25,6 +25,10 @@ Extract the contents of the encrypted archive `.env.zip`. Make sure that you ext
 
 ## Development
 
+### Dependencies
+
+Install the required dependencies by running `npm install`.
+
 ### Prisma Schema Migration
 
 After making changes in the `schema.prisma` file, run the following command to run the corresponding migration in the database:
@@ -35,7 +39,7 @@ npx prisma migrate dev
 
 ### Building the Prisma Client
 
-After making a schema migration or before first running the dev server, you must regenerate the Prisma Client by running the following command
+Before the first start of the dev server and after each schema migration, you must regenerate the Prisma Client by running the following command
 
 ```bash
 npx prisma generate
@@ -43,7 +47,7 @@ npx prisma generate
 
 ### Run Dev Server
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+To start a development server, run the following command:
 
 ```bash
 npm run dev
