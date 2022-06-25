@@ -10,7 +10,7 @@
 
 <main class="h-screen w-screen flex flex-col md:flex-row p-4 md:p-8 bg-white text-black dark:bg-black dark:text-white">
 	<NavigationBar />
-	<div class="flex-grow">
+	<div class="flex-grow md:mx-5 md:my-8">
 		<button
 			class="font-bold py-2 px-4 rounded bg-white border border-black text-black"
 			on:click={() => theme.set(LIGHT_MODE)}>light</button
