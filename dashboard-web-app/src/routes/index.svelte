@@ -8,7 +8,7 @@
 	<title>Dashboard | Start</title>
 </svelte:head>
 
-<main class="h-screen w-screen flex p-8 bg-white text-black dark:bg-black dark:text-white">
+<main class="h-screen w-screen flex flex-col md:flex-row p-4 md:p-8 bg-white text-black dark:bg-black dark:text-white">
 	<NavigationBar />
 	<div class="flex-grow">
 		<button
