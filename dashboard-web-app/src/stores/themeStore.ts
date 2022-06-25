@@ -1,12 +1,25 @@
 import { browser } from "$app/env";
-import { writable } from "svelte/store";
+import { writable, type Writable } from "svelte/store";
 
 export const LIGHT_MODE = 'light';
 export const DARK_MODE = 'dark';
 
+interface ThemeStore extends Writable<string | undefined> {
+    switch(): void,
+}
+
+const themeStore = (initialTheme: string | undefined) : ThemeStore => {
+    const store = writable(initialTheme);
+
+    return {
+        ...store,
+        switch: () => store.update(currentTheme => currentTheme == LIGHT_MODE ? DARK_MODE : LIGHT_MODE),
+    };
+};
+
 const initialTheme = browser ? (document.documentElement.classList.contains('dark') ? DARK_MODE : LIGHT_MODE) : undefined;
 
-export const theme = writable(initialTheme);
+export const theme = themeStore(initialTheme);
 
 theme.subscribe((newTheme) => {
     if (browser && (newTheme === LIGHT_MODE || newTheme === DARK_MODE)) {
