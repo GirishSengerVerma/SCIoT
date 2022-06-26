@@ -1,23 +1,5 @@
-<script lang="ts">
-	import NavigationBar from '$root/components/core/NavigationBar.svelte';
-
-	import { DARK_MODE, LIGHT_MODE, theme } from '$root/stores/themeStore';
-</script>
-
 <svelte:head>
-	<title>Dashboard | Start</title>
+	<title>Dashboard | Home</title>
 </svelte:head>
 
-<main class="h-screen w-screen flex flex-col md:flex-row p-4 md:p-8 bg-white text-black dark:bg-black dark:text-white">
-	<NavigationBar />
-	<div class="flex-grow md:mx-5 md:my-8">
-		<button
-			class="font-bold py-2 px-4 rounded bg-white border border-black text-black"
-			on:click={() => theme.set(LIGHT_MODE)}>light</button
-		>
-		<button
-			class="font-bold py-2 px-4 rounded bg-black border border-white text-white"
-			on:click={() => theme.set(DARK_MODE)}>dark</button
-		>
-	</div>
-</main>
+<h1 class="text-lg">Welcome to the Dashboard Web App!</h1>
