@@ -1,13 +1,12 @@
 <script lang="ts">
-	// @ts-ignore
-	import { localStorageStore } from "@babichjacob/svelte-localstorage/svelte-kit";
 	import { Location } from "@prisma/client";
 	import { onMount } from "svelte";
-	import type { Writable } from "svelte/store";
 
 	import { enumValueToString, stringToEnumValue } from "$root/utils/enumUtil";
 	import { DataPeriod } from "$root/types/dataPeriod";
 	import { ICON_COMMON_LOCATION, ICON_BUTTON_ADD, ICON_DATA_PERIOD_LIVE_DATA, ICON_DATA_PERIOD_HISTORIC_DATA } from "$root/constants/iconConstants";
+
+	import { sensorLocation, sensorDataPeriod } from "$root/stores/sensorStores";
 
 	import MainContent from "$root/components/core/MainContent.svelte";
 	import MainContentHeader from "$root/components/core/MainContentHeader.svelte";
@@ -16,13 +15,8 @@
 
 	let initializingStores = true;
 
-	const initialSensorLocation = enumValueToString(Location.STUTTGART_KILLESBERG_PARK);
 	const sensorLocationOptions = Object.values(Location).map(enumValueToString);
-	const sensorLocation: Writable<string> = localStorageStore("sensorLocation", initialSensorLocation);
-	
-	const initialSensorDataPeriod = enumValueToString(DataPeriod.LIVE_DATA);
 	const sensorDataPeriodOptions = Object.values(DataPeriod).map(enumValueToString);
-	const sensorDataPeriod: Writable<string> = localStorageStore("sensorDatPeriod", initialSensorDataPeriod);
 	
 	$: onOptionsChange(stringToEnumValue(Location, $sensorLocation), stringToEnumValue(DataPeriod, $sensorDataPeriod));
 
