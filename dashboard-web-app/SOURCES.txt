@@ -1,6 +1,8 @@
 SVG Icons:
-    https://feathericons.com/
-    https://heroicons.dev/
+    https://feathericons.com/ (licensed under MIT license)
+    https://heroicons.dev/ (licensed under MIT license)
+    https://codepen.io/shaneparsons/pen/MpgEma (licensed under MIT license)
+    https://www.iconfinder.com/icons/352426/history_icon (licensed under CC BY-SA 3.0)
 
 Favicon:
     https://favicon.io/emoji-favicons/chart-decreasing/ (licensed under CC-BY 4.0)

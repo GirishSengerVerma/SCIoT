@@ -14,6 +14,7 @@
 		"format": "prettier --write --plugin-search-dir=. ."
 	},
 	"devDependencies": {
+		"@babichjacob/svelte-localstorage": "^0.2.0",
 		"@sveltejs/adapter-auto": "next",
 		"@sveltejs/adapter-node": "^1.0.0-next.78",
 		"@sveltejs/kit": "next",

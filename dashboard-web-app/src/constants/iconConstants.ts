@@ -9,3 +9,8 @@ export const ICON_COMMON_SETTINGS = 'common/settings';
 
 export const ICON_DROPDOWN_CHEVRON_UP = 'dropdown/chevron-up';
 export const ICON_DROPDOWN_CHEVRON_DOWN = 'dropdown/chevron-down';
+
+export const ICON_BUTTON_ADD = 'button/plus';
+
+export const ICON_DATA_PERIOD_LIVE_DATA = 'dataPeriod/live-data';
+export const ICON_DATA_PERIOD_HISTORIC_DATA = 'dataPeriod/historic-data';
