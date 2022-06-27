@@ -7,7 +7,5 @@
 
 <main class="h-screen w-screen flex flex-col md:flex-row p-4 md:p-8 bg-white text-black dark:bg-black dark:text-white">
 	<NavigationBar route={$page.routeId ?? ""} />
-	<div class="flex-grow md:mx-5 md:my-8">
-		<slot />
-	</div>
+	<slot />
 </main>

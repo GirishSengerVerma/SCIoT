@@ -1,5 +1,14 @@
+<script>
+import MainContent from "$root/components/core/MainContent.svelte";
+import MainContentHeader from "$root/components/core/MainContentHeader.svelte";
+
+</script>
 <svelte:head>
 	<title>Dashboard | Sensors</title>
 </svelte:head>
 
-<h1 class="text-lg">Sensors!</h1>
+<MainContent>
+	<MainContentHeader title={"Sensors"}>
+	</MainContentHeader>
+	Hellooo!
+</MainContent>
