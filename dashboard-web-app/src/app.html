@@ -16,12 +16,13 @@
 			// investigating document.documentElement.classList
 			const storedDarkMode = 'theme' in localStorage && localStorage.getItem('theme') === 'dark';
 			const systemPreferenceDarkMode = !('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches;
-			const initialTheme = (storedDarkMode || systemPreferenceDarkMode) ? 'dark' : 'light';
-			
+			const isDarkMode = storedDarkMode || systemPreferenceDarkMode;
+			const initialTheme = isDarkMode ? 'dark' : 'light';
+
 			if (initialTheme === 'dark' && !document.documentElement.classList.contains('dark')) {
-            	document.documentElement.classList.add('dark')
+            	document.documentElement.classList.add('dark');
             } else if (initialTheme === 'light' && document.documentElement.classList.contains('dark')) {
-            	document.documentElement.classList.remove('dark')
+            	document.documentElement.classList.remove('dark');
 			}
         </script>
 	</head>
