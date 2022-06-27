@@ -23,13 +23,19 @@
 	const initialSensorDataPeriod = enumValueToString(DataPeriod.LIVE_DATA);
 	const sensorDataPeriodOptions = Object.values(DataPeriod).map(enumValueToString);
 	const sensorDataPeriod: Writable<string> = localStorageStore("sensorDatPeriod", initialSensorDataPeriod);
+	
+	$: onOptionsChange(stringToEnumValue(Location, $sensorLocation), stringToEnumValue(DataPeriod, $sensorDataPeriod));
 
 	$: isLiveData = $sensorDataPeriod === enumValueToString(DataPeriod.LIVE_DATA);
 
 	onMount(() => {
         initializingStores = false;
     });
-	
+
+	const onOptionsChange = (sensorLocation: Location, sensorDataPeriod: DataPeriod) => {
+		console.log("Options changed");
+		// TODO DWA Fetch data using prisma
+	};
 </script>
 
 <svelte:head>
