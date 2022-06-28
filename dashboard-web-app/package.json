@@ -1,6 +1,9 @@
 {
 	"name": "dashboard-web-app",
 	"version": "0.0.1",
+	"description": "Dashboard Web App for monitoring and controlling weather events, sensors, actuators, etc.",
+	"author": "SCIoT SS22 Group 30",
+	"license": "MIT",
 	"scripts": {
 		"dev": "svelte-kit dev",
 		"build": "svelte-kit build",

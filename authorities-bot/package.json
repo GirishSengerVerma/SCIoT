@@ -1,0 +1,35 @@
+{
+  "name": "authorities-bot",
+  "version": "1.0.0",
+  "description": "Telegram Bot for requesting and responding to move units of specific authorities to other locations.",
+  "main": "target/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node target/main.js"
+  },
+  "keywords": [
+    "iot",
+    "telegram",
+    "bot",
+    "notification"
+  ],
+  "author": "SCIoT SS22 Group 30",
+  "license": "MIT",
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.3",
+    "@types/node": "^18.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.30.0",
+    "@typescript-eslint/parser": "^5.30.0",
+    "eslint": "^8.18.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.1.0",
+    "prettier": "^2.7.1",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "telegraf": "^4.8.5",
+    "telegraf-session-local": "^2.1.0"
+  }
+}
