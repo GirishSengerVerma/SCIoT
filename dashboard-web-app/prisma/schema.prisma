@@ -141,6 +141,12 @@ enum WeatherEventActionType {
   COUNTER_MEASURE_MOVE_UNITS_RESPONSE
 }
 
+enum UnitType {
+  AMBULANCE
+  POLICE_CAR
+  FIRE_TRUCK
+}
+
 model WeatherEventAction {
   id                    Int                    @id @default(autoincrement())
   weatherEvent          WeatherEvent           @relation(fields: [weatherEventId], references: [id])
@@ -148,6 +154,7 @@ model WeatherEventAction {
   timestamp             DateTime               @default(now())
   type                  WeatherEventActionType
   wasManuallyTaken      Boolean                @default(false)
+  moveUnitsType         UnitType?
   moveUnitsFromLocation Location?
   moveUnitsToLocation   Location?
   moveUnitsAmount       Int?
