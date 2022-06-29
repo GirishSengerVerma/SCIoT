@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import * as mqtt from "mqtt";
-import { PrismaClient, Location, SensorMeasure, SensorSimulationBehavior, SensorSimulationMode } from '@prisma/client';
+import { PrismaClient, Location, SensorMeasure, SensorSimulationBehavior, SensorSimulationMode, UnitType } from '@prisma/client';
 
 import { assert } from 'console';
 
@@ -23,7 +23,7 @@ const initialSensorsDataSKP = [
             instanceId: 'SKP_TEMPERATURE_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SKP_TEMPERATURE_S',
             name: 'Temperature at Stuttgart Killesbergpark',
             location: Location.STUTTGART_KILLESBERG_PARK,
@@ -37,7 +37,7 @@ const initialSensorsDataSKP = [
             instanceId: 'SKP_WIND_SPEED_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SKP_WIND_SPEED_S',
             name: 'Wind Speed at Stuttgart Killesbergpark',
             location: Location.STUTTGART_KILLESBERG_PARK,
@@ -51,7 +51,7 @@ const initialSensorsDataSKP = [
             instanceId: 'SKP_HUMIDITY_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SKP_HUMIDITY_S',
             name: 'Humidity at Stuttgart Killesbergpark',
             location: Location.STUTTGART_KILLESBERG_PARK,
@@ -65,7 +65,7 @@ const initialSensorsDataSKP = [
             instanceId: 'SKP_PRESSURE_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SKP_PRESSURE_S',
             name: 'Pressure at Stuttgart Killesbergpark',
             location: Location.STUTTGART_KILLESBERG_PARK,
@@ -79,7 +79,7 @@ const initialSensorsDataSKP = [
             instanceId: 'SKP_VIBRATION_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SKP_VIBRATION_S',
             name: 'Vibration at Stuttgart Killesbergpark',
             location: Location.STUTTGART_KILLESBERG_PARK,
@@ -93,7 +93,7 @@ const initialSensorsDataSKP = [
             instanceId: 'SKP_CO2_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SKP_CO2_S',
             name: 'CO2 at Stuttgart Killesbergpark',
             location: Location.STUTTGART_KILLESBERG_PARK,
@@ -107,7 +107,7 @@ const initialSensorsDataSKP = [
             instanceId: 'SKP_CO_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SKP_CO_S',
             name: 'CO at Stuttgart Killesbergpark',
             location: Location.STUTTGART_KILLESBERG_PARK,
@@ -124,7 +124,7 @@ const initialSensorsDataSVO = [
             instanceId: 'SVO_TEMPERATURE_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SVO_TEMPERATURE_S',
             name: 'Temperature at Stuttgart Vaihingen Office',
             location: Location.STUTTGART_VAIHINGEN_OFFICE,
@@ -138,7 +138,7 @@ const initialSensorsDataSVO = [
             instanceId: 'SVO_WIND_SPEED_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SVO_WIND_SPEED_S',
             name: 'Wind Speed at Stuttgart Vaihingen Office',
             location: Location.STUTTGART_VAIHINGEN_OFFICE,
@@ -152,7 +152,7 @@ const initialSensorsDataSVO = [
             instanceId: 'SVO_HUMIDITY_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SVO_HUMIDITY_S',
             name: 'Humidity at Stuttgart Vaihingen Office',
             location: Location.STUTTGART_VAIHINGEN_OFFICE,
@@ -166,7 +166,7 @@ const initialSensorsDataSVO = [
             instanceId: 'SVO_PRESSURE_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SVO_PRESSURE_S',
             name: 'Pressure at Stuttgart Vaihingen Office',
             location: Location.STUTTGART_VAIHINGEN_OFFICE,
@@ -180,7 +180,7 @@ const initialSensorsDataSVO = [
             instanceId: 'SVO_VIBRATION_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SVO_VIBRATION_S',
             name: 'Vibration at Stuttgart Vaihingen Office',
             location: Location.STUTTGART_VAIHINGEN_OFFICE,
@@ -194,7 +194,7 @@ const initialSensorsDataSVO = [
             instanceId: 'SVO_CO2_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SVO_CO2_S',
             name: 'CO2 at Stuttgart Vaihingen Office',
             location: Location.STUTTGART_VAIHINGEN_OFFICE,
@@ -208,7 +208,7 @@ const initialSensorsDataSVO = [
             instanceId: 'SVO_CO_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SVO_CO_S',
             name: 'CO at Stuttgart Vaihingen Office',
             location: Location.STUTTGART_VAIHINGEN_OFFICE,
@@ -225,7 +225,7 @@ const initialSensorsDataSMES = [
             instanceId: 'SMES_TEMPERATURE_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SMES_TEMPERATURE_S',
             name: 'Temperature at Stuttgart Max Eyth See',
             location: Location.STUTTGART_MAX_EYTH_SEE,
@@ -239,7 +239,7 @@ const initialSensorsDataSMES = [
             instanceId: 'SMES_WIND_SPEED_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SMES_WIND_SPEED_S',
             name: 'Wind Speed at Stuttgart Max Eyth See',
             location: Location.STUTTGART_MAX_EYTH_SEE,
@@ -253,7 +253,7 @@ const initialSensorsDataSMES = [
             instanceId: 'SMES_HUMIDITY_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SMES_HUMIDITY_S',
             name: 'Humidity at Stuttgart Max Eyth See',
             location: Location.STUTTGART_MAX_EYTH_SEE,
@@ -267,7 +267,7 @@ const initialSensorsDataSMES = [
             instanceId: 'SMES_PRESSURE_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SMES_PRESSURE_S',
             name: 'Pressure at Stuttgart Max Eyth See',
             location: Location.STUTTGART_MAX_EYTH_SEE,
@@ -281,7 +281,7 @@ const initialSensorsDataSMES = [
             instanceId: 'SMES_VIBRATION_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SMES_VIBRATION_S',
             name: 'Vibration at Stuttgart Max Eyth See',
             location: Location.STUTTGART_MAX_EYTH_SEE,
@@ -295,7 +295,7 @@ const initialSensorsDataSMES = [
             instanceId: 'SMES_CO2_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SMES_CO2_S',
             name: 'CO2 at Stuttgart Max Eyth See',
             location: Location.STUTTGART_MAX_EYTH_SEE,
@@ -309,7 +309,7 @@ const initialSensorsDataSMES = [
             instanceId: 'SMES_CO_S',
             isPhysical: false,
         },
-        metadata: { 
+        metadata: {
             instanceId: 'SMES_CO_S',
             name: 'CO at Stuttgart Max Eyth See',
             location: Location.STUTTGART_MAX_EYTH_SEE,
@@ -321,6 +321,20 @@ const initialSensorsDataSMES = [
 ];
 
 const initialSensorsData = initialSensorsDataSKP.concat(initialSensorsDataSVO).concat(initialSensorsDataSMES);
+
+const getInitialUnitStatusData = () => {
+    const initialData = [];
+    for (let location of Object.values(Location)) {
+        for (let unitType of Object.values(UnitType)) {
+            if (location === Location.AUTHORITIES_HUB) {
+                initialData.push({ location, unitType, amount: 3 });
+            } else {
+                initialData.push({ location, unitType, amount: 0 });
+            }
+        }
+    }
+    return initialData;
+};
 
 const host = process.env.MQTT_HOST;
 
@@ -339,7 +353,7 @@ const initializePrisma = async () => {
 
     const isSensorsTableEmpty = (await prisma.sensor.count()) == 0;
 
-    if(isSensorsTableEmpty) {
+    if (isSensorsTableEmpty) {
         const createSensorsResult = await prisma.sensor.createMany({
             data: initialSensorsData.map(e => e.sensor),
         });
@@ -349,12 +363,26 @@ const initializePrisma = async () => {
 
     const isSensorMetaDataTableEmpty = (await prisma.sensorMetaData.count()) == 0;
 
-    if(isSensorMetaDataTableEmpty) {
+    if (isSensorMetaDataTableEmpty) {
         const createSensorMetaDataResult = await prisma.sensorMetaData.createMany({
             data: initialSensorsData.map(e => e.metadata),
         });
         console.log('Created initial metadata for ' + createSensorMetaDataResult.count + ' sensors.');
         assert(createSensorMetaDataResult.count == initialSensorsData.length);
+    }
+
+    console.log('Prisma Client: Initializing Units Data..');
+    for (let unitStatus of getInitialUnitStatusData()) {
+        await prisma.unitStatus.upsert({
+            create: unitStatus,
+            update: {},
+            where: {
+                unitType_location: {
+                    location: unitStatus.location,
+                    unitType: unitStatus.unitType,
+                },
+            },
+        });
     }
 
     console.log('Prisma Client: Done.\n');
@@ -364,7 +392,7 @@ const initializeMQTTClient = () => {
     console.log('MQTT Client: Connecting to MQTT broker over secure MQTT connection..');
 
     const mqttClient = mqtt.connect(host, options);
-    
+
     mqttClient.on('error', (err) => {
         console.log('MQTT Client: Connection error: ', err);
         mqttClient.end();
@@ -376,7 +404,7 @@ const initializeMQTTClient = () => {
 
     mqttClient.on('connect', () => {
         console.log('MQTT Client: Connected.');
-        
+
         mqttClient.subscribe(sensorTelemetryTopicPrefix + '/+/+', { qos: 0 });
         mqttClient.subscribe(sensorMetadataTopicPrefix + '/+/+', { qos: 0 });
         // TODO DWA Add for weather events, actuators, ...
@@ -385,8 +413,8 @@ const initializeMQTTClient = () => {
     mqttClient.on('message', function (topic, message) {
         try {
             const messageJSON = JSON.parse(message.toString());
-            
-            if(topic.startsWith(sensorTelemetryTopicPrefix)) {
+
+            if (topic.startsWith(sensorTelemetryTopicPrefix)) {
                 prisma.sensorTelemetryData.create({ data: messageJSON })
                     .then(data => data)
                     .catch(error => console.error('Error persisting JSON data using Prisma: ', error));
