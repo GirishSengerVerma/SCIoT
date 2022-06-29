@@ -86,6 +86,23 @@ model SensorTelemetryData {
   value      Decimal
 }
 
+enum UnitType {
+  AMBULANCE
+  POLICE_CAR
+  FIRE_TRUCK
+}
+
+model UnitStatus {
+  id                   Int                 @id @default(autoincrement())
+  unitType             UnitType
+  location             Location
+  amount               Int
+  lastChangedBy        WeatherEventAction? @relation(fields: [weatherEventActionId], references: [id])
+  weatherEventActionId Int?
+
+  @@unique([unitType, location])
+}
+
 enum WeatherEventType {
   STORM
   TORNADO
@@ -141,12 +158,6 @@ enum WeatherEventActionType {
   COUNTER_MEASURE_MOVE_UNITS_RESPONSE
 }
 
-enum UnitType {
-  AMBULANCE
-  POLICE_CAR
-  FIRE_TRUCK
-}
-
 model WeatherEventAction {
   id                    Int                    @id @default(autoincrement())
   weatherEvent          WeatherEvent           @relation(fields: [weatherEventId], references: [id])
@@ -158,4 +169,5 @@ model WeatherEventAction {
   moveUnitsFromLocation Location?
   moveUnitsToLocation   Location?
   moveUnitsAmount       Int?
+  UnitStatus            UnitStatus[]
 }
