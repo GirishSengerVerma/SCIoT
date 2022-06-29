@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 import 'dotenv/config';
-import { Markup, Scenes, Telegraf, session } from 'telegraf';
+import pg from 'pg';
+const { Client } = pg;
+import { Markup, Scenes, Telegraf, session, Composer } from 'telegraf';
 import { WizardContext } from 'telegraf/typings/scenes';
 
 const UNIT_TYPE_NAME_BY_ICON = new Map<string, string>([
@@ -20,15 +22,39 @@ const LOCATION_NAME_BY_ICON = new Map<string, string>([
   ['🌲', 'STUTTGART_KILLESBERG_PARK'],
   ['🏢', 'STUTTGART_VAIHINGEN_OFFICE'],
   ['🚤', 'STUTTGART_MAX_EYTH_SEE'],
+  ['🧿', 'AUTHORITIES_HUB'],
 ]);
 
 const LOCATION_ICON_BY_NAME = new Map<string, string>([
   ['STUTTGART_KILLESBERG_PARK', '🌲'],
   ['STUTTGART_VAIHINGEN_OFFICE', '🏢'],
   ['STUTTGART_MAX_EYTH_SEE', '🚤'],
+  ['AUTHORITIES_HUB', '🧿'],
 ]);
 
+if (!process.env.DATABASE_URL) {
+  throw 'DATABASE_URL Environment Variable is not set!';
+}
+
+const connectionString: string = process.env.DATABASE_URL;
+const client = new Client({ connectionString });
+await client.connect();
+
+try {
+  const res = await client.query('SELECT * FROM "UnitStatus"');
+  // TODO AB Store it and check on each moveUnits reponse!
+  console.log(res.rows);
+} catch (e) {
+  if (e instanceof Error) {
+    console.log(e.stack);
+  }
+} finally {
+  client.end();
+}
+
 // TODO AB Listen to MQTT unit request messages and display those here
+
+// TODO AB Fix: you can currently click on a previous step action again to get to the next step
 
 const moveUnits = async (
   ctx: WizardContext,
@@ -77,6 +103,7 @@ const moveUnitsResponseWizard: Scenes.WizardScene<WizardContext> =
       );
       return ctx.wizard.next();
     },
+    moveUnitsTypeSelectionHandler,
     async (ctx) => {
       console.log('Step 2');
       if (ctx.message && 'text' in ctx.message) {
@@ -122,6 +149,7 @@ const moveUnitsResponseWizard: Scenes.WizardScene<WizardContext> =
             '🚤 Max Eyth See',
             LOCATION_NAME_BY_ICON.get('🚤')!
           ),
+          Markup.button.callback('🧿 Hub', LOCATION_NAME_BY_ICON.get('🧿')!),
         ])
       );
       return ctx.wizard.next();
@@ -148,6 +176,7 @@ const moveUnitsResponseWizard: Scenes.WizardScene<WizardContext> =
             '🚤 Max Eyth See',
             LOCATION_NAME_BY_ICON.get('🚤')!
           ),
+          Markup.button.callback('🧿 Hub', LOCATION_NAME_BY_ICON.get('🧿')!),
         ])
       );
       return ctx.wizard.next();
