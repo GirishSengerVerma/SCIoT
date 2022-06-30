@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Scenes, Markup } from 'telegraf';
 import {
   UNIT_TYPE_NAME_BY_ICON,

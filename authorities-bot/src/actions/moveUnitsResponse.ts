@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
   UNIT_TYPE_ICON_BY_NAME,
   LOCATION_DISPLAY_NAME_BY_NAME,
@@ -16,7 +17,7 @@ export const moveUnits = async (
   fromWizard: boolean
 ): Promise<void> => {
   if (fromWizard) {
-    for (let messageId of ctx.scene.session.messageIds) {
+    for (const messageId of ctx.scene.session.messageIds) {
       await ctx.deleteMessage(messageId);
     }
   }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import pg from 'pg';
 const { Client } = pg;
 

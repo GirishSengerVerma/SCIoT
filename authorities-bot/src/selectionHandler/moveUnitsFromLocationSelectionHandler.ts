@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Composer } from 'telegraf';
 import { LOCATION_NAME_BY_ICON } from '../utils/mappings';
 import { MoveUnitsContext } from '../types/wizardTypes';
