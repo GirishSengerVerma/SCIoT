@@ -110,7 +110,6 @@ enum WeatherEventType {
   THUNDER_STORM
   HURRICANE
   BLIZZARD
-  HIGH_WATER
   FLOOD
   COLD
   HEAT
