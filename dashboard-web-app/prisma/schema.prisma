@@ -159,8 +159,8 @@ enum WeatherEventActionType {
 
 model WeatherEventAction {
   id                    Int                    @id @default(autoincrement())
-  weatherEvent          WeatherEvent           @relation(fields: [weatherEventId], references: [id])
-  weatherEventId        Int
+  weatherEvent          WeatherEvent?          @relation(fields: [weatherEventId], references: [id])
+  weatherEventId        Int?
   timestamp             DateTime               @default(now())
   type                  WeatherEventActionType
   wasManuallyTaken      Boolean                @default(false)
