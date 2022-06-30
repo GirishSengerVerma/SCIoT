@@ -3,9 +3,12 @@
   "compilerOptions": {
     "rootDir": "src",
     "outDir": "target",
-    "module": "esnext",
+    "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es2017"
+    "target": "es6",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
   },
   "include": ["src"],
   "exclude": ["node_modules"],
