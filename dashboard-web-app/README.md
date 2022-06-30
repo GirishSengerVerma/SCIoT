@@ -5,6 +5,7 @@
 ### VS Code
 
 Add the following extensions in your VS Code:
+
 - [Svelte for VS Code](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode)
 - [Prisma](https://marketplace.visualstudio.com/items?itemName=Prisma.prisma)
 - [Tailwind CSS IntelliSense](https://marketplace.visualstudio.com/items?itemName=bradlc.vscode-tailwindcss)
@@ -17,11 +18,7 @@ see [Tutorial](https://github.com/prisma/prisma/issues/1761#issuecomment-7419517
 
 ### Environment Properties
 
-Extract the contents of the encrypted archive `.env.zip`. Make sure that you extract the contents inplace, i.e. the `.env` file is placed in the main directory of this project (and not in a new folder) and make sure the `.env` file contains:
-
-- an entry `DATABASE_URL` for the SQL database connection string
-- an entry `MQTT_USERNAME` containing the username for the MQTT connection to the broker
-- an entry `MQTT_PASSWORD` containing the password for the MQTT connection to the broker
+Extract the contents of the encrypted archive `.env.zip`. Make sure that you extract the contents inplace, i.e. the `.env` file is placed in the main directory of this project (and not in a new folder).
 
 ## Development
 
