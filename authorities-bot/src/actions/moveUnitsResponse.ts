@@ -2,14 +2,19 @@
 import {
   UNIT_TYPE_ICON_BY_NAME,
   LOCATION_DISPLAY_NAME_BY_NAME,
+  WEATHER_EVENT_TYPE_DISPLAY_NAME_BY_NAME,
 } from '../utils/mappings';
 import { MoveUnitsContext } from '../types/wizardTypes';
 import { getUnitStatus, setUnitStatus } from '../utils/unitStatus';
-import { sendMoveUnitsResponseMessage } from '../middlewares/mqtt';
+import { sendMoveUnitsResponseMessage } from '../utils/mqtt';
+import {
+  getWeatherEventLocationById,
+  getWeatherEventTypeById,
+} from '../utils/weatherEvents';
 
 export const moveUnits = async (
   ctx: MoveUnitsContext,
-  weatherEventId: number,
+  weatherEventId: number | undefined,
   moveUnitsAmount: number,
   moveUnitsType: string,
   moveUnitsFromLocation: string,
@@ -45,14 +50,28 @@ export const moveUnits = async (
     getUnitStatus(moveUnitsToLocation, moveUnitsType) + moveUnitsAmount
   );
 
-  const displayMessage =
-    moveUnitsAmount +
+  let displayMessage =
+    typeof weatherEventId !== 'undefined'
+      ? 'Due to possible ' +
+        WEATHER_EVENT_TYPE_DISPLAY_NAME_BY_NAME.get(
+          getWeatherEventTypeById(weatherEventId!)!
+        )! +
+        ' at ' +
+        LOCATION_DISPLAY_NAME_BY_NAME.get(
+          getWeatherEventLocationById(weatherEventId!)!
+        )! +
+        ':\n'
+      : '';
+
+  displayMessage +=
+    +moveUnitsAmount +
     ' units of type ' +
     UNIT_TYPE_ICON_BY_NAME.get(moveUnitsType)! +
     ' moved from ' +
     LOCATION_DISPLAY_NAME_BY_NAME.get(moveUnitsFromLocation)! +
     ' to ' +
-    LOCATION_DISPLAY_NAME_BY_NAME.get(moveUnitsToLocation)!;
+    LOCATION_DISPLAY_NAME_BY_NAME.get(moveUnitsToLocation)! +
+    ' for possible ';
 
   sendMoveUnitsResponseMessage(
     weatherEventId,

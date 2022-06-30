@@ -7,14 +7,25 @@ import {
   UNIT_TYPE_NAME_BY_ICON,
   UNIT_TYPE_ICON_BY_NAME,
   LOCATION_DISPLAY_NAME_BY_NAME,
+  WEATHER_EVENT_TYPE_DISPLAY_NAME_BY_NAME,
+  LOCATION_ICON_BY_NAME,
 } from './utils/mappings';
 import { MoveUnitsContext } from './types/wizardTypes';
 import { moveUnitsResponseWizard } from './wizards/moveUnitsResponseWizard';
 import { Scenes, session, Telegraf } from 'telegraf';
 import { hasUnitStatus, getUnitStatus } from './utils/unitStatus';
-import { listenToMQTTMessages } from './middlewares/mqtt';
-
-// TODO AB Listen to MQTT unit request messages and display those here
+import {
+  listenToMQTTMessages,
+  moveUnitsRequestTopicName,
+  mqttClient,
+  mqttListenerActive,
+} from './utils/mqtt';
+import {
+  getWeatherEventLocationById,
+  getWeatherEventTypeById,
+  hasWeatherEventWithId,
+  weatherEventIds,
+} from './utils/weatherEvents';
 
 const moveUnitsResponseStage = new Scenes.Stage<MoveUnitsContext>([
   moveUnitsResponseWizard,
@@ -28,13 +39,15 @@ const bot: Telegraf<MoveUnitsContext> = new Telegraf(
 
 bot.use(session());
 bot.use(moveUnitsResponseStage.middleware());
-bot.use(listenToMQTTMessages);
 bot.launch();
 
 // Implement Bot handlers
 
 bot.start((ctx) => {
   ctx.reply('Welcome to the 🚑🚓🚒 Authorities Bot 🚑🚒🚓');
+  if (!mqttListenerActive) {
+    listenToMQTTMessages(ctx);
+  }
 });
 
 bot.help(async (ctx) => {
@@ -42,7 +55,8 @@ bot.help(async (ctx) => {
     'Help Menu:\n\n' +
       '/start : receive a greeting\n' +
       '/moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:🌲|🏢|🚤> <To:🌲|🏢|🚤>] : respond that for a certain weather event a certain number of units was moved from one location to another\n' +
-      '/status : see status of where all units are currently stationed'
+      '/status : see status of where all units are currently stationed\n' +
+      '/events : see overview of current weather events'
   );
 });
 
@@ -71,6 +85,30 @@ bot.command('status', async (ctx) => {
   await ctx.reply(currentStatus);
 });
 
+bot.command('events', async (ctx) => {
+  let currentStatus = 'Current Weather Events:\n';
+
+  if (weatherEventIds.size === 0) {
+    currentStatus += '🚫 None';
+  } else {
+    for (const weatherEventId of weatherEventIds) {
+      currentStatus +=
+        '\n' +
+        weatherEventId +
+        ': Possible ' +
+        WEATHER_EVENT_TYPE_DISPLAY_NAME_BY_NAME.get(
+          getWeatherEventTypeById(weatherEventId)!
+        )! +
+        ' at ' +
+        LOCATION_DISPLAY_NAME_BY_NAME.get(
+          getWeatherEventLocationById(weatherEventId)!
+        )!;
+    }
+  }
+
+  await ctx.reply(currentStatus);
+});
+
 bot.command('moveunits', async (ctx) => {
   if (
     ctx.message &&
@@ -79,14 +117,14 @@ bot.command('moveunits', async (ctx) => {
   ) {
     // Direct Command Mode
     const args = ctx.message.text.split(' ');
-    if (!Boolean(parseInt(args[1]))) {
+    if (!/\d/.test(args[1])) {
       ctx.reply(
         'First argument (WeatherEventId) must be an integer!\n\n' +
           'Syntax: /moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:🧿|🌲|🏢|🚤> <To:🧿|🌲|🏢|🚤>]'
       );
       return;
     }
-    if (!Boolean(parseInt(args[2]))) {
+    if (!/\d/.test(args[2])) {
       ctx.reply(
         'Second argument (Amount) must be an integer!\n\n' +
           'Syntax: /moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:🧿|🌲|🏢|🚤> <To:🧿|🌲|🏢|🚤>]'
@@ -116,7 +154,15 @@ bot.command('moveunits', async (ctx) => {
     }
 
     const weatherEventId = parseInt(args[1]);
-    // TODO AB Check if it is an id for an existing weather event for which we previously got a move units request
+    if (!hasWeatherEventWithId(weatherEventId)) {
+      ctx.reply(
+        'There is no weather event with the given id (' +
+          weatherEventId +
+          ')!\n\n' +
+          'Run /events to see an overview of current weather events.'
+      );
+      return;
+    }
 
     const moveUnitsAmount = parseInt(args[2]);
     const moveUnitsType = UNIT_TYPE_NAME_BY_ICON.get(args[3])!;
@@ -136,8 +182,88 @@ bot.command('moveunits', async (ctx) => {
     return;
   }
 
+  let weatherEventId = undefined;
+
+  if (
+    ctx.message &&
+    ctx.message.text &&
+    ctx.message.text.split(' ').length > 1
+  ) {
+    const args = ctx.message.text.split(' ');
+
+    if (!/\d/.test(args[1])) {
+      ctx.reply(
+        'If specified, first argument (WeatherEventId) must be an integer!\n\n' +
+          'Syntax: /moveunits [<WeatherEventId>]'
+      );
+      return;
+    }
+
+    weatherEventId = parseInt(args[1]);
+    if (!hasWeatherEventWithId(weatherEventId)) {
+      ctx.reply(
+        'There is no weather event with the given id (' +
+          weatherEventId +
+          ')!\n\n' +
+          'Run /events to see an overview of current weather events.'
+      );
+      return;
+    }
+  }
+
   // Interactive Mode
   ctx.scene.enter('MOVE_UNITS_RESPONSE_WIZARD');
+  ctx.scene.session.weatherEventId = weatherEventId;
+});
+
+const randomFromMapKeys = (mapping: Map<string, string>): string => {
+  const keys = Array.from(mapping.keys());
+  const index = Math.floor(Math.random() * keys.length);
+  return keys[index];
+};
+
+const randomIntFromInterval = (min: number, max: number) => {
+  return Math.floor(Math.random() * (max - min + 1) + min);
+};
+
+let testRequestId = 0;
+
+// Used for simulating an incoming move units request
+bot.command('testrequest', async (_) => {
+  const weatherEventId = weatherEventIds.size;
+  const weatherEventType = randomFromMapKeys(
+    WEATHER_EVENT_TYPE_DISPLAY_NAME_BY_NAME
+  );
+  const weatherEventLocation = randomFromMapKeys(LOCATION_DISPLAY_NAME_BY_NAME);
+  const moveUnitsType = randomFromMapKeys(UNIT_TYPE_ICON_BY_NAME);
+  let moveUnitsFromLocation = randomFromMapKeys(LOCATION_ICON_BY_NAME);
+  while (getUnitStatus(moveUnitsFromLocation, moveUnitsType) === 0) {
+    moveUnitsFromLocation = randomFromMapKeys(LOCATION_ICON_BY_NAME);
+  }
+  const moveUnitsToLocation = randomFromMapKeys(LOCATION_ICON_BY_NAME);
+  const moveUnitsAmount = randomIntFromInterval(
+    1,
+    getUnitStatus(moveUnitsFromLocation, moveUnitsType)
+  );
+
+  const requestMessage = {
+    id: testRequestId++,
+    weatherEvent: {
+      id: weatherEventId,
+      location: weatherEventLocation,
+      type: weatherEventType,
+    },
+    moveUnitsType,
+    moveUnitsAmount,
+    moveUnitsFromLocation,
+    moveUnitsToLocation,
+  };
+
+  mqttClient.publish(
+    moveUnitsRequestTopicName,
+    JSON.stringify(requestMessage),
+    { qos: 1, retain: false }
+  );
 });
 
 // Enable graceful stop

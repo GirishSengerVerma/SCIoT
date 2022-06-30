@@ -31,7 +31,7 @@ client.connect().then(async (reason: any) => {
     const res = await client.query(
       'SELECT * FROM "UnitStatus" ORDER BY "location", "unitType"'
     );
-    for (let row of res.rows) {
+    for (const row of res.rows) {
       unitStatus.set(row.location + '|' + row.unitType, row.amount);
     }
   } catch (e) {

@@ -1,7 +1,7 @@
 import { Context, Scenes } from 'telegraf';
 
 export interface MoveUnitsWizardSession extends Scenes.WizardSessionData {
-  weatherEventId: number;
+  weatherEventId: number | undefined;
   moveUnitsType: string;
   moveUnitsAmount: number;
   moveUnitsFromLocation: string;
