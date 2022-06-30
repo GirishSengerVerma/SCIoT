@@ -50,7 +50,7 @@ export const listenToMQTTMessages = (
 ) => {
   mqttClient.on('message', async function (topic, message) {
     try {
-      const messageJSON: any = JSON.parse(message.toString());
+      const messageJSON = JSON.parse(message.toString());
 
       if (
         topic.startsWith(moveUnitsRequestTopicName) &&

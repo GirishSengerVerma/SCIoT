@@ -49,10 +49,10 @@ bot.help(async (ctx) => {
 bot.command('status', async (ctx) => {
   let currentStatus = 'Current Units Status:\n';
 
-  for (let location of LOCATION_NAME_BY_ICON.values()) {
+  for (const location of LOCATION_NAME_BY_ICON.values()) {
     let locationStatus = '';
 
-    for (let unitType of UNIT_TYPE_NAME_BY_ICON.values()) {
+    for (const unitType of UNIT_TYPE_NAME_BY_ICON.values()) {
       if (!hasUnitStatus(location, unitType)) {
         continue;
       }
