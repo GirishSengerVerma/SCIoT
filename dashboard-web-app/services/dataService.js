@@ -1,20 +1,23 @@
 import 'dotenv/config'
 import * as mqtt from "mqtt";
 import { PrismaClient, Location, SensorMeasure, SensorSimulationBehavior, SensorSimulationMode, UnitType } from '@prisma/client';
+import { Server } from 'socket.io';
 
 import { assert } from 'console';
 
-export const persistDataServicePlugin = {
-    name: 'persistDataService',
+export const dataServicePlugin = {
+    name: 'dataService',
     configureServer(server) {
-        console.log('Starting Development Server Persist Data Service..\n');
-        initializePersistDataService();
+        console.log('Starting Development Server Data Service..\n');
+        initializeDataService(server.httpServer);
     },
 }
 
-export const initializePersistDataService = async () => {
+export const initializeDataService = async (server) => {
     await initializePrisma();
-    initializeMQTTClient();
+    const io = new Server(server);
+    initializeMQTTClient(io);
+    initializeWebsocketServer(io);
 }
 
 const initialSensorsDataSKP = [
@@ -349,7 +352,7 @@ const sensorMetadataTopicPrefix = 'sensors/metadata';
 const prisma = new PrismaClient();
 
 const initializePrisma = async () => {
-    console.log('Prisma Client: Initializing Sensor Data..');
+    console.log('Data Service: Prisma Client: Initializing Sensor Data..');
 
     const isSensorsTableEmpty = (await prisma.sensor.count()) == 0;
 
@@ -357,7 +360,7 @@ const initializePrisma = async () => {
         const createSensorsResult = await prisma.sensor.createMany({
             data: initialSensorsData.map(e => e.sensor),
         });
-        console.log('Created ' + createSensorsResult.count + ' sensors.');
+        console.log('Data Service: Prisma Client: Created ' + createSensorsResult.count + ' sensors.');
         assert(createSensorsResult.count == initialSensorsData.length);
     }
 
@@ -367,11 +370,11 @@ const initializePrisma = async () => {
         const createSensorMetaDataResult = await prisma.sensorMetaData.createMany({
             data: initialSensorsData.map(e => e.metadata),
         });
-        console.log('Created initial metadata for ' + createSensorMetaDataResult.count + ' sensors.');
+        console.log('Data Service: Prisma Client: Created initial metadata for ' + createSensorMetaDataResult.count + ' sensors.');
         assert(createSensorMetaDataResult.count == initialSensorsData.length);
     }
 
-    console.log('Prisma Client: Initializing Units Data..');
+    console.log('Data Service: Prisma Client: Initializing Units Data..');
     for (let unitStatus of getInitialUnitStatusData()) {
         await prisma.unitStatus.upsert({
             create: unitStatus,
@@ -385,25 +388,68 @@ const initializePrisma = async () => {
         });
     }
 
-    console.log('Prisma Client: Done.\n');
+    console.log('Data Service: Prisma Client: Done.\n');
 }
 
-const initializeMQTTClient = () => {
-    console.log('MQTT Client: Connecting to MQTT broker over secure MQTT connection..');
+let currentWebsocketConnections = [];
+
+const initializeWebsocketServer = (io) => {
+    io.on('connection', (socket) => {
+        currentWebsocketConnections.push(socket);
+
+        // Send current MetaData and TelemetryData for all Sensors
+        prisma.sensor.findMany({ select: { instanceId: true } }).then((sensors) => {
+            sensors.forEach(async (sensor) => {
+                const sensorMetaData = await prisma.sensorMetaData.findFirst({
+                    where: {
+                        instanceId: sensor.instanceId
+                    },
+                    orderBy: {
+                        timestamp: 'desc'
+                    }
+                });
+                if (sensorMetaData) {
+                    socket.emit(sensorMetadataTopicPrefix, JSON.stringify(sensorMetaData));
+                }
+
+                const sensorTelemetryData = await prisma.sensorTelemetryData.findFirst({
+                    where: {
+                        instanceId: sensor.instanceId
+                    },
+                    orderBy: {
+                        timestamp: 'desc'
+                    }
+                });
+                if (sensorTelemetryData) {
+                    socket.emit(sensorTelemetryTopicPrefix, JSON.stringify(sensorTelemetryData));
+                }
+            });
+        });
+
+        socket.conn.on("close", (_) => {
+            currentWebsocketConnections = currentWebsocketConnections.filter(con => con !== socket);
+        });
+    });
+
+    console.log('Data Service: Initialized Websocket Server.');
+};
+
+const initializeMQTTClient = async () => {
+    console.log('Data Service: MQTT Client: Connecting to MQTT broker over secure MQTT connection..');
 
     const mqttClient = mqtt.connect(host, options);
 
     mqttClient.on('error', (err) => {
-        console.log('MQTT Client: Connection error: ', err);
+        console.log('Data Service: MQTT Client: Connection error: ', err);
         mqttClient.end();
     })
 
     mqttClient.on('reconnect', () => {
-        console.log('MQTT Client: Reconnecting...');
+        console.log('Data Service: MQTT Client: Reconnecting...');
     })
 
     mqttClient.on('connect', () => {
-        console.log('MQTT Client: Connected.');
+        console.log('Data Service: MQTT Client: Connected.');
 
         mqttClient.subscribe(sensorTelemetryTopicPrefix + '/+/+', { qos: 0 });
         mqttClient.subscribe(sensorMetadataTopicPrefix + '/+/+', { qos: 0 });
@@ -415,17 +461,19 @@ const initializeMQTTClient = () => {
             const messageJSON = JSON.parse(message.toString());
 
             if (topic.startsWith(sensorTelemetryTopicPrefix)) {
+                currentWebsocketConnections.forEach(socket => socket.emit(sensorTelemetryTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.sensorTelemetryData.create({ data: messageJSON })
                     .then(data => data)
-                    .catch(error => console.error('Error persisting JSON data using Prisma: ', error));
+                    .catch(error => console.error('Data Service: Error persisting JSON data using Prisma: ', error));
             } else if (topic.startsWith(sensorMetadataTopicPrefix)) {
+                currentWebsocketConnections.forEach(socket => socket.emit(sensorMetadataTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.sensorMetaData.create({ data: messageJSON })
                     .then(data => data)
-                    .catch(error => console.error('Error persisting JSON data using Prisma: ', error));
+                    .catch(error => console.error('Data Service: Error persisting JSON data using Prisma: ', error));
             }
             // TODO DWA Add for weather events, actuators, ...   
         } catch (error) {
-            console.error('Error processing incoming MQTT message: ', error);
+            console.error('Data Service: Error processing incoming MQTT message: ', error);
         }
     });
 }

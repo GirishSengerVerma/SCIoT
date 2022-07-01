@@ -5,7 +5,9 @@
 	import '$root/styles/app.css';
 </script>
 
-<main class="h-screen w-screen flex flex-col md:flex-row p-4 md:p-8 bg-white text-black dark:bg-black dark:text-white">
-	<NavigationBar route={$page.routeId ?? ""} />
+<main
+	class="h-full min-h-screen w-screen flex flex-col lg:flex-row p-4 lg:p-8 bg-white text-black dark:bg-black dark:text-white"
+>
+	<NavigationBar route={$page.routeId ?? ''} />
 	<slot />
 </main>

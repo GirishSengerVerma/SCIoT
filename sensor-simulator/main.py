@@ -11,7 +11,8 @@ from sensor.simulated_sensors import SimulatedTemperatureSensor, SensorSimulatio
     SensorMeasure, SensorSimulationBehavior
 from sensor.simulator import Simulator
 
-UPDATE_INTERVAL_IN_MS = 300
+UPDATE_INTERVAL_IN_MS = 3000
+SHOW_LIVE_PLOT = False
 
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
@@ -25,7 +26,7 @@ if __name__ == '__main__':
     mqtt_client = MQTTClient(mqtt_host, mqtt_port, mqtt_username, mqtt_password)
 
     # Initialize the simulator
-    simulator = Simulator(UPDATE_INTERVAL_IN_MS, mqtt_client)
+    simulator = Simulator(UPDATE_INTERVAL_IN_MS, SHOW_LIVE_PLOT, mqtt_client)
 
     # Setup PostgreSQL client
     connection = psycopg2.connect(

@@ -23,8 +23,9 @@ class Simulator:
         The interval (in ms) in which the simulator senses data from its sensors can be specified during construction.
     """
 
-    def __init__(self, interval: int, mqtt_client: MQTTClient):
+    def __init__(self, interval: int, show_live_plot: bool, mqtt_client: MQTTClient):
         self.interval: int = interval
+        self.show_live_plot: bool = show_live_plot;
         self.mqtt_client: MQTTClient = mqtt_client
         self.is_running: bool = False
         self.plot_animation: Optional[FuncAnimation] = None
@@ -73,7 +74,8 @@ class Simulator:
         sense_thread = Thread(target=sensing_loop)
         sense_thread.start()
 
-        self.live_plot()
+        if self.show_live_plot:
+            self.live_plot()
 
     def stop(self):
         self.is_running = False

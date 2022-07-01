@@ -3,7 +3,7 @@ import preprocess from 'svelte-preprocess';
 import path from 'path';
 import { defineConfig } from 'vite';
 
-import { persistDataServicePlugin } from './services/persistDataService.js';
+import { dataServicePlugin } from './services/dataService.js';
 
 const loadViteConfig = () => {
 	return defineConfig({
@@ -12,14 +12,14 @@ const loadViteConfig = () => {
 				$root: path.resolve('./src')
 			}
 		},
-        plugins: [persistDataServicePlugin],
+		plugins: [dataServicePlugin],
 		optimizeDeps: {
 			exclude: ["@babichjacob/svelte-localstorage"],
 		},
 		ssr: {
 			noExternal: ["@babichjacob/svelte-localstorage"],
 		},
-    });
+	});
 };
 
 /** @type {import('@sveltejs/kit').Config} */

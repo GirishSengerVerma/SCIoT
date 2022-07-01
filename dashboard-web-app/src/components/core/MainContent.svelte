@@ -1,3 +1,3 @@
-<div class="flex-grow md:mx-10 md:my-7">
-    <slot/>
+<div class="flex-grow mb-16 lg:mx-10 lg:my-7">
+	<slot />
 </div>
