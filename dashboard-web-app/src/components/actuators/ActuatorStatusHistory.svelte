@@ -15,7 +15,7 @@
 		| undefined;
 </script>
 
-<div class="flex flex-col py-3 min-h-[220px] max-h-40 lg:max-h-96 justify-evenly">
+<div class="w-full flex flex-col py-3 min-h-[220px] max-h-40 lg:max-h-96 justify-evenly">
 	<SubTitle text="Actuator Status History" />
 	<div class="overflow-auto border border-accentLight dark:border-accentDark rounded-lg my-2">
 		<table class="table-auto w-full text-xs lg:text-sm text-left">
@@ -52,6 +52,12 @@
 							<hr />
 						{/if}
 					{/each}
+				{:else}
+					<tr class="text-center">
+						<td class="py-4 px-2 font-semibold ">Loading..</td>
+						<td>Loading..</td>
+						<td>Loading..</td>
+					</tr>
 				{/if}
 			</tbody>
 		</table>

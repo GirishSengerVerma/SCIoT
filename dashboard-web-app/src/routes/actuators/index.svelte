@@ -122,17 +122,15 @@
 	</MainContentHeader>
 	<div class="flex flex-col lg:flex-row lg:mt-10">
 		<div
-			class="w-full flex flex-grow lg:mr-10 border rounded-xl border-accentLight dark:border-accentDark py-2 px-4 lg:py-3 lg:px-6"
+			class="w-full flex flex-grow flex-col lg:mr-10 border rounded-xl border-accentLight dark:border-accentDark py-2 px-4 lg:py-3 lg:px-6"
 		>
 			{#if initializingStores}
 				<LoadingSpinner />
 			{:else if $selectedActuatorInstanceId && actuatorMetaDataAtLocation.has($selectedActuatorInstanceId) && $actuatorStatusData.has($selectedActuatorInstanceId)}
-				<div class="w-full">
-					<ActuatorStatusHistory
-						loading={fetchingHistoricActuatorsData}
-						actuatorHistoricStatusData={selectedActuatorHistoricStatusData}
-					/>
-				</div>
+				<ActuatorStatusHistory
+					loading={initializingStores || fetchingHistoricActuatorsData}
+					actuatorHistoricStatusData={selectedActuatorHistoricStatusData}
+				/>
 			{/if}
 		</div>
 		<div
