@@ -10,6 +10,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Location {
+  STUTTGART_VAIHINGEN_OFFICE
+  STUTTGART_KILLESBERG_PARK
+  STUTTGART_MAX_EYTH_SEE
+  AUTHORITIES_HUB
+}
+
 model Sensor {
   id                  Int                   @id @default(autoincrement())
   instanceId          String                @unique
@@ -17,13 +24,6 @@ model Sensor {
   isPhysical          Boolean               @default(false)
   SensorMetaData      SensorMetaData[]
   SensorTelemetryData SensorTelemetryData[]
-}
-
-enum Location {
-  STUTTGART_VAIHINGEN_OFFICE
-  STUTTGART_KILLESBERG_PARK
-  STUTTGART_MAX_EYTH_SEE
-  AUTHORITIES_HUB
 }
 
 enum SensorMeasure {
@@ -84,6 +84,42 @@ model SensorTelemetryData {
   timestamp  DateTime
   unit       SensorUnit
   value      Decimal
+}
+
+model Actuator {
+  id                 Int                  @id @default(autoincrement())
+  instanceId         String               @unique
+  createdAt          DateTime             @default(now())
+  isPhysical         Boolean              @default(false)
+  ActuatorMetaData   ActuatorMetaData[]
+  ActuatorStatusData ActuatorStatusData[]
+}
+
+enum ActuatorType {
+  ALARM_LIGHT
+  ALARM_SOUND
+  WATER_PROTECTION_WALL
+  LOCKDOWN
+}
+
+model ActuatorMetaData {
+  id         Int          @id @default(autoincrement())
+  actuator   Actuator     @relation(fields: [instanceId], references: [instanceId])
+  instanceId String
+  timestamp  DateTime     @default(now())
+  name       String
+  location   Location
+  type       ActuatorType
+}
+
+model ActuatorStatusData {
+  id                   Int                 @id @default(autoincrement())
+  actuator             Actuator            @relation(fields: [instanceId], references: [instanceId])
+  instanceId           String
+  timestamp            DateTime
+  enabled              Boolean
+  lastChangedBy        WeatherEventAction? @relation(fields: [weatherEventActionId], references: [id])
+  weatherEventActionId Int?
 }
 
 enum UnitType {
@@ -169,4 +205,5 @@ model WeatherEventAction {
   moveUnitsToLocation   Location?
   moveUnitsAmount       Int?
   UnitStatus            UnitStatus[]
+  ActuatorStatusData    ActuatorStatusData[]
 }
