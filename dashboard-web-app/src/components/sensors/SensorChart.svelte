@@ -6,11 +6,15 @@
 	import { enumValueToString } from '$root/utils/enumUtil';
 	import LoadingSpinner from '../core/LoadingSpinner.svelte';
 
+	// TODO DWA Implement Sensor Data Chart!
+
 	const getOptions = (
 		themeToUse: string,
 		sensorMetaData: SensorMetaData | undefined,
 		data: SensorTelemetryData[] | undefined
 	) => {
+		//data ? data.map((d) => d.value) : []
+
 		return {
 			theme: {
 				mode: themeToUse
@@ -43,7 +47,7 @@
 			series: [
 				{
 					name: 'sensorValues',
-					data: data ? data.map((d) => d.value) : []
+					data: [0, 0]
 				}
 			],
 			fill: {
@@ -96,7 +100,7 @@
 		try {
 			chart!.update(getOptions(theme ?? LIGHT_MODE, sensorMetaData, data));
 		} catch (error) {
-			console.error('Could not update SensorChart: ', error);
+			console.warn('Could not update SensorChart: ', error);
 		}
 	};
 

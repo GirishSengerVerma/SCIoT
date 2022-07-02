@@ -11,8 +11,9 @@
 		ICON_DATA_PERIOD_HISTORIC_DATA
 	} from '$root/constants/iconConstants';
 
+	import { selectedLocation } from '$root/stores/locationStores';
+
 	import {
-		sensorLocation,
 		sensorDataPeriod,
 		sensorMetaData,
 		selectedSensorInstanceId,
@@ -33,25 +34,27 @@
 	import LoadingSpinner from '$root/components/core/LoadingSpinner.svelte';
 
 	let initializingStores = true;
+	let fetchingData = false;
 
-	const sensorLocationOptions = Object.values(Location).map(enumValueToString);
+	const selectedLocationOptions = Object.values(Location).map(enumValueToString);
 	const sensorDataPeriodOptions = Object.values(DataPeriod).map(enumValueToString);
 
 	$: $sensorDataPeriod === enumValueToString(DataPeriod.LIVE_DATA)
-		? updateLiveData(stringToEnumValue(Location, $sensorLocation), $sensorMetaData)
+		? updateLiveData(stringToEnumValue(Location, $selectedLocation), $sensorMetaData)
 		: updateHistoricData(
-				stringToEnumValue(Location, $sensorLocation),
+				stringToEnumValue(Location, $selectedLocation),
 				stringToEnumValue(DataPeriod, $sensorDataPeriod)
 		  );
 
 	$: isLiveData = $sensorDataPeriod === enumValueToString(DataPeriod.LIVE_DATA);
 
 	let sensorMetaDataAtLocation = new Map<string, SensorMetaData>();
-	let fetchingHistoricData = false;
 	let historicSensorTelemetryData = new Map<string, SensorTelemetryData[]>();
 
 	onMount(() => {
 		initializingStores = false;
+
+		updateLiveData(stringToEnumValue(Location, $selectedLocation), $sensorMetaData);
 
 		socket.on(SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC, (message) => {
 			if ($sensorDataPeriod === enumValueToString(DataPeriod.LIVE_DATA)) {
@@ -92,7 +95,7 @@
 				);
 			}
 
-			fetchingHistoricData = false;
+			fetchingData = false;
 		});
 	});
 
@@ -101,12 +104,12 @@
 	});
 
 	const updateLiveData = (
-		sensorLocation: Location,
+		selectedLocation: Location,
 		sensorMetaData: Map<string, SensorMetaData>
 	) => {
 		sensorMetaDataAtLocation = new Map(
 			[...sensorMetaData]
-				.filter(([_, v]) => v.location === sensorLocation)
+				.filter(([_, v]) => v.location === selectedLocation)
 				.sort((a, b) => a[0].localeCompare(b[0]))
 		);
 
@@ -115,15 +118,13 @@
 		}
 	};
 
-	const updateHistoricData = (sensorLocation: Location, sensorDataPeriod: DataPeriod) => {
-		console.log('Update Historic Data..', sensorLocation, sensorDataPeriod);
-
-		fetchingHistoricData = true;
+	const updateHistoricData = (selectedLocation: Location, sensorDataPeriod: DataPeriod) => {
+		fetchingData = true;
 
 		socket.emit(
 			SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC,
 			JSON.stringify({
-				sensorLocation,
+				selectedLocation,
 				sensorDataPeriod
 			})
 		);
@@ -145,13 +146,13 @@
 				onClick={() => alert('TODO DWA Implement')}
 			/>
 			<DropdownSelect
-				name="sensorLocation"
+				name="selectedLocation"
 				iconName={ICON_COMMON_LOCATION}
 				iconAlt="SensorLocation"
 				loading={initializingStores}
-				initialValue={$sensorLocation}
-				options={sensorLocationOptions}
-				onChange={sensorLocation.set}
+				initialValue={$selectedLocation}
+				options={selectedLocationOptions}
+				onChange={selectedLocation.set}
 			/>
 			<DropdownSelect
 				name="sensorDataPeriod"
@@ -170,7 +171,7 @@
 		<div
 			class="flex flex-grow lg:mr-10 border rounded-xl border-accentLight dark:border-accentDark p-3 lg:p-8"
 		>
-			{#if [...sensorMetaDataAtLocation].length === 0}
+			{#if initializingStores || fetchingData}
 				<LoadingSpinner />
 			{:else if $selectedSensorInstanceId && sensorMetaDataAtLocation.has($selectedSensorInstanceId) && $liveSensorData.has($selectedSensorInstanceId)}
 				<div class="w-full">
@@ -178,7 +179,7 @@
 						sensorMetaData={sensorMetaDataAtLocation.get($selectedSensorInstanceId)}
 						data={isLiveData
 							? $liveSensorData.get($selectedSensorInstanceId)
-							: fetchingHistoricData
+							: fetchingData
 							? undefined
 							: historicSensorTelemetryData.get($selectedSensorInstanceId)}
 					/>
@@ -188,7 +189,7 @@
 		<div
 			class="flex flex-wrap lg:max-w-xl gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-6 lg:mt-0 justify-between lg:justify-end"
 		>
-			{#if [...sensorMetaDataAtLocation].length === 0}
+			{#if initializingStores || fetchingData}
 				<LoadingSpinner />
 			{:else}
 				{#each [...sensorMetaDataAtLocation] as [key, metaData]}
@@ -198,7 +199,7 @@
 						isHistoricData={!isLiveData}
 						telemetryData={isLiveData
 							? $liveSensorData.get(key)
-							: fetchingHistoricData
+							: fetchingData
 							? undefined
 							: historicSensorTelemetryData.get(key)}
 						onClick={() => selectedSensorInstanceId.set(key)}

@@ -1,18 +1,12 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { localStorageStore } from '@babichjacob/svelte-localstorage/svelte-kit';
-import { Location, type SensorMetaData, type SensorTelemetryData } from '@prisma/client';
-import { derived, writable, type Readable, type Writable } from 'svelte/store';
+import type { Sensor, SensorMetaData, SensorTelemetryData } from '@prisma/client';
+import { writable, type Writable } from 'svelte/store';
 
 import { DataPeriod } from '$root/types/dataPeriod';
 import { socket } from '$root/utils/socketio';
 import { enumValueToString } from '$root/utils/enumUtil';
-
-const initialSensorLocation = enumValueToString(Location.STUTTGART_KILLESBERG_PARK);
-export const sensorLocation: Writable<string> = localStorageStore(
-	'sensorLocation',
-	initialSensorLocation
-);
 
 const initialSensorDataPeriod = enumValueToString(DataPeriod.LIVE_DATA);
 export const sensorDataPeriod: Writable<string> = localStorageStore(
@@ -20,11 +14,36 @@ export const sensorDataPeriod: Writable<string> = localStorageStore(
 	initialSensorDataPeriod
 );
 
+interface SensorStore extends Writable<Map<string, Sensor>> {
+	add(value: Sensor): void;
+	remove(sensorInstanceId: string): void;
+	reset(): void;
+}
+
+const createSensorStore = () => {
+	const store: Writable<Map<string, Sensor>> = writable(new Map<string, Sensor>());
+
+	const sensorStore: SensorStore = {
+		...store,
+		add: (value: Sensor) => store.update((currentMap) => currentMap.set(value.instanceId, value)),
+		remove: (sensorInstanceId: string) =>
+			store.update((currentMap) => {
+				currentMap.delete(sensorInstanceId);
+				return currentMap;
+			}),
+		reset: () => store.set(new Map<string, Sensor>())
+	};
+
+	return sensorStore;
+};
+
+export const sensors: SensorStore = createSensorStore();
+
 // TODO DWA SensorMetaDataStore, LiveSensorDataStore : Automatically remove old values
 
 interface SensorMetaDataStore extends Writable<Map<string, SensorMetaData>> {
 	addValue(value: SensorMetaData): void;
-	resetSensor(sensorId: string): void;
+	resetSensor(sensorInstanceId: string): void;
 	reset(): void;
 }
 
@@ -35,9 +54,9 @@ const createSensorMetaDataStore = () => {
 		...store,
 		addValue: (value: SensorMetaData) =>
 			store.update((currentMap) => currentMap.set(value.instanceId, value)),
-		resetSensor: (sensorId: string) =>
+		resetSensor: (sensorInstanceId: string) =>
 			store.update((currentMap) => {
-				currentMap.delete(sensorId);
+				currentMap.delete(sensorInstanceId);
 				return currentMap;
 			}),
 		reset: () => store.set(new Map<string, SensorMetaData>())
@@ -50,7 +69,7 @@ export const sensorMetaData: SensorMetaDataStore = createSensorMetaDataStore();
 
 interface LiveSensorDataStore extends Writable<Map<string, SensorTelemetryData[]>> {
 	addValue(value: SensorTelemetryData): void;
-	resetSensor(sensorId: string): void;
+	resetSensor(sensorInstanceId: string): void;
 	reset(): void;
 }
 
@@ -65,9 +84,9 @@ const createLiveSensorDataStore = () => {
 			store.update((currentMap) =>
 				currentMap.set(value.instanceId, [...(currentMap.get(value.instanceId) ?? []), value])
 			),
-		resetSensor: (sensorId: string) =>
+		resetSensor: (sensorInstanceId: string) =>
 			store.update((currentMap) => {
-				currentMap.delete(sensorId);
+				currentMap.delete(sensorInstanceId);
 				return currentMap;
 			}),
 		reset: () => store.set(new Map<string, SensorTelemetryData[]>())
@@ -82,27 +101,3 @@ export const selectedSensorInstanceId: Writable<string> = localStorageStore(
 );
 
 export const liveSensorData: LiveSensorDataStore = createLiveSensorDataStore();
-
-const sensorTelemetryTopicPrefix = 'sensors/telemetry';
-const sensorMetadataTopicPrefix = 'sensors/metadata';
-
-socket.on(sensorTelemetryTopicPrefix, (message) => {
-	try {
-		const messageJSON = JSON.parse(message.toString());
-		liveSensorData.addValue(messageJSON as SensorTelemetryData);
-	} catch (error) {
-		console.error(
-			'Web App: Error processing incoming Sensor Telemetry Data Socket IO message: ',
-			error
-		);
-	}
-});
-
-socket.on(sensorMetadataTopicPrefix, (message) => {
-	try {
-		const messageJSON = JSON.parse(message.toString());
-		sensorMetaData.addValue(messageJSON as SensorMetaData);
-	} catch (error) {
-		console.error('Web App: Error processing incoming Sensor MetaData Socket IO message: ', error);
-	}
-});

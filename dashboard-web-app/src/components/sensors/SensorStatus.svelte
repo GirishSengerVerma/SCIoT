@@ -1,51 +1,56 @@
 <script lang="ts">
+	import type { SensorMetaData, SensorTelemetryData } from '@prisma/client';
+
 	import { enumValueToString, stringToEnumValue } from '$root/utils/enumUtil';
 	import { ICON_SENSORS_BY_NAME } from '$root/constants/iconConstants';
-
-	import type { SensorMetaData, SensorTelemetryData } from '@prisma/client';
 	import { SENSOR_UNIT_REPRESENTATION_MAP } from '$root/utils/sensorUnitRepresentations';
 	import {
 		getSensorValueStatus,
 		getSensorValueStatusBgColor,
 		getSensorValueStatusBorderColor
 	} from '$root/utils/sensorValueStatusUtil';
-	import LoadingSpinner from '../core/LoadingSpinner.svelte';
 	import { SensorValueStatus } from '$root/types/sensorValueStatus';
 
-	$: formattedCurrentValue = telemetryData
-		? Number(telemetryData![telemetryData!.length - 1].value).toFixed(0) +
-		  ' ' +
-		  SENSOR_UNIT_REPRESENTATION_MAP.get(telemetryData![telemetryData!.length - 1].unit)
+	import LoadingSpinner from '$root/components/core/LoadingSpinner.svelte';
+
+	$: formattedCurrentValue =
+		telemetryData && telemetryData.length > 0
+			? Number(telemetryData![telemetryData!.length - 1].value).toFixed(0) +
+			  ' ' +
+			  SENSOR_UNIT_REPRESENTATION_MAP.get(telemetryData![telemetryData!.length - 1].unit)
+			: '-';
+
+	$: dataTrend = isHistoricData
+		? telemetryData && telemetryData.length >= 2
+			? calculateDataTrend(true)
+			: 'No Data'
 		: '';
 
-	$: dataTrend =
-		isHistoricData && telemetryData && telemetryData.length >= 2 ? calculateDataTrend(true) : '';
-
-	$: valueStatus =
-		isHistoricData && telemetryData && telemetryData.length >= 2
+	$: valueStatus = isHistoricData
+		? telemetryData && telemetryData.length >= 2
 			? calculateDataTrend(false)
-			: enumValueToString(
-					telemetryData
-						? getSensorValueStatus(
-								metaData.measure,
-								telemetryData![telemetryData!.length - 1].value
-						  )
-						: SensorValueStatus.MEDIUM
-			  );
+			: 'No Data'
+		: enumValueToString(
+				telemetryData && telemetryData.length > 0
+					? getSensorValueStatus(metaData.measure, telemetryData![telemetryData!.length - 1].value)
+					: SensorValueStatus.MEDIUM
+		  );
 
-	$: valueStatusBgColor =
-		isHistoricData && telemetryData && telemetryData.length >= 2
+	$: valueStatusBgColor = isHistoricData
+		? telemetryData && telemetryData.length >= 2
 			? dataTrend.startsWith('+')
 				? 'bg-green-300'
 				: 'bg-red-300'
-			: getSensorValueStatusBgColor(stringToEnumValue(SensorValueStatus, valueStatus));
+			: 'bg-accentLight dark:bg-accentDark'
+		: getSensorValueStatusBgColor(stringToEnumValue(SensorValueStatus, valueStatus));
 
-	$: valueStatusBorderColor =
-		isHistoricData && telemetryData && telemetryData.length >= 2
+	$: valueStatusBorderColor = isHistoricData
+		? telemetryData && telemetryData.length >= 2
 			? dataTrend.startsWith('+')
 				? 'border-green-400'
 				: 'border-red-400'
-			: getSensorValueStatusBorderColor(stringToEnumValue(SensorValueStatus, valueStatus));
+			: 'border-accentLight dark:border-accentDark'
+		: getSensorValueStatusBorderColor(stringToEnumValue(SensorValueStatus, valueStatus));
 
 	const calculateDataTrend = (absolute: boolean) => {
 		const oldestValue = Number(telemetryData![0].value);

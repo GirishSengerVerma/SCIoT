@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import * as mqtt from "mqtt";
-import { PrismaClient, Location, SensorMeasure, SensorSimulationBehavior, SensorSimulationMode, UnitType } from '@prisma/client';
+import { PrismaClient, Location, SensorMeasure, SensorSimulationBehavior, SensorSimulationMode, UnitType, ActuatorType } from '@prisma/client';
 import { Server } from 'socket.io';
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
@@ -329,6 +329,155 @@ const initialSensorsDataSMES = [
 
 const initialSensorsData = initialSensorsDataSKP.concat(initialSensorsDataSVO).concat(initialSensorsDataSMES);
 
+const timestamp = dayjs().toISOString();
+
+const initialActuatorsDataSKP = [
+    {
+        actuator: {
+            instanceId: 'SKP_SOUND_A',
+            isPhysical: true,
+        },
+        metadata: {
+            instanceId: 'SKP_SOUND_A',
+            name: 'Alarm Sound at Stuttgart Killesbergpark',
+            location: Location.STUTTGART_KILLESBERG_PARK,
+            type: ActuatorType.ALARM_SOUND,
+        },
+        status: {
+            instanceId: 'SKP_SOUND_A',
+            enabled: false,
+            timestamp,
+        },
+    },
+    {
+        actuator: {
+            instanceId: 'SKP_LIGHT_A',
+            isPhysical: true,
+        },
+        metadata: {
+            instanceId: 'SKP_LIGHT_A',
+            name: 'Alarm Light at Stuttgart Killesbergpark',
+            location: Location.STUTTGART_KILLESBERG_PARK,
+            type: ActuatorType.ALARM_LIGHT,
+        },
+        status: {
+            instanceId: 'SKP_LIGHT_A',
+            enabled: false,
+            timestamp,
+        },
+    },
+    {
+        actuator: {
+            instanceId: 'SKP_LOCKDOWN_A',
+            isPhysical: false,
+        },
+        metadata: {
+            instanceId: 'SKP_LOCKDOWN_A',
+            name: 'Lockdown at Stuttgart Killesbergpark',
+            location: Location.STUTTGART_KILLESBERG_PARK,
+            type: ActuatorType.LOCKDOWN,
+        },
+        status: {
+            instanceId: 'SKP_LOCKDOWN_A',
+            enabled: false,
+            timestamp,
+        },
+    },
+];
+
+const initialActuatorsDataSVO = [
+    {
+        actuator: {
+            instanceId: 'SVO_LIGHT_A',
+            isPhysical: true,
+        },
+        metadata: {
+            instanceId: 'SVO_LIGHT_A',
+            name: 'Alarm Light at Stuttgart Vaihingen Office',
+            location: Location.STUTTGART_VAIHINGEN_OFFICE,
+            type: ActuatorType.ALARM_LIGHT,
+        },
+        status: {
+            instanceId: 'SVO_LIGHT_A',
+            enabled: false,
+            timestamp,
+        },
+    },
+    {
+        actuator: {
+            instanceId: 'SVO_LOCKDOWN_A',
+            isPhysical: false,
+        },
+        metadata: {
+            instanceId: 'SVO_LOCKDOWN_A',
+            name: 'Lockdown at Stuttgart Vaihingen Office',
+            location: Location.STUTTGART_VAIHINGEN_OFFICE,
+            type: ActuatorType.LOCKDOWN,
+        },
+        status: {
+            instanceId: 'SVO_LOCKDOWN_A',
+            enabled: false,
+            timestamp,
+        },
+    },
+];
+
+const initialActuatorsDataSMES = [
+    {
+        actuator: {
+            instanceId: 'SMES_LIGHT_A',
+            isPhysical: true,
+        },
+        metadata: {
+            instanceId: 'SMES_LIGHT_A',
+            name: 'Alarm Light at Stuttgart Max Eyth See',
+            location: Location.STUTTGART_MAX_EYTH_SEE,
+            type: ActuatorType.ALARM_LIGHT,
+        },
+        status: {
+            instanceId: 'SMES_LIGHT_A',
+            enabled: false,
+            timestamp,
+        },
+    },
+    {
+        actuator: {
+            instanceId: 'SMES_WATER_PROTECTION_WALL_A',
+            isPhysical: true,
+        },
+        metadata: {
+            instanceId: 'SMES_WATER_PROTECTION_WALL_A',
+            name: 'Water Protection Wall at Stuttgart Max Eyth See',
+            location: Location.STUTTGART_MAX_EYTH_SEE,
+            type: ActuatorType.WATER_PROTECTION_WALL,
+        },
+        status: {
+            instanceId: 'SMES_WATER_PROTECTION_WALL_A',
+            enabled: false,
+            timestamp,
+        },
+    },
+    {
+        actuator: {
+            instanceId: 'SMES_LOCKDOWN_A',
+            isPhysical: false,
+        },
+        metadata: {
+            instanceId: 'SMES_LOCKDOWN_A',
+            name: 'Lockdown at Stuttgart Max Eyth See',
+            location: Location.STUTTGART_MAX_EYTH_SEE,
+            type: ActuatorType.LOCKDOWN,
+        },
+        status: {
+            instanceId: 'SMES_LOCKDOWN_A',
+            enabled: false,
+            timestamp,
+        },
+    },
+];
+
+const initialActuatorsData = initialActuatorsDataSKP.concat(initialActuatorsDataSVO).concat(initialActuatorsDataSMES);
+
 const getInitialUnitStatusData = () => {
     const initialData = [];
     for (let location of Object.values(Location)) {
@@ -350,46 +499,89 @@ const options = {
     password: process.env.MQTT_PASSWORD,
 }
 
+const sensorInstanceTopicPrefix = 'sensors/instance';
 const sensorTelemetryTopicPrefix = 'sensors/telemetry';
 const sensorMetadataTopicPrefix = 'sensors/metadata';
+
+const actuatorInstanceTopicPrefix = 'actuators/instance';
+const actuatorStatusDataTopicPrefix = 'actuators/statusdata';
+const actuatorsMetadataTopicPrefix = 'actuators/metadata';
 
 const prisma = new PrismaClient();
 
 const initializePrisma = async () => {
-    console.log('Data Service: Prisma Client: Initializing Sensor Data..');
+    {
+        console.log('Data Service: Prisma Client: Initializing Sensor Data..');
 
-    const isSensorsTableEmpty = (await prisma.sensor.count()) == 0;
+        const isSensorsTableEmpty = (await prisma.sensor.count()) == 0;
 
-    if (isSensorsTableEmpty) {
-        const createSensorsResult = await prisma.sensor.createMany({
-            data: initialSensorsData.map(e => e.sensor),
-        });
-        console.log('Data Service: Prisma Client: Created ' + createSensorsResult.count + ' sensors.');
-        assert(createSensorsResult.count == initialSensorsData.length);
+        if (isSensorsTableEmpty) {
+            const createSensorsResult = await prisma.sensor.createMany({
+                data: initialSensorsData.map(e => e.sensor),
+            });
+            console.log('Data Service: Prisma Client: Created ' + createSensorsResult.count + ' sensors.');
+            assert(createSensorsResult.count == initialSensorsData.length);
+        }
+
+        const isSensorMetaDataTableEmpty = (await prisma.sensorMetaData.count()) == 0;
+
+        if (isSensorMetaDataTableEmpty) {
+            const createSensorMetaDataResult = await prisma.sensorMetaData.createMany({
+                data: initialSensorsData.map(e => e.metadata),
+            });
+            console.log('Data Service: Prisma Client: Created initial metadata for ' + createSensorMetaDataResult.count + ' sensors.');
+            assert(createSensorMetaDataResult.count == initialSensorsData.length);
+        }
     }
 
-    const isSensorMetaDataTableEmpty = (await prisma.sensorMetaData.count()) == 0;
+    {
+        console.log('Data Service: Prisma Client: Initializing Actuators Data..');
 
-    if (isSensorMetaDataTableEmpty) {
-        const createSensorMetaDataResult = await prisma.sensorMetaData.createMany({
-            data: initialSensorsData.map(e => e.metadata),
-        });
-        console.log('Data Service: Prisma Client: Created initial metadata for ' + createSensorMetaDataResult.count + ' sensors.');
-        assert(createSensorMetaDataResult.count == initialSensorsData.length);
+        const isActuatorsTableEmpty = (await prisma.actuator.count()) == 0;
+
+        if (isActuatorsTableEmpty) {
+            const createActuatorsResult = await prisma.actuator.createMany({
+                data: initialActuatorsData.map(e => e.actuator),
+            });
+            console.log('Data Service: Prisma Client: Created ' + createActuatorsResult.count + ' actuators.');
+            assert(createActuatorsResult.count == initialActuatorsData.length);
+        }
+
+        const isActuatorMetaDataTableEmpty = (await prisma.actuatorMetaData.count()) == 0;
+
+        if (isActuatorMetaDataTableEmpty) {
+            const createActuatorMetaDataResult = await prisma.actuatorMetaData.createMany({
+                data: initialActuatorsData.map(e => e.metadata),
+            });
+            console.log('Data Service: Prisma Client: Created initial metadata for ' + createActuatorMetaDataResult.count + ' actuators.');
+            assert(createActuatorMetaDataResult.count == initialActuatorsData.length);
+        }
+
+        const isActuatorStatusDataTableEmpty = (await prisma.actuatorStatusData.count()) == 0;
+
+        if (isActuatorStatusDataTableEmpty) {
+            const createActuatorStatusDataResult = await prisma.actuatorStatusData.createMany({
+                data: initialActuatorsData.map(e => e.status),
+            });
+            console.log('Data Service: Prisma Client: Created initial status data for ' + createActuatorStatusDataResult.count + ' actuators.');
+            assert(createActuatorStatusDataResult.count == initialActuatorsData.length);
+        }
     }
 
-    console.log('Data Service: Prisma Client: Initializing Units Data..');
-    for (let unitStatus of getInitialUnitStatusData()) {
-        await prisma.unitStatus.upsert({
-            create: unitStatus,
-            update: {},
-            where: {
-                unitType_location: {
-                    location: unitStatus.location,
-                    unitType: unitStatus.unitType,
+    {
+        console.log('Data Service: Prisma Client: Initializing Units Data..');
+        for (let unitStatus of getInitialUnitStatusData()) {
+            await prisma.unitStatus.upsert({
+                create: unitStatus,
+                update: {},
+                where: {
+                    unitType_location: {
+                        location: unitStatus.location,
+                        unitType: unitStatus.unitType,
+                    },
                 },
-            },
-        });
+            });
+        }
     }
 
     console.log('Data Service: Prisma Client: Done.\n');
@@ -404,9 +596,11 @@ const initializeWebsocketServer = (io) => {
     io.on('connection', (socket) => {
         currentWebsocketConnections.push(socket);
 
-        // Send current MetaData and TelemetryData for all Sensors
+        // Sensors: Send newest data
         prisma.sensor.findMany({ select: { instanceId: true } }).then((sensors) => {
             sensors.forEach(async (sensor) => {
+                socket.emit(sensorInstanceTopicPrefix, JSON.stringify(sensor));
+
                 const sensorMetaData = await prisma.sensorMetaData.findFirst({
                     where: {
                         instanceId: sensor.instanceId
@@ -433,11 +627,42 @@ const initializeWebsocketServer = (io) => {
             });
         });
 
+        // Actuators: Send newest data
+        prisma.actuator.findMany({ select: { instanceId: true, isPhysical: true } }).then((actuators) => {
+            actuators.forEach(async (actuator) => {
+                socket.emit(actuatorInstanceTopicPrefix, JSON.stringify(actuator));
+
+                const actuatorMetaData = await prisma.actuatorMetaData.findFirst({
+                    where: {
+                        instanceId: actuator.instanceId
+                    },
+                    orderBy: {
+                        timestamp: 'desc'
+                    }
+                });
+                if (actuatorMetaData) {
+                    socket.emit(actuatorsMetadataTopicPrefix, JSON.stringify(actuatorMetaData));
+                }
+
+                const actuatorStatusData = await prisma.actuatorStatusData.findFirst({
+                    where: {
+                        instanceId: actuator.instanceId
+                    },
+                    orderBy: {
+                        timestamp: 'desc'
+                    }
+                });
+                if (actuatorStatusData) {
+                    socket.emit(actuatorStatusDataTopicPrefix, JSON.stringify(actuatorStatusData));
+                }
+            });
+        });
+
         socket.on(SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC, (message) => {
             try {
                 const messageJSON = JSON.parse(message.toString());
 
-                const sensorLocation = messageJSON['sensorLocation'];
+                const selectedLocation = messageJSON['selectedLocation'];
                 const sensorDataPeriod = messageJSON['sensorDataPeriod'];
 
                 if (sensorDataPeriod === 'LIVE_DATA') {
@@ -471,7 +696,7 @@ const initializeWebsocketServer = (io) => {
                             }
                         });
 
-                        if (sensorMetaData.location !== sensorLocation) {
+                        if (sensorMetaData.location !== selectedLocation) {
                             continue;
                         }
 
@@ -545,14 +770,24 @@ const initializeMQTTClient = async () => {
                 currentWebsocketConnections.forEach(socket => socket.emit(sensorTelemetryTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.sensorTelemetryData.create({ data: messageJSON })
                     .then(data => data)
-                    .catch(error => console.error('Data Service: Error persisting JSON data using Prisma: ', error));
+                    .catch(error => console.error('Data Service: Error persisting Sensor Telemetry JSON data using Prisma: ', error));
             } else if (topic.startsWith(sensorMetadataTopicPrefix)) {
                 currentWebsocketConnections.forEach(socket => socket.emit(sensorMetadataTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.sensorMetaData.create({ data: messageJSON })
                     .then(data => data)
-                    .catch(error => console.error('Data Service: Error persisting JSON data using Prisma: ', error));
+                    .catch(error => console.error('Data Service: Error persisting Sensor MetaData JSON data using Prisma: ', error));
+            } else if (topic.startsWith(actuatorStatusDataTopicPrefix)) {
+                currentWebsocketConnections.forEach(socket => socket.emit(actuatorStatusDataTopicPrefix, JSON.stringify(messageJSON)));
+                prisma.actuatorStatusData.create({ data: messageJSON })
+                    .then(data => data)
+                    .catch(error => console.error('Data Service: Error persisting Actuator Status JSON data using Prisma: ', error));
+            } else if (topic.startsWith(actuatorsMetadataTopicPrefix)) {
+                currentWebsocketConnections.forEach(socket => socket.emit(actuatorsMetadataTopicPrefix, JSON.stringify(messageJSON)));
+                prisma.actuatorMetaData.create({ data: messageJSON })
+                    .then(data => data)
+                    .catch(error => console.error('Data Service: Error persisting Actuator MetaData JSON data using Prisma: ', error));
             }
-            // TODO DWA Add for weather events, actuators, ...   
+            // TODO DWA Add for weather events, units, ...   
         } catch (error) {
             console.error('Data Service: Error processing incoming MQTT message: ', error);
         }
