@@ -38,3 +38,15 @@ export const ICON_SENSORS_BY_NAME: Map<string, string> = new Map<string, string>
 	['WATER_LEVEL', ICON_SENSORS_WATER_LEVEL],
 	['SOUND', ICON_SENSORS_SOUND]
 ]);
+
+export const ICON_ACTUATORS_ALARM_LIGHT = 'actuators/alarm-light';
+export const ICON_ACTUATORS_ALARM_SOUND = 'actuators/alarm-sound';
+export const ICON_ACTUATORS_LOCKDOWN = 'actuators/lock';
+export const ICON_ACTUATORS_WATER_PROTECTION_WALL = 'actuators/wall';
+
+export const ICON_ACTUATORS_BY_NAME: Map<string, string> = new Map<string, string>([
+	['ALARM_LIGHT', ICON_ACTUATORS_ALARM_LIGHT],
+	['ALARM_SOUND', ICON_ACTUATORS_ALARM_SOUND],
+	['LOCKDOWN', ICON_ACTUATORS_LOCKDOWN],
+	['WATER_PROTECTION_WALL', ICON_ACTUATORS_WATER_PROTECTION_WALL]
+]);
