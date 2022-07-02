@@ -56,8 +56,6 @@ const createActuatorMetaDataStore = () => {
 		reset: () => store.set(new Map<string, ActuatorMetaData>())
 	};
 
-	console.log('Creating Actuator MetaData Store..');
-
 	return actuatorMetaDataStore;
 };
 

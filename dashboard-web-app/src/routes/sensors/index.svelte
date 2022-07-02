@@ -54,10 +54,9 @@
 	onMount(() => {
 		initializingStores = false;
 
-		updateLiveData(stringToEnumValue(Location, $selectedLocation), $sensorMetaData);
-
 		socket.on(SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC, (message) => {
 			if ($sensorDataPeriod === enumValueToString(DataPeriod.LIVE_DATA)) {
+				fetchingData = false;
 				console.log('Ignoring incoming historic sensor data because we are in Live Data mode.');
 				return;
 			}

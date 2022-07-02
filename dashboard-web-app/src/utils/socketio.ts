@@ -22,6 +22,11 @@ const sensorMetadataTopicPrefix = 'sensors/metadata';
 export const SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC = 'requestHistoricSensorData';
 export const SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC = 'responseHistoricSensorData';
 
+export const SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC =
+	'requestHistoricActuatorStatusData';
+export const SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC =
+	'responseHistoricActuatorStatusData';
+
 export const socket = io();
 
 socket.on(sensorInstanceTopicPrefix, (message) => {
@@ -81,7 +86,6 @@ socket.on(actuatorStatusTopicPrefix, (message) => {
 socket.on(actuatorMetadataTopicPrefix, (message) => {
 	try {
 		const messageJSON = JSON.parse(message.toString());
-		console.log('Incoming Socket Actuator Metadata', JSON.stringify(messageJSON));
 		actuatorMetaData.addValue(messageJSON as ActuatorMetaData);
 	} catch (error) {
 		console.error(

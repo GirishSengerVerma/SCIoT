@@ -590,6 +590,9 @@ const initializePrisma = async () => {
 const SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC = 'requestHistoricSensorData';
 const SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC = 'responseHistoricSensorData';
 
+const SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'requestHistoricActuatorStatusData';
+const SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'responseHistoricActuatorStatusData';
+
 let currentWebsocketConnections = [];
 
 const initializeWebsocketServer = (io) => {
@@ -727,6 +730,33 @@ const initializeWebsocketServer = (io) => {
             } catch (error) {
                 console.error(
                     'Data Service: Error processing incoming Historic Sensor Data Request Socket IO message: ',
+                    error
+                );
+            }
+        });
+
+        socket.on(SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC, async (message) => {
+            try {
+                const messageJSON = JSON.parse(message.toString());
+
+                const selectedActuatorInstanceId = messageJSON['selectedActuatorInstanceId'];
+
+                let historicSelectedActuatorStatusData = await prisma.actuatorStatusData.findMany({
+                    where: {
+                        instanceId: selectedActuatorInstanceId,
+                    }, include: {
+                        lastChangedBy: {
+                            include: {
+                                weatherEvent: true
+                            },
+                        },
+                    },
+                });
+
+                socket.emit(SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC, JSON.stringify(historicSelectedActuatorStatusData));
+            } catch (error) {
+                console.error(
+                    'Data Service: Error processing incoming Historic Actuator Status Data Request Socket IO message: ',
                     error
                 );
             }

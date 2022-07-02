@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Location, type ActuatorMetaData } from '@prisma/client';
-	import { onMount } from 'svelte';
+	import { Location, type ActuatorMetaData, type ActuatorStatusData } from '@prisma/client';
+	import { onDestroy, onMount } from 'svelte';
 
 	import { enumValueToString, stringToEnumValue } from '$root/utils/enumUtil';
 	import { ICON_COMMON_LOCATION, ICON_BUTTON_ADD } from '$root/constants/iconConstants';
@@ -20,6 +20,13 @@
 	import ActionButton from '$root/components/core/ActionButton.svelte';
 	import ActuatorStatus from '$root/components/actuators/ActuatorStatus.svelte';
 	import LoadingSpinner from '$root/components/core/LoadingSpinner.svelte';
+	import {
+		socket,
+		SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC,
+		SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC
+	} from '$root/utils/socketio';
+	import type { ActuatorStatusDataWithRelatedWeatherEventData } from '$root/types/additionalPrismaTypes';
+	import ActuatorStatusHistory from '$root/components/actuators/ActuatorStatusHistory.svelte';
 
 	let initializingStores = true;
 
@@ -27,9 +34,32 @@
 
 	let actuatorMetaDataAtLocation = new Map<string, ActuatorMetaData>();
 
+	let fetchingHistoricActuatorsData = false;
+	let selectedActuatorHistoricStatusData:
+		| ActuatorStatusDataWithRelatedWeatherEventData[]
+		| undefined;
+
 	onMount(() => {
 		initializingStores = false;
-		updateLiveData(stringToEnumValue(Location, $selectedLocation), $actuatorMetaData);
+
+		socket.on(SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC, (message) => {
+			try {
+				const messageJSON = JSON.parse(message.toString());
+				console.log(JSON.stringify(messageJSON));
+				selectedActuatorHistoricStatusData =
+					messageJSON as ActuatorStatusDataWithRelatedWeatherEventData[];
+			} catch (error) {
+				console.error(
+					'Web App: Error processing incoming Historic Actuators Status Data Response Socket IO message: ',
+					error
+				);
+			}
+			fetchingHistoricActuatorsData = false;
+		});
+	});
+
+	onDestroy(() => {
+		socket.off(SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC);
 	});
 
 	$: updateLiveData(stringToEnumValue(Location, $selectedLocation), $actuatorMetaData);
@@ -38,8 +68,6 @@
 		selectedLocation: Location,
 		actuatorMetaData: Map<string, ActuatorMetaData>
 	) => {
-		console.log('Updating Actuators Data', selectedLocation, actuatorMetaData);
-
 		actuatorMetaDataAtLocation = new Map(
 			[...actuatorMetaData]
 				.filter(([_, v]) => v.location === selectedLocation)
@@ -52,6 +80,18 @@
 		) {
 			selectedActuatorInstanceId.set('');
 		}
+	};
+
+	$: updateHistoricActuatorsStatusData($selectedActuatorInstanceId);
+
+	const updateHistoricActuatorsStatusData = (selectedActuatorInstanceId: string) => {
+		fetchingHistoricActuatorsData = true;
+		socket.emit(
+			SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC,
+			JSON.stringify({
+				selectedActuatorInstanceId
+			})
+		);
 	};
 </script>
 
@@ -73,7 +113,7 @@
 				name="selectedLocation"
 				iconName={ICON_COMMON_LOCATION}
 				iconAlt="ActuatorLocation"
-				{initializingStores}
+				loading={initializingStores}
 				initialValue={$selectedLocation}
 				options={selectedLocationOptions}
 				onChange={selectedLocation.set}
@@ -82,12 +122,17 @@
 	</MainContentHeader>
 	<div class="flex flex-col lg:flex-row lg:mt-10">
 		<div
-			class="flex flex-grow lg:mr-10 border rounded-xl border-accentLight dark:border-accentDark p-3 lg:p-8"
+			class="w-full flex flex-grow lg:mr-10 border rounded-xl border-accentLight dark:border-accentDark py-2 px-5 lg:py-3 lg:px-6"
 		>
 			{#if initializingStores}
 				<LoadingSpinner />
 			{:else if $selectedActuatorInstanceId && actuatorMetaDataAtLocation.has($selectedActuatorInstanceId) && $actuatorStatusData.has($selectedActuatorInstanceId)}
-				<div class="w-full">// TODO Show History of changes and allow updating status</div>
+				<div class="w-full">
+					<ActuatorStatusHistory
+						loading={fetchingHistoricActuatorsData}
+						actuatorHistoricStatusData={selectedActuatorHistoricStatusData}
+					/>
+				</div>
 			{/if}
 		</div>
 		<div
