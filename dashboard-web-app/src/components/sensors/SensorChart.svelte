@@ -6,7 +6,11 @@
 	import { enumValueToString } from '$root/utils/enumUtil';
 	import LoadingSpinner from '../core/LoadingSpinner.svelte';
 
-	const getOptions = (themeToUse: string) => {
+	const getOptions = (
+		themeToUse: string,
+		sensorMetaData: SensorMetaData | undefined,
+		data: SensorTelemetryData[] | undefined
+	) => {
 		return {
 			theme: {
 				mode: themeToUse
@@ -38,8 +42,8 @@
 			},
 			series: [
 				{
-					name: 'sales',
-					data: [30, 40, 35, 50, 49, 60, 70, 91, 125]
+					name: 'sensorValues',
+					data: data ? data.map((d) => d.value) : []
 				}
 			],
 			fill: {
@@ -79,12 +83,22 @@
 
 	let chart: { update(options: any): void; destroy(): void } | undefined;
 
-	theme.subscribe((newTheme) => {
-		if (!newTheme || !chart) {
+	$: onParametersChange($theme, sensorMetaData, data);
+
+	const onParametersChange = (
+		theme: string | undefined,
+		sensorMetaData: SensorMetaData | undefined,
+		data: SensorTelemetryData[] | undefined
+	) => {
+		if (!chart) {
 			return;
 		}
-		chart!.update(getOptions(newTheme));
-	});
+		try {
+			chart!.update(getOptions(theme ?? LIGHT_MODE, sensorMetaData, data));
+		} catch (error) {
+			console.error('Could not update SensorChart: ', error);
+		}
+	};
 
 	export let sensorMetaData: SensorMetaData | undefined;
 	export let data: SensorTelemetryData[] | undefined;
@@ -93,5 +107,8 @@
 {#if !data}
 	<LoadingSpinner />
 {:else}
-	<ApexChart options={getOptions($theme ?? LIGHT_MODE)} bind:chartRef={chart} />
+	<ApexChart
+		options={getOptions($theme ?? LIGHT_MODE, sensorMetaData, data)}
+		bind:chartRef={chart}
+	/>
 {/if}

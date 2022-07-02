@@ -15,6 +15,7 @@
 		sensorLocation,
 		sensorDataPeriod,
 		sensorMetaData,
+		selectedSensorInstanceId,
 		liveSensorData
 	} from '$root/stores/sensorStores';
 
@@ -44,9 +45,6 @@
 		  );
 
 	$: isLiveData = $sensorDataPeriod === enumValueToString(DataPeriod.LIVE_DATA);
-
-	// TODO DWA Store in localstorage store, fix Chart not updating after changing selection
-	let selectedSensorInstanceId: string | undefined = undefined;
 
 	let sensorMetaDataAtLocation = new Map<string, SensorMetaData>();
 	let fetchingHistoricData = false;
@@ -84,9 +82,8 @@
 
 				historicSensorTelemetryData = telemetryDataHelperMap;
 
-				// TODO DWA Store in localstorage store, fix Chart not updating after changing selection
-				if (!selectedSensorInstanceId && [...sensorMetaDataAtLocation.keys()].length > 0) {
-					selectedSensorInstanceId = [...sensorMetaDataAtLocation.keys()][0];
+				if ($selectedSensorInstanceId && !sensorMetaDataAtLocation.has($selectedSensorInstanceId)) {
+					selectedSensorInstanceId.set('');
 				}
 			} catch (error) {
 				console.error(
@@ -113,9 +110,8 @@
 				.sort((a, b) => a[0].localeCompare(b[0]))
 		);
 
-		// TODO DWA Store in localstorage store, fix Chart not updating after changing selection
-		if (!selectedSensorInstanceId && [...sensorMetaDataAtLocation.keys()].length > 0) {
-			selectedSensorInstanceId = [...sensorMetaDataAtLocation.keys()][0];
+		if ($selectedSensorInstanceId && !sensorMetaDataAtLocation.has($selectedSensorInstanceId)) {
+			selectedSensorInstanceId.set('');
 		}
 	};
 
@@ -176,15 +172,15 @@
 		>
 			{#if [...sensorMetaDataAtLocation].length === 0}
 				<LoadingSpinner />
-			{:else if selectedSensorInstanceId && sensorMetaDataAtLocation.has(selectedSensorInstanceId) && $liveSensorData.has(selectedSensorInstanceId)}
+			{:else if $selectedSensorInstanceId && sensorMetaDataAtLocation.has($selectedSensorInstanceId) && $liveSensorData.has($selectedSensorInstanceId)}
 				<div class="w-full">
 					<SensorChart
-						sensorMetaData={sensorMetaDataAtLocation.get(selectedSensorInstanceId)}
+						sensorMetaData={sensorMetaDataAtLocation.get($selectedSensorInstanceId)}
 						data={isLiveData
-							? $liveSensorData.get(selectedSensorInstanceId)
+							? $liveSensorData.get($selectedSensorInstanceId)
 							: fetchingHistoricData
 							? undefined
-							: historicSensorTelemetryData.get(selectedSensorInstanceId)}
+							: historicSensorTelemetryData.get($selectedSensorInstanceId)}
 					/>
 				</div>
 			{/if}
@@ -198,14 +194,14 @@
 				{#each [...sensorMetaDataAtLocation] as [key, metaData]}
 					<SensorStatus
 						{metaData}
-						isSelected={key === selectedSensorInstanceId}
+						isSelected={key === $selectedSensorInstanceId}
 						isHistoricData={!isLiveData}
 						telemetryData={isLiveData
 							? $liveSensorData.get(key)
 							: fetchingHistoricData
 							? undefined
 							: historicSensorTelemetryData.get(key)}
-						onClick={() => (selectedSensorInstanceId = key)}
+						onClick={() => selectedSensorInstanceId.set(key)}
 					/>
 				{/each}
 			{/if}

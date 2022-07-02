@@ -16,7 +16,7 @@ export const sensorLocation: Writable<string> = localStorageStore(
 
 const initialSensorDataPeriod = enumValueToString(DataPeriod.LIVE_DATA);
 export const sensorDataPeriod: Writable<string> = localStorageStore(
-	'sensorDatPeriod',
+	'sensorDataPeriod',
 	initialSensorDataPeriod
 );
 
@@ -75,6 +75,11 @@ const createLiveSensorDataStore = () => {
 
 	return liveSensorDataStore;
 };
+
+export const selectedSensorInstanceId: Writable<string> = localStorageStore(
+	'selectedSensorInstanceId',
+	''
+);
 
 export const liveSensorData: LiveSensorDataStore = createLiveSensorDataStore();
 
