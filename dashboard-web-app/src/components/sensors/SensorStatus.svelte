@@ -12,23 +12,65 @@
 	import LoadingSpinner from '../core/LoadingSpinner.svelte';
 	import { SensorValueStatus } from '$root/types/sensorValueStatus';
 
-	$: valueStatus = enumValueToString(getSensorValueStatus(metaData.measure, telemetryData?.value));
-	$: valueStatusBgColor = getSensorValueStatusBgColor(
-		stringToEnumValue(SensorValueStatus, valueStatus)
-	);
-	$: valueStatusBorderColor = getSensorValueStatusBorderColor(
-		stringToEnumValue(SensorValueStatus, valueStatus)
-	);
-
-	$: formattedValue = telemetryData
-		? Number(telemetryData.value).toFixed(0) +
+	$: formattedCurrentValue = telemetryData
+		? Number(telemetryData![telemetryData!.length - 1].value).toFixed(0) +
 		  ' ' +
-		  SENSOR_UNIT_REPRESENTATION_MAP.get(telemetryData.unit)
+		  SENSOR_UNIT_REPRESENTATION_MAP.get(telemetryData![telemetryData!.length - 1].unit)
 		: '';
 
+	$: dataTrend =
+		isHistoricData && telemetryData && telemetryData.length >= 2 ? calculateDataTrend(true) : '';
+
+	$: valueStatus =
+		isHistoricData && telemetryData && telemetryData.length >= 2
+			? calculateDataTrend(false)
+			: enumValueToString(
+					telemetryData
+						? getSensorValueStatus(
+								metaData.measure,
+								telemetryData![telemetryData!.length - 1].value
+						  )
+						: SensorValueStatus.MEDIUM
+			  );
+
+	$: valueStatusBgColor =
+		isHistoricData && telemetryData && telemetryData.length >= 2
+			? dataTrend.startsWith('+')
+				? 'bg-green-300'
+				: 'bg-red-300'
+			: getSensorValueStatusBgColor(stringToEnumValue(SensorValueStatus, valueStatus));
+
+	$: valueStatusBorderColor =
+		isHistoricData && telemetryData && telemetryData.length >= 2
+			? dataTrend.startsWith('+')
+				? 'border-green-400'
+				: 'border-red-400'
+			: getSensorValueStatusBorderColor(stringToEnumValue(SensorValueStatus, valueStatus));
+
+	const calculateDataTrend = (absolute: boolean) => {
+		const oldestValue = Number(telemetryData![0].value);
+		const newestValue = Number(telemetryData![telemetryData!.length - 1].value);
+		const trendAbsolute = newestValue - oldestValue;
+		if (absolute) {
+			return (
+				(trendAbsolute >= 0.0 ? '+ ' : '- ') +
+				trendAbsolute.toFixed(1).replace('+', '').replace('-', '')
+			);
+		}
+
+		const trendRelative = (trendAbsolute / oldestValue) * 100.0;
+
+		return (
+			(trendAbsolute >= 0.0 ? '+ ' : '- ') +
+			trendRelative.toFixed(1).replace('+', '').replace('-', '') +
+			' %'
+		);
+	};
+
 	export let metaData: SensorMetaData;
-	export let telemetryData: SensorTelemetryData | undefined;
+	export let telemetryData: SensorTelemetryData[] | undefined;
 	export let isSelected: boolean = false;
+	export let isHistoricData: boolean = false;
 	export let onClick: CallableFunction = () => {};
 </script>
 
@@ -65,7 +107,7 @@
 			<div class="flex flex-col justify-around">
 				{#if telemetryData}
 					<div class="text-lg md:text-xl font-bold md:font-medium text-right md:text-center">
-						{formattedValue}
+						{isHistoricData ? dataTrend : formattedCurrentValue}
 					</div>
 					<div
 						class={'hidden md:block rounded-full ' +

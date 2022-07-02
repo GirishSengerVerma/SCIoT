@@ -2,6 +2,10 @@ import 'dotenv/config'
 import * as mqtt from "mqtt";
 import { PrismaClient, Location, SensorMeasure, SensorSimulationBehavior, SensorSimulationMode, UnitType } from '@prisma/client';
 import { Server } from 'socket.io';
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc.js";
+
+dayjs.extend(utc)
 
 import { assert } from 'console';
 
@@ -391,6 +395,9 @@ const initializePrisma = async () => {
     console.log('Data Service: Prisma Client: Done.\n');
 }
 
+const SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC = 'requestHistoricSensorData';
+const SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC = 'responseHistoricSensorData';
+
 let currentWebsocketConnections = [];
 
 const initializeWebsocketServer = (io) => {
@@ -424,6 +431,80 @@ const initializeWebsocketServer = (io) => {
                     socket.emit(sensorTelemetryTopicPrefix, JSON.stringify(sensorTelemetryData));
                 }
             });
+        });
+
+        socket.on(SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC, (message) => {
+            try {
+                const messageJSON = JSON.parse(message.toString());
+
+                const sensorLocation = messageJSON['sensorLocation'];
+                const sensorDataPeriod = messageJSON['sensorDataPeriod'];
+
+                if (sensorDataPeriod === 'LIVE_DATA') {
+                    console.error(
+                        'Data Service: Request for Historic Sensor Data although Data Period is Live Data'
+                    );
+                    return;
+                }
+
+                let timestampFilterGte;
+                if (sensorDataPeriod === 'LAST_HOUR') {
+                    timestampFilterGte = dayjs().subtract(1, 'hour');
+                } else if (sensorDataPeriod === 'LAST_DAY') {
+                    timestampFilterGte = dayjs().subtract(1, 'day');
+                } else if (sensorDataPeriod === 'LAST_WEEK') {
+                    timestampFilterGte = dayjs().subtract(1, 'week');
+                } else if (sensorDataPeriod === 'LAST_MONTH') {
+                    timestampFilterGte = dayjs().subtract(1, 'month');
+                }
+
+                prisma.sensor.findMany({ select: { instanceId: true } }).then(async (sensors) => {
+                    const historicSensorData = {};
+
+                    for (let sensor of sensors) {
+                        const sensorMetaData = await prisma.sensorMetaData.findFirst({
+                            where: {
+                                instanceId: sensor.instanceId
+                            },
+                            orderBy: {
+                                timestamp: 'desc'
+                            }
+                        });
+
+                        if (sensorMetaData.location !== sensorLocation) {
+                            continue;
+                        }
+
+                        historicSensorData[sensorMetaData.instanceId] = {
+                            metaData: {},
+                            telemetryData: []
+                        }
+
+                        historicSensorData[sensorMetaData.instanceId]['metaData'] = sensorMetaData;
+
+                        const sensorTelemetryDataList = await prisma.sensorTelemetryData.findMany({
+                            where: {
+                                instanceId: sensor.instanceId,
+                                timestamp: {
+                                    gte: timestampFilterGte.toDate(),
+                                }
+                            },
+                            orderBy: {
+                                timestamp: 'asc'
+                            }
+                        });
+                        historicSensorData[sensorMetaData.instanceId]['telemetryData'] = sensorTelemetryDataList;
+                    }
+
+                    socket.emit(SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC, JSON.stringify(historicSensorData));
+                });
+
+            } catch (error) {
+                console.error(
+                    'Data Service: Error processing incoming Historic Sensor Data Request Socket IO message: ',
+                    error
+                );
+            }
         });
 
         socket.conn.on("close", (_) => {

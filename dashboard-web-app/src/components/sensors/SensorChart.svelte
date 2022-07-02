@@ -4,6 +4,7 @@
 	import ApexChart from '$root/components/core/ApexChart.svelte';
 	import { LIGHT_MODE, theme } from '$root/stores/themeStore';
 	import { enumValueToString } from '$root/utils/enumUtil';
+	import LoadingSpinner from '../core/LoadingSpinner.svelte';
 
 	const getOptions = (themeToUse: string) => {
 		return {
@@ -89,4 +90,8 @@
 	export let data: SensorTelemetryData[] | undefined;
 </script>
 
-<ApexChart options={getOptions($theme ?? LIGHT_MODE)} bind:chartRef={chart} />
+{#if !data}
+	<LoadingSpinner />
+{:else}
+	<ApexChart options={getOptions($theme ?? LIGHT_MODE)} bind:chartRef={chart} />
+{/if}

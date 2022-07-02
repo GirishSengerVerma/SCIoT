@@ -79,7 +79,8 @@ class Simulator:
 
     def stop(self):
         self.is_running = False
-        self.plot_animation.pause()
+        if self.show_live_plot:
+            self.plot_animation.pause()
         plt.close('all')
 
     def get_sensors_at_location_sorted(self, location: SensorLocation):

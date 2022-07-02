@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Location, type SensorMetaData, type SensorTelemetryData } from '@prisma/client';
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 
 	import { enumValueToString, stringToEnumValue } from '$root/utils/enumUtil';
 	import { DataPeriod } from '$root/types/dataPeriod';
@@ -24,65 +24,113 @@
 	import ActionButton from '$root/components/core/ActionButton.svelte';
 	import SensorStatus from '$root/components/sensors/SensorStatus.svelte';
 	import SensorChart from '$root/components/sensors/SensorChart.svelte';
+	import {
+		socket,
+		SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC,
+		SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC
+	} from '$root/utils/socketio';
+	import LoadingSpinner from '$root/components/core/LoadingSpinner.svelte';
 
 	let initializingStores = true;
 
 	const sensorLocationOptions = Object.values(Location).map(enumValueToString);
 	const sensorDataPeriodOptions = Object.values(DataPeriod).map(enumValueToString);
 
-	$: onChange(
-		stringToEnumValue(Location, $sensorLocation),
-		stringToEnumValue(DataPeriod, $sensorDataPeriod),
-		$sensorMetaData,
-		$liveSensorData
-	);
+	$: $sensorDataPeriod === enumValueToString(DataPeriod.LIVE_DATA)
+		? updateLiveData(stringToEnumValue(Location, $sensorLocation), $sensorMetaData)
+		: updateHistoricData(
+				stringToEnumValue(Location, $sensorLocation),
+				stringToEnumValue(DataPeriod, $sensorDataPeriod)
+		  );
+
+	$: isLiveData = $sensorDataPeriod === enumValueToString(DataPeriod.LIVE_DATA);
 
 	// TODO DWA Store in localstorage store, fix Chart not updating after changing selection
 	let selectedSensorInstanceId: string | undefined = undefined;
 
 	let sensorMetaDataAtLocation = new Map<string, SensorMetaData>();
-	let sensorTelemetryData = new Map<string, SensorTelemetryData[]>();
-	let sensorCurrentTelemetryData = new Map<string, SensorTelemetryData>();
+	let fetchingHistoricData = false;
+	let historicSensorTelemetryData = new Map<string, SensorTelemetryData[]>();
 
 	onMount(() => {
 		initializingStores = false;
+
+		socket.on(SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC, (message) => {
+			if ($sensorDataPeriod === enumValueToString(DataPeriod.LIVE_DATA)) {
+				console.log('Ignoring incoming historic sensor data because we are in Live Data mode.');
+				return;
+			}
+
+			try {
+				const messageJSON = JSON.parse(message.toString());
+
+				const metaDataHelperMap: Map<string, SensorMetaData> = new Map();
+				const telemetryDataHelperMap: Map<string, SensorTelemetryData[]> = new Map();
+
+				for (let sensorInstanceId of Object.keys(messageJSON)) {
+					metaDataHelperMap.set(
+						sensorInstanceId,
+						messageJSON[sensorInstanceId]['metaData'] as SensorMetaData
+					);
+					telemetryDataHelperMap.set(
+						sensorInstanceId,
+						messageJSON[sensorInstanceId]['telemetryData'] as SensorTelemetryData[]
+					);
+				}
+
+				sensorMetaDataAtLocation = new Map(
+					[...metaDataHelperMap].sort((a, b) => a[0].localeCompare(b[0]))
+				);
+
+				historicSensorTelemetryData = telemetryDataHelperMap;
+
+				// TODO DWA Store in localstorage store, fix Chart not updating after changing selection
+				if (!selectedSensorInstanceId && [...sensorMetaDataAtLocation.keys()].length > 0) {
+					selectedSensorInstanceId = [...sensorMetaDataAtLocation.keys()][0];
+				}
+			} catch (error) {
+				console.error(
+					'Web App: Error processing incoming Historic Sensor Data Response Socket IO message: ',
+					error
+				);
+			}
+
+			fetchingHistoricData = false;
+		});
 	});
 
-	const onChange = (
+	onDestroy(() => {
+		socket.off(SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC);
+	});
+
+	const updateLiveData = (
 		sensorLocation: Location,
-		sensorDataPeriod: DataPeriod,
-		sensorMetaData: Map<string, SensorMetaData>,
-		liveSensorData: Map<string, SensorTelemetryData[]>
+		sensorMetaData: Map<string, SensorMetaData>
 	) => {
-		const isLiveData = sensorDataPeriod === DataPeriod.LIVE_DATA;
+		sensorMetaDataAtLocation = new Map(
+			[...sensorMetaData]
+				.filter(([_, v]) => v.location === sensorLocation)
+				.sort((a, b) => a[0].localeCompare(b[0]))
+		);
 
-		if (isLiveData) {
-			sensorMetaDataAtLocation = new Map(
-				[...sensorMetaData]
-					.filter(([_, v]) => v.location === sensorLocation)
-					.sort((a, b) => a[0].localeCompare(b[0]))
-			);
-
-			if (!selectedSensorInstanceId && [...sensorMetaDataAtLocation.keys()].length > 0) {
-				selectedSensorInstanceId = [...sensorMetaDataAtLocation.keys()][0];
-			}
-
-			sensorTelemetryData = new Map(
-				[...liveSensorData].filter(([k, _]) => sensorMetaDataAtLocation.has(k))
-			);
-
-			let helperMap = new Map<string, SensorTelemetryData>();
-			for (let [k, v] of [...sensorTelemetryData]) {
-				if (!sensorTelemetryData.has(k)) {
-					continue;
-				}
-				const allSensorTelemetryData = sensorTelemetryData.get(k)!;
-				helperMap.set(k, allSensorTelemetryData[allSensorTelemetryData.length - 1]);
-			}
-			sensorCurrentTelemetryData = helperMap;
-		} else {
-			// TODO Historic Data
+		// TODO DWA Store in localstorage store, fix Chart not updating after changing selection
+		if (!selectedSensorInstanceId && [...sensorMetaDataAtLocation.keys()].length > 0) {
+			selectedSensorInstanceId = [...sensorMetaDataAtLocation.keys()][0];
 		}
+	};
+
+	const updateHistoricData = (sensorLocation: Location, sensorDataPeriod: DataPeriod) => {
+		console.log('Update Historic Data..', sensorLocation, sensorDataPeriod);
+
+		fetchingHistoricData = true;
+
+		socket.emit(
+			SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC,
+			JSON.stringify({
+				sensorLocation,
+				sensorDataPeriod
+			})
+		);
 	};
 </script>
 
@@ -126,11 +174,17 @@
 		<div
 			class="flex flex-grow lg:mr-10 border rounded-xl border-accentLight dark:border-accentDark p-3 lg:p-8"
 		>
-			{#if selectedSensorInstanceId && sensorMetaDataAtLocation.has(selectedSensorInstanceId) && sensorTelemetryData.has(selectedSensorInstanceId)}
+			{#if [...sensorMetaDataAtLocation].length === 0}
+				<LoadingSpinner />
+			{:else if selectedSensorInstanceId && sensorMetaDataAtLocation.has(selectedSensorInstanceId) && $liveSensorData.has(selectedSensorInstanceId)}
 				<div class="w-full">
 					<SensorChart
 						sensorMetaData={sensorMetaDataAtLocation.get(selectedSensorInstanceId)}
-						data={sensorTelemetryData.get(selectedSensorInstanceId)}
+						data={isLiveData
+							? $liveSensorData.get(selectedSensorInstanceId)
+							: fetchingHistoricData
+							? undefined
+							: historicSensorTelemetryData.get(selectedSensorInstanceId)}
 					/>
 				</div>
 			{/if}
@@ -138,14 +192,23 @@
 		<div
 			class="flex flex-wrap lg:max-w-xl gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-6 lg:mt-0 justify-between lg:justify-end"
 		>
-			{#each [...sensorMetaDataAtLocation] as [key, metaData]}
-				<SensorStatus
-					{metaData}
-					isSelected={key === selectedSensorInstanceId}
-					telemetryData={sensorCurrentTelemetryData.get(key)}
-					onClick={() => (selectedSensorInstanceId = key)}
-				/>
-			{/each}
+			{#if [...sensorMetaDataAtLocation].length === 0}
+				<LoadingSpinner />
+			{:else}
+				{#each [...sensorMetaDataAtLocation] as [key, metaData]}
+					<SensorStatus
+						{metaData}
+						isSelected={key === selectedSensorInstanceId}
+						isHistoricData={!isLiveData}
+						telemetryData={isLiveData
+							? $liveSensorData.get(key)
+							: fetchingHistoricData
+							? undefined
+							: historicSensorTelemetryData.get(key)}
+						onClick={() => (selectedSensorInstanceId = key)}
+					/>
+				{/each}
+			{/if}
 		</div>
 	</div>
 </MainContent>
