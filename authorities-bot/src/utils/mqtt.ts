@@ -31,8 +31,7 @@ console.log(
   'MQTT Client: Connecting to MQTT broker over secure MQTT connection..'
 );
 
-export const moveUnitsRequestTopicName = 'authorities/moveunits/request';
-export const moveUnitsResponseTopicName = 'authorities/moveunits/response';
+export const weatherEventActionTopicName = 'weatherevent/action';
 
 export const mqttClient = mqtt.connect(host, options);
 
@@ -47,7 +46,7 @@ mqttClient.on('reconnect', () => {
 
 mqttClient.on('connect', () => {
   console.log('MQTT Client: Connected.');
-  mqttClient.subscribe(moveUnitsRequestTopicName, { qos: 1 });
+  mqttClient.subscribe(weatherEventActionTopicName, { qos: 1 });
 });
 
 export let mqttListenerActive = false;
@@ -64,9 +63,10 @@ export const listenToMQTTMessages = (ctx: Context) => {
       const messageJSON = JSON.parse(messageString);
 
       if (
-        topic.startsWith(moveUnitsRequestTopicName) &&
+        topic.startsWith(weatherEventActionTopicName) &&
         messageJSON.hasOwnProperty('id') &&
         messageJSON.hasOwnProperty('weatherEvent') &&
+        messageJSON.hasOwnProperty('type') &&
         messageJSON.hasOwnProperty('moveUnitsType') &&
         messageJSON.hasOwnProperty('moveUnitsAmount') &&
         messageJSON.hasOwnProperty('moveUnitsFromLocation') &&
@@ -75,6 +75,7 @@ export const listenToMQTTMessages = (ctx: Context) => {
         const {
           id,
           weatherEvent: { id: weatherEventId, location, type },
+          type: actionType,
           moveUnitsType,
           moveUnitsAmount,
           moveUnitsFromLocation,
@@ -84,6 +85,10 @@ export const listenToMQTTMessages = (ctx: Context) => {
         console.log('Processing Move Units Request ' + id + '..');
 
         addWeatherEvent(weatherEventId, location, type);
+
+        if (actionType !== 'COUNTER_MEASURE_MOVE_UNITS_REQUEST') {
+          return;
+        }
 
         const weatherEventTypeDisplayName =
           WEATHER_EVENT_TYPE_DISPLAY_NAME_BY_NAME.get(type)!;
@@ -111,6 +116,15 @@ export const listenToMQTTMessages = (ctx: Context) => {
           '.\n\nRespond using /moveunits !';
 
         await ctx.reply(telegramMessage);
+      } else if (
+        topic.startsWith(weatherEventActionTopicName) &&
+        messageJSON.hasOwnProperty('weatherEvent')
+      ) {
+        const {
+          weatherEvent: { id: weatherEventId, location, type },
+        } = messageJSON;
+
+        addWeatherEvent(weatherEventId, location, type);
       }
     } catch (error) {
       console.error('Error processing incoming MQTT message: ', error);
@@ -134,7 +148,7 @@ export const sendMoveUnitsResponseMessage = (
     moveUnitsToLocation,
     moveUnitsAmount,
   };
-  mqttClient.publish(moveUnitsResponseTopicName, JSON.stringify(message), {
+  mqttClient.publish(weatherEventActionTopicName, JSON.stringify(message), {
     qos: 1,
     retain: false,
   });

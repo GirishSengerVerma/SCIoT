@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import * as mqtt from "mqtt";
-import { PrismaClient, Location, SensorMeasure, SensorSimulationBehavior, SensorSimulationMode, UnitType, ActuatorType } from '@prisma/client';
+import { PrismaClient, Location, SensorMeasure, SensorSimulationBehavior, SensorSimulationMode, UnitType, ActuatorType, WeatherEventActionType } from '@prisma/client';
 import { Server } from 'socket.io';
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
@@ -507,6 +507,10 @@ const actuatorInstanceTopicPrefix = 'actuators/instance';
 const actuatorStatusDataTopicPrefix = 'actuators/statusdata';
 const actuatorsMetadataTopicPrefix = 'actuators/metadata';
 
+const authoritiesUnitStatusTopicPrefix = 'authorities/unitstatus';
+
+const weatherEventActionTopicPrefix = 'weatherevent/action';
+
 const prisma = new PrismaClient();
 
 const initializePrisma = async () => {
@@ -661,6 +665,20 @@ const initializeWebsocketServer = (io) => {
             });
         });
 
+        // Send current Authorities Unit Status
+        prisma.unitStatus.findMany({
+            include: {
+                lastChangedBy: {
+                    weatherEvent: true,
+                }
+            },
+            orderBy: ['location', 'unitType'],
+        }).then(unitStatusData => {
+            unitStatusData.forEach((unitStatus) => {
+                socket.emit(authoritiesUnitStatusTopicPrefix, unitStatus);
+            });
+        });
+
         socket.on(SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC, (message) => {
             try {
                 const messageJSON = JSON.parse(message.toString());
@@ -796,7 +814,14 @@ const initializeMQTTClient = async () => {
         try {
             const messageJSON = JSON.parse(message.toString());
 
-            if (topic.startsWith(sensorTelemetryTopicPrefix)) {
+            const timestamp = dayjs().toISOString();            
+
+             if (topic.startsWith(sensorInstanceTopicPrefix)) {
+                currentWebsocketConnections.forEach(socket => socket.emit(sensorInstanceTopicPrefix, JSON.stringify(messageJSON)));
+                prisma.sensor.upsert({ create: messageJSON, where: { instanceId: messageJSON.instanceId }})
+                    .then(data => data)
+                    .catch(error => console.error('Data Service: Error persisting Sensor Instance JSON data using Prisma: ', error));
+            } else if (topic.startsWith(sensorTelemetryTopicPrefix)) {
                 currentWebsocketConnections.forEach(socket => socket.emit(sensorTelemetryTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.sensorTelemetryData.create({ data: messageJSON })
                     .then(data => data)
@@ -806,6 +831,16 @@ const initializeMQTTClient = async () => {
                 prisma.sensorMetaData.create({ data: messageJSON })
                     .then(data => data)
                     .catch(error => console.error('Data Service: Error persisting Sensor MetaData JSON data using Prisma: ', error));
+            }else if (topic.startsWith(actuatorInstanceTopicPrefix)) {
+                currentWebsocketConnections.forEach(socket => socket.emit(actuatorInstanceTopicPrefix, JSON.stringify(messageJSON)));
+                prisma.actuator.upsert({ 
+                    create: messageJSON, 
+                    where: { 
+                        instanceId: messageJSON.instanceId 
+                    }
+                })
+                    .then(data => data)
+                    .catch(error => console.error('Data Service: Error persisting Actuator Instance JSON data using Prisma: ', error));
             } else if (topic.startsWith(actuatorStatusDataTopicPrefix)) {
                 currentWebsocketConnections.forEach(socket => socket.emit(actuatorStatusDataTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.actuatorStatusData.create({ data: messageJSON })
@@ -816,8 +851,61 @@ const initializeMQTTClient = async () => {
                 prisma.actuatorMetaData.create({ data: messageJSON })
                     .then(data => data)
                     .catch(error => console.error('Data Service: Error persisting Actuator MetaData JSON data using Prisma: ', error));
+            } else if(topic.startsWith(weatherEventActionTopicPrefix)) {
+                const weatherEventAction = JSON.stringify(messageJSON);
+
+                currentWebsocketConnections.forEach(socket => socket.emit(weatherEventActionTopicPrefix, weatherEventAction));
+                
+                prisma.weatherEventAction.create({ data: messageJSON })
+                    .then(data => data)
+                    .catch(error => console.error('Data Service: Error persisting Weather Event Action JSON data using Prisma: ', error));
+
+                if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_DEVICE_NOTIFICATION) {
+                    // TODO Implement!
+                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION) {
+                    prisma.actuatorMetaData.findMany({ 
+                        select: {instanceId: true}, 
+                        where: {
+                            location: weatherEventAction.location,
+                            type: ActuatorType.LOCKDOWN,
+                        }
+                    }).then(result => {
+                        prisma.actuatorStatusData.createMany({
+                            data: {
+                                result.map(item => {})
+                            }
+                        });
+                    });
+                    // TODO Update ActuatorStatusData for LOCKDOWN Actuators at Location
+                    // TODO Emit actuatorStatusData via Socket Message and MQTT message
+                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_REOPEN_LOCATION) {
+                    // TODO Update ActuatorStatusData for LOCKDOWN Actuators at Location
+                    // TODO Emit actuatorStatusData via Socket Message and MQTT message
+                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL) {
+                    // TODO Update ActuatorStatusData for WATER_PROTECTION_WALL Actuators at Location
+                    // TODO Emit actuatorStatusData via Socket Message and MQTT message
+                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_DOWN_WATER_PROTECTION_WALL) {
+                    // TODO Update ActuatorStatusData for WATER_PROTECTION_WALL Actuators at Location
+                    // TODO Emit actuatorStatusData via Socket Message and MQTT message
+                } else if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_LIGHT) {
+                    // TODO Update ActuatorStatusData for ALARM_LIGHT Actuators at Location
+                    // TODO Emit actuatorStatusData via Socket Message and MQTT message
+                } else if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_SOUND) {
+                    // TODO Update ActuatorStatusData for ALARM_SOUND Actuators at Location
+                    // TODO Emit actuatorStatusData via Socket Message and MQTT message
+                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_MOVE_UNITS_RESPONSE) {
+                    // TODO Update Number of Units at from and to Location
+                    // TODO Emit authoritiesUnitStatus message via Socket Message
+                } else if(weatherEventAction.type === WeatherEventActionType.PLANNING_INCREASE_RISK_LEVEL) {
+                    // TODO Create new Risk Level for Weather Event
+                    // TODO Emit weatherEventRisk via Socket Message
+                } else if(weatherEventAction.type === WeatherEventActionType.PLANNING_DECREASE_RISK_LEVEL) {
+                    // TODO Create new Risk Level for Weather Event
+                    // TODO Emit weatherEventRisk via Socket Message
+                }
+                // TODO Other types
             }
-            // TODO DWA Add for weather events, units, ...   
+            // TODO DWA Add for weather events, ...   
         } catch (error) {
             console.error('Data Service: Error processing incoming MQTT message: ', error);
         }

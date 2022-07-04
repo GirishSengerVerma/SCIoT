@@ -16,7 +16,7 @@ import { Scenes, session, Telegraf } from 'telegraf';
 import { hasUnitStatus, getUnitStatus } from './utils/unitStatus';
 import {
   listenToMQTTMessages,
-  moveUnitsRequestTopicName,
+  weatherEventActionTopicName,
   mqttClient,
   mqttListenerActive,
 } from './utils/mqtt';
@@ -260,7 +260,7 @@ bot.command('testrequest', async (_) => {
   };
 
   mqttClient.publish(
-    moveUnitsRequestTopicName,
+    weatherEventActionTopicName,
     JSON.stringify(requestMessage),
     { qos: 1, retain: false }
   );

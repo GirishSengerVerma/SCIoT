@@ -7,9 +7,11 @@ import type {
 	ActuatorMetaData,
 	Sensor,
 	SensorMetaData,
-	SensorTelemetryData
+	SensorTelemetryData,
+	UnitStatus
 } from '@prisma/client';
 import { sensors, liveSensorData, sensorMetaData } from '$root/stores/sensorStores';
+import { authoritiesUnitStatus } from '$root/stores/authoritiesStores';
 
 const actuatorInstanceTopicPrefix = 'actuators/instance';
 const actuatorStatusTopicPrefix = 'actuators/statusdata';
@@ -18,6 +20,8 @@ const actuatorMetadataTopicPrefix = 'actuators/metadata';
 const sensorInstanceTopicPrefix = 'sensors/instance';
 const sensorTelemetryTopicPrefix = 'sensors/telemetry';
 const sensorMetadataTopicPrefix = 'sensors/metadata';
+
+const authoritiesUnitStatusTopicPrefix = 'authorities/unitstatus';
 
 export const SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC = 'requestHistoricSensorData';
 export const SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC = 'responseHistoricSensorData';
@@ -90,6 +94,18 @@ socket.on(actuatorMetadataTopicPrefix, (message) => {
 	} catch (error) {
 		console.error(
 			'Web App: Error processing incoming Actuator MetaData Socket IO message: ',
+			error
+		);
+	}
+});
+
+socket.on(authoritiesUnitStatusTopicPrefix, (message) => {
+	try {
+		const messageJSON = JSON.parse(message.toString());
+		authoritiesUnitStatus.setStatus(messageJSON as UnitStatus);
+	} catch (error) {
+		console.error(
+			'Web App: Error processing incoming Authorities UnitStatus Socket IO message: ',
 			error
 		);
 	}
