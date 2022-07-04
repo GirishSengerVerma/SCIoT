@@ -55,12 +55,6 @@
 			selected={route === 'events'}
 		/>
 		<NavigationBarItem
-			iconName={ICON_COMMON_LOCATION}
-			iconAlt="Locations"
-			link="/locations"
-			selected={route === 'locations'}
-		/>
-		<NavigationBarItem
 			iconName={ICON_COMMON_SENSOR}
 			iconAlt="Sensors"
 			link="/sensors"
