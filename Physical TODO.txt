@@ -1,0 +1,9 @@
+TODO Physical
+
+Physical Sensors should
+	annouce themselves using sensors/instance and sensors/metadata on startup or whenever needed
+	in interval, send current value using sensors/telemetry
+
+Physical Actuators should
+	annouce themselves using actuators/instance and actuators/metadata on startup or whenever needed
+	listen to incoming actuators/statusdata messages and update status respectively
