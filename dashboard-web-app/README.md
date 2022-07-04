@@ -24,7 +24,7 @@ Extract the contents of the encrypted archive `.env.zip`. Make sure that you ext
 
 ### Dependencies
 
-Install the required dependencies by running `npm install`.
+Install the required dependencies by running `npm install`. It it fails, first follow the step `Building the Prisma Client` below and then run `npm install` again.
 
 ### Prisma Schema Migration
 
