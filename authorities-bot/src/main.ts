@@ -253,6 +253,8 @@ bot.command('testrequest', async (_) => {
       location: weatherEventLocation,
       type: weatherEventType,
     },
+    type: 'COUNTER_MEASURE_MOVE_UNITS_REQUEST',
+    location: weatherEventLocation,
     moveUnitsType,
     moveUnitsAmount,
     moveUnitsFromLocation,
@@ -260,7 +262,7 @@ bot.command('testrequest', async (_) => {
   };
 
   mqttClient.publish(
-    weatherEventActionTopicName,
+    weatherEventActionTopicName + '/' + moveUnitsToLocation,
     JSON.stringify(requestMessage),
     { qos: 1, retain: false }
   );

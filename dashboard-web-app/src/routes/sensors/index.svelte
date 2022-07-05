@@ -173,7 +173,7 @@
 			{#if initializingStores || fetchingData}
 				<LoadingSpinner />
 			{:else if $selectedSensorInstanceId && sensorMetaDataAtLocation.has($selectedSensorInstanceId) && $liveSensorData.has($selectedSensorInstanceId)}
-				<div class="w-full">
+				<div class="w-full max-w-screen-lg">
 					<SensorChart
 						sensorMetaData={sensorMetaDataAtLocation.get($selectedSensorInstanceId)}
 						data={isLiveData

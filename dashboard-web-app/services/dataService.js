@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import * as mqtt from "mqtt";
-import { PrismaClient, Location, SensorMeasure, SensorSimulationBehavior, SensorSimulationMode, UnitType, ActuatorType, WeatherEventActionType } from '@prisma/client';
+import { PrismaClient, Location, SensorMeasure, SensorSimulationBehavior, SensorSimulationMode, UnitType, ActuatorType, WeatherEventActionType, WeatherEventRiskLevel } from '@prisma/client';
 import { Server } from 'socket.io';
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc.js";
@@ -507,9 +507,11 @@ const actuatorInstanceTopicPrefix = 'actuators/instance';
 const actuatorStatusDataTopicPrefix = 'actuators/statusdata';
 const actuatorsMetadataTopicPrefix = 'actuators/metadata';
 
-const authoritiesUnitStatusTopicPrefix = 'authorities/unitstatus';
+const weatherEventInstanceTopicPrefix = 'weatherevents/instance';
+const weatherEventRiskTopicPrefix = 'weatherevents/risk';
+const weatherEventActionTopicPrefix = 'weatherevents/action';
 
-const weatherEventActionTopicPrefix = 'weatherevent/action';
+const authoritiesUnitStatusTopicPrefix = 'authorities/unitstatus';
 
 const prisma = new PrismaClient();
 
@@ -665,16 +667,34 @@ const initializeWebsocketServer = (io) => {
             });
         });
 
+        // TODO DWA Send current Weather Events and for each: current WeatherEventRisk and possibly also action(s) ?
+
         // Send current Authorities Unit Status
+        
+        const locationAndUnitTypesProcessed = new Set([]);
+
         prisma.unitStatus.findMany({
             include: {
                 lastChangedBy: {
-                    weatherEvent: true,
-                }
+                    include: {
+                        weatherEvent: true,
+                    },
+                },
             },
-            orderBy: ['location', 'unitType'],
+            orderBy: [
+                {
+                    location: 'desc', 
+                },
+                {
+                    unitType: 'desc',
+                },
+            ],
         }).then(unitStatusData => {
             unitStatusData.forEach((unitStatus) => {
+                if(locationAndUnitTypesProcessed.has(unitStatus.location + '_' + unitStatus.unitType)) { // only choose most recent entries for each pair
+                    return;
+                }
+                locationAndUnitTypesProcessed.add(unitStatus.location + '_' + unitStatus.unitType);
                 socket.emit(authoritiesUnitStatusTopicPrefix, unitStatus);
             });
         });
@@ -805,16 +825,24 @@ const initializeMQTTClient = async () => {
     mqttClient.on('connect', () => {
         console.log('Data Service: MQTT Client: Connected.');
 
+        mqttClient.subscribe(sensorInstanceTopicPrefix + '/+/+', { qos: 0 });
         mqttClient.subscribe(sensorTelemetryTopicPrefix + '/+/+', { qos: 0 });
         mqttClient.subscribe(sensorMetadataTopicPrefix + '/+/+', { qos: 0 });
-        // TODO DWA Add for weather events, actuators, ...
+
+        mqttClient.subscribe(actuatorInstanceTopicPrefix + '/+/+', { qos: 0 });
+        mqttClient.subscribe(actuatorStatusDataTopicPrefix + '/+/+', { qos: 0 });
+        mqttClient.subscribe(actuatorsMetadataTopicPrefix + '/+/+', { qos: 0 });
+
+        mqttClient.subscribe(weatherEventInstanceTopicPrefix + '/+', { qos: 0 });
+        mqttClient.subscribe(weatherEventActionTopicPrefix + '/+', { qos: 0 });
+        mqttClient.subscribe(weatherEventRiskTopicPrefix + '/+', { qos: 0 });
     })
 
-    mqttClient.on('message', function (topic, message) {
+    mqttClient.on('message', async function (topic, message) {
         try {
             const messageJSON = JSON.parse(message.toString());
 
-            const timestamp = dayjs().toISOString();            
+            const timestamp = dayjs().toISOString();
 
              if (topic.startsWith(sensorInstanceTopicPrefix)) {
                 currentWebsocketConnections.forEach(socket => socket.emit(sensorInstanceTopicPrefix, JSON.stringify(messageJSON)));
@@ -851,6 +879,16 @@ const initializeMQTTClient = async () => {
                 prisma.actuatorMetaData.create({ data: messageJSON })
                     .then(data => data)
                     .catch(error => console.error('Data Service: Error persisting Actuator MetaData JSON data using Prisma: ', error));
+            } else if (topic.startsWith(weatherEventInstanceTopicPrefix)) {
+                currentWebsocketConnections.forEach(socket => socket.emit(weatherEventInstanceTopicPrefix, JSON.stringify(messageJSON)));
+                prisma.weatherEvent.upsert({ create: messageJSON, update: { end: messageJSON.end }, where: { id: messageJSON.id } })
+                    .then(data => data)
+                    .catch(error => console.error('Data Service: Error persisting Weather Event Instance JSON data using Prisma: ', error));
+            } else if (topic.startsWith(weatherEventRiskTopicPrefix)) {
+                currentWebsocketConnections.forEach(socket => socket.emit(weatherEventRiskTopicPrefix, JSON.stringify(messageJSON)));
+                prisma.weatherEventRisk.create({ data: messageJSON })
+                    .then(data => data)
+                    .catch(error => console.error('Data Service: Error persisting Weather Event Risk JSON data using Prisma: ', error));
             } else if(topic.startsWith(weatherEventActionTopicPrefix)) {
                 const weatherEventAction = JSON.stringify(messageJSON);
 
@@ -862,50 +900,158 @@ const initializeMQTTClient = async () => {
 
                 if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_DEVICE_NOTIFICATION) {
                     // TODO Implement!
-                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION) {
+                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION || weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_REOPEN_LOCATION) {
+                    const enabled = weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION;
+
                     prisma.actuatorMetaData.findMany({ 
-                        select: {instanceId: true}, 
+                        select: { instanceId: true }, 
                         where: {
                             location: weatherEventAction.location,
                             type: ActuatorType.LOCKDOWN,
                         }
                     }).then(result => {
-                        prisma.actuatorStatusData.createMany({
-                            data: {
-                                result.map(item => {})
-                            }
+                        const newActuatorStatusData = result.map(item => {
+                            return {
+                                instanceId: item.instanceId,
+                                timestamp,
+                                enabled,
+                                weatherEventActionId: weatherEventAction.id,
+                            };
                         });
+                        newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location, newActuatorStatus)); // will be persisted and sent via websosket when received in listener above
                     });
-                    // TODO Update ActuatorStatusData for LOCKDOWN Actuators at Location
-                    // TODO Emit actuatorStatusData via Socket Message and MQTT message
-                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_REOPEN_LOCATION) {
-                    // TODO Update ActuatorStatusData for LOCKDOWN Actuators at Location
-                    // TODO Emit actuatorStatusData via Socket Message and MQTT message
-                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL) {
-                    // TODO Update ActuatorStatusData for WATER_PROTECTION_WALL Actuators at Location
-                    // TODO Emit actuatorStatusData via Socket Message and MQTT message
-                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_DOWN_WATER_PROTECTION_WALL) {
-                    // TODO Update ActuatorStatusData for WATER_PROTECTION_WALL Actuators at Location
-                    // TODO Emit actuatorStatusData via Socket Message and MQTT message
+                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL || weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_DOWN_WATER_PROTECTION_WALL) {
+                    const enabled = weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL;
+
+                    prisma.actuatorMetaData.findMany({ 
+                        select: { instanceId: true }, 
+                        where: {
+                            location: weatherEventAction.location,
+                            type: ActuatorType.WATER_PROTECTION_WALL,
+                        }
+                    }).then(result => {
+                        const newActuatorStatusData = result.map(item => {
+                            return {
+                                instanceId: item.instanceId,
+                                timestamp,
+                                enabled,
+                                weatherEventActionId: weatherEventAction.id,
+                            };
+                        });
+                        newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location, newActuatorStatus));   // will be persisted and sent via websosket when received in listener above
+                    });
                 } else if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_LIGHT) {
-                    // TODO Update ActuatorStatusData for ALARM_LIGHT Actuators at Location
-                    // TODO Emit actuatorStatusData via Socket Message and MQTT message
+                    prisma.actuatorMetaData.findMany({ 
+                        select: { instanceId: true }, 
+                        where: {
+                            location: weatherEventAction.location,
+                            type: ActuatorType.ALARM_LIGHT,
+                        }
+                    }).then(result => {
+                        const newActuatorStatusData = result.map(item => {
+                            return {
+                                instanceId: item.instanceId,
+                                timestamp,
+                                enabled: true,
+                                weatherEventActionId: weatherEventAction.id,
+                            };
+                        });
+                        newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location, newActuatorStatus));   // will be persisted and sent via websosket when received in listener above
+                    });
                 } else if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_SOUND) {
-                    // TODO Update ActuatorStatusData for ALARM_SOUND Actuators at Location
-                    // TODO Emit actuatorStatusData via Socket Message and MQTT message
-                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_MOVE_UNITS_RESPONSE) {
-                    // TODO Update Number of Units at from and to Location
-                    // TODO Emit authoritiesUnitStatus message via Socket Message
+                    prisma.actuatorMetaData.findMany({ 
+                        select: { instanceId: true }, 
+                        where: {
+                            location: weatherEventAction.location,
+                            type: ActuatorType.ALARM_SOUND,
+                        }
+                    }).then(result => {
+                        const newActuatorStatusData = result.map(item => {
+                            return {
+                                instanceId: item.instanceId,
+                                timestamp,
+                                enabled: true,
+                                weatherEventActionId: weatherEventAction.id,
+                            };
+                        });
+                        newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location, newActuatorStatus));   // will be persisted and sent via websosket when received in listener above
+                    });
                 } else if(weatherEventAction.type === WeatherEventActionType.PLANNING_INCREASE_RISK_LEVEL) {
-                    // TODO Create new Risk Level for Weather Event
-                    // TODO Emit weatherEventRisk via Socket Message
+                    const currentWeatherEventRisk = await prisma.weatherEventRisk.findFirst({ 
+                        where: { 
+                            weatherEventId: weatherEventAction.weatherEventId,
+                        },
+                        orderBy: {
+                            timestamp: 'desc',
+                        }
+                    });
+
+                    let newWeatherEventRiskLevel = undefined;
+                    if(currentWeatherEventRisk) {
+                        if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.LOW) {
+                            newWeatherEventRiskLevel = WeatherEventRiskLevel.MEDIUM;
+                        } else if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.MEDIUM) {
+                            newWeatherEventRiskLevel = WeatherEventRiskLevel.HIGH;
+                        } else if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.HIGH) {
+                            newWeatherEventRiskLevel = WeatherEventRiskLevel.EXTREME;
+                        } else if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.EXTREME) {
+                            newWeatherEventRiskLevel = WeatherEventRiskLevel.EXTREME;
+                        }
+                    } else {
+                        newWeatherEventRiskLevel = WeatherEventRiskLevel.MEDIUM;
+                    }
+
+                    const newWeatherEventRisk = {
+                        weatherEventId: weatherEventAction.weatherEventId,
+                        riskLevel: newWeatherEventRiskLevel,
+                    };
+
+                    await prisma.weatherEventRisk.update({ where: { id: currentWeatherEventRisk.id }, data: { end: timestamp } });
+                    
+                    mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEventAction.location, newWeatherEventRisk);  // will be persisted and sent via websosket when received in listener above
                 } else if(weatherEventAction.type === WeatherEventActionType.PLANNING_DECREASE_RISK_LEVEL) {
-                    // TODO Create new Risk Level for Weather Event
-                    // TODO Emit weatherEventRisk via Socket Message
+                    const currentWeatherEventRisk = await prisma.weatherEventRisk.findFirst({ 
+                        where: { 
+                            weatherEventId: weatherEventAction.weatherEventId,
+                        },
+                        orderBy: {
+                            timestamp: 'desc',
+                        }
+                    });
+
+                    await prisma.weatherEventRisk.update({ where: { id: currentWeatherEventRisk.id }, data: { end: timestamp } });
+
+                    let newWeatherEventRiskLevel = undefined;
+                    if(currentWeatherEventRisk) {
+                        if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.LOW) {
+                            const weatherEvent = await prisma.weatherEvent.findFirst({ where: { id: currentWeatherEventRisk.weatherEventId } });
+                            const newWeatherEvent = { ...weatherEvent, end: timestamp };
+                            mqttClient.publish(weatherEventInstanceTopicPrefix + '/' + weatherEventAction.location, newWeatherEvent);  // will be persisted and sent via websosket when received in listener above
+                            return;
+                        } else if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.MEDIUM) {
+                            newWeatherEventRiskLevel = WeatherEventRiskLevel.LOW;
+                        } else if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.HIGH) {
+                            newWeatherEventRiskLevel = WeatherEventRiskLevel.MEDIUM;
+                        } else if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.EXTREME) {
+                            newWeatherEventRiskLevel = WeatherEventRiskLevel.HIGH;
+                        }
+                    } else {
+                        newWeatherEventRiskLevel = WeatherEventRiskLevel.LOW;
+                    }
+
+                    const newWeatherEventRisk = {
+                        weatherEventId: weatherEventAction.weatherEventId,
+                        riskLevel: newWeatherEventRiskLevel,
+                    };
+
+                    mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEventAction.location, newWeatherEventRisk);  // will be persisted and sent via websosket when received in listener above
+                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_MOVE_UNITS_RESPONSE) {
+                    await prisma.unitStatus.update( where: {}, data: {  } );
+
+                    // TODO DWA Update Number of Units at from and to Location
+                    // TODO DWA Emit authoritiesUnitStatus message via Socket Message
                 }
-                // TODO Other types
-            }
-            // TODO DWA Add for weather events, ...   
+            }  
         } catch (error) {
             console.error('Data Service: Error processing incoming MQTT message: ', error);
         }

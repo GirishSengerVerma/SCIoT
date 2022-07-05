@@ -31,7 +31,7 @@ console.log(
   'MQTT Client: Connecting to MQTT broker over secure MQTT connection..'
 );
 
-export const weatherEventActionTopicName = 'weatherevent/action';
+export const weatherEventActionTopicName = 'weatherevents/action';
 
 export const mqttClient = mqtt.connect(host, options);
 
@@ -46,7 +46,7 @@ mqttClient.on('reconnect', () => {
 
 mqttClient.on('connect', () => {
   console.log('MQTT Client: Connected.');
-  mqttClient.subscribe(weatherEventActionTopicName, { qos: 1 });
+  mqttClient.subscribe(weatherEventActionTopicName + '/+', { qos: 1 });
 });
 
 export let mqttListenerActive = false;
@@ -67,6 +67,7 @@ export const listenToMQTTMessages = (ctx: Context) => {
         messageJSON.hasOwnProperty('id') &&
         messageJSON.hasOwnProperty('weatherEvent') &&
         messageJSON.hasOwnProperty('type') &&
+        messageJSON.hasOwnProperty('location') &&
         messageJSON.hasOwnProperty('moveUnitsType') &&
         messageJSON.hasOwnProperty('moveUnitsAmount') &&
         messageJSON.hasOwnProperty('moveUnitsFromLocation') &&
@@ -76,6 +77,7 @@ export const listenToMQTTMessages = (ctx: Context) => {
           id,
           weatherEvent: { id: weatherEventId, location, type },
           type: actionType,
+          location: actionLocation,
           moveUnitsType,
           moveUnitsAmount,
           moveUnitsFromLocation,
@@ -143,13 +145,16 @@ export const sendMoveUnitsResponseMessage = (
     ...(weatherEventId && { weatherEventId }),
     type: 'COUNTER_MEASURE_MOVE_UNITS_RESPONSE',
     wasManuallyTaken: true,
+    location: moveUnitsToLocation,
     moveUnitsType,
     moveUnitsFromLocation,
     moveUnitsToLocation,
     moveUnitsAmount,
   };
-  mqttClient.publish(weatherEventActionTopicName, JSON.stringify(message), {
-    qos: 1,
-    retain: false,
-  });
+  mqttClient.publish(weatherEventActionTopicName + '/' + moveUnitsToLocation, 
+    JSON.stringify(message), {
+      qos: 1,
+      retain: false,
+    }
+  );
 };

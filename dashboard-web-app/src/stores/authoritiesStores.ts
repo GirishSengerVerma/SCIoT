@@ -34,4 +34,6 @@ const createAuthoritiesUnitStatusStore = () => {
 	return authoritiesUnitStatusStore;
 };
 
+// TODO DWA Use and test authoritiesUnitStatus
+
 export const authoritiesUnitStatus: AuthoritiesUnitStatusStore = createAuthoritiesUnitStatusStore();
