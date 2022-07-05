@@ -133,10 +133,11 @@ model UnitStatus {
   unitType             UnitType
   location             Location
   amount               Int
-  lastChangedBy        WeatherEventAction? @relation(fields: [weatherEventActionId], references: [id])
+  timestamp            DateTime            @default(now())
+  changedBy            WeatherEventAction? @relation(fields: [weatherEventActionId], references: [id])
   weatherEventActionId Int?
 
-  @@unique([unitType, location])
+  @@unique([unitType, location, timestamp])
 }
 
 enum WeatherEventType {
@@ -165,6 +166,8 @@ model WeatherEvent {
   id                 Int                  @id @default(autoincrement())
   location           Location
   type               WeatherEventType
+  start              DateTime             @default(now())
+  end                DateTime?
   WeatherEventRisk   WeatherEventRisk[]
   WeatherEventAction WeatherEventAction[]
 }
@@ -200,6 +203,7 @@ model WeatherEventAction {
   timestamp             DateTime               @default(now())
   type                  WeatherEventActionType
   wasManuallyTaken      Boolean                @default(false)
+  location              Location
   moveUnitsType         UnitType?
   moveUnitsFromLocation Location?
   moveUnitsToLocation   Location?
