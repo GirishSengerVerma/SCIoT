@@ -499,6 +499,10 @@ const options = {
     password: process.env.MQTT_PASSWORD,
 }
 
+const weatherEventInstanceTopicPrefix = 'weatherevents/instance';
+const weatherEventRiskTopicPrefix = 'weatherevents/risk';
+const weatherEventActionTopicPrefix = 'weatherevents/action';
+
 const sensorInstanceTopicPrefix = 'sensors/instance';
 const sensorTelemetryTopicPrefix = 'sensors/telemetry';
 const sensorMetadataTopicPrefix = 'sensors/metadata';
@@ -506,10 +510,6 @@ const sensorMetadataTopicPrefix = 'sensors/metadata';
 const actuatorInstanceTopicPrefix = 'actuators/instance';
 const actuatorStatusDataTopicPrefix = 'actuators/statusdata';
 const actuatorsMetadataTopicPrefix = 'actuators/metadata';
-
-const weatherEventInstanceTopicPrefix = 'weatherevents/instance';
-const weatherEventRiskTopicPrefix = 'weatherevents/risk';
-const weatherEventActionTopicPrefix = 'weatherevents/action';
 
 const authoritiesUnitStatusTopicPrefix = 'authorities/unitstatus';
 
@@ -666,8 +666,8 @@ const initializeWebsocketServer = (io) => {
             });
         });
 
-        // TODO DWA Send current Weather Events and for each: current WeatherEventRisk and possibly also action(s) ?
-
+        // TODO DWA Send current Weather Events and for each: current WeatherEventRisk
+        
         // Send current Authorities Unit Status
         {
             const locationAndUnitTypesProcessed = new Set([]);
@@ -801,6 +801,8 @@ const initializeWebsocketServer = (io) => {
                 );
             }
         });
+
+        // TODO DWA Implement Historic Weather Event Data Fetching
 
         socket.on(SOCKET_REQUEST_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC, async (message) => {
             try {

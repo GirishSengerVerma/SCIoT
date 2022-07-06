@@ -1,0 +1,11 @@
+TODO
+	Weather Events Page
+	
+	Create Weather Event, Create Sensor, Create Sensor, Create Actuator
+	
+	Actuator:
+		Change Status Button
+			possible to select corresponding WeatherEvent or leave empty
+	
+	Authorities:
+		Move Units Manually

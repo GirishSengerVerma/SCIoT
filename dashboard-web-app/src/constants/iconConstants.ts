@@ -17,6 +17,30 @@ export const ICON_BUTTON_ADD = 'button/plus';
 export const ICON_DATA_PERIOD_LIVE_DATA = 'dataPeriod/live-data';
 export const ICON_DATA_PERIOD_HISTORIC_DATA = 'dataPeriod/historic-data';
 
+// TODO Add SVG icon assets
+
+export const ICON_WEATHER_EVENTS_STORM = 'weatherevents/storm';
+export const ICON_WEATHER_EVENTS_HAIL_STORM = 'weatherevents/hail-storm';
+export const ICON_WEATHER_EVENTS_THUNDER_STORM = 'weatherevents/thunder-storm';
+export const ICON_WEATHER_EVENTS_FLOOD = 'weatherevents/flood';
+export const ICON_WEATHER_EVENTS_COLD = 'weatherevents/cold';
+export const ICON_WEATHER_EVENTS_HEAT = 'weatherevents/heat';
+export const ICON_WEATHER_EVENTS_WILD_FIRE = 'weatherevents/wild-fire';
+export const ICON_WEATHER_EVENTS_EARTH_QUAKE = 'weatherevents/earth-quake';
+export const ICON_WEATHER_EVENTS_BAD_AIR = 'weatherevents/bad-air';
+
+export const ICON_WEATHER_EVENTS_BY_NAME: Map<string, string> = new Map<string, string>([
+	['STORM', ICON_WEATHER_EVENTS_STORM],
+	['HAIL_STORM', ICON_WEATHER_EVENTS_HAIL_STORM],
+	['THUNDER_STORM', ICON_WEATHER_EVENTS_THUNDER_STORM],
+	['FLOOD', ICON_WEATHER_EVENTS_FLOOD],
+	['COLD', ICON_WEATHER_EVENTS_COLD],
+	['HEAT', ICON_WEATHER_EVENTS_HEAT],
+	['WILD_FIRE', ICON_WEATHER_EVENTS_WILD_FIRE],
+	['EARTH_QUAKE', ICON_WEATHER_EVENTS_EARTH_QUAKE],
+	['BAD_AIR', ICON_WEATHER_EVENTS_BAD_AIR],
+]);
+
 export const ICON_SENSORS_TEMPERATURE = 'sensors/thermometer';
 export const ICON_SENSORS_PRESSURE = 'sensors/pressure';
 export const ICON_SENSORS_CO2 = 'sensors/co2-cloud';

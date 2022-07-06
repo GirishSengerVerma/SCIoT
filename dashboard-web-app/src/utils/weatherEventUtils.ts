@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { WeatherEventActionWithWeatherEvent } from '$root/types/additionalPrismaTypes';
-import { WeatherEventActionType } from '@prisma/client';
+import { WeatherEventActionType, WeatherEventRiskLevel } from '@prisma/client';
 import { enumValueToString } from '$root/utils/enumUtil';
 import { locationIconMap } from '$root/utils/locationUtils';
 import { unitTypeIconMap } from '$root/utils/unitTypeUtils';
@@ -60,4 +60,18 @@ export const formatWeatherEventAction = (
 	}
 
 	return formattedWeatherEventAction;
+};
+
+export const getWeatherEventRiskLevelColor = (weatherEventRiskLevel: WeatherEventRiskLevel) => {
+	if (weatherEventRiskLevel === WeatherEventRiskLevel.LOW) {
+		return "bg-green-300";
+	} else if (weatherEventRiskLevel === WeatherEventRiskLevel.MEDIUM) {
+		return "bg-yellow-300";
+	} else if (weatherEventRiskLevel === WeatherEventRiskLevel.HIGH) {
+		return "bg-orange-300";
+	} else if (weatherEventRiskLevel === WeatherEventRiskLevel.EXTREME) {
+		return "bg-red-300";
+	} else {
+		return "";
+	}
 };

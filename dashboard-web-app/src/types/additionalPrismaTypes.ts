@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma, WeatherEventAction, WeatherEventRisk } from '@prisma/client';
 
 export type ActuatorStatusDataWithRelatedWeatherEventData = Prisma.ActuatorStatusDataGetPayload<{
 	include: {
@@ -25,3 +25,8 @@ export type WeatherEventActionWithWeatherEvent = Prisma.WeatherEventActionGetPay
 		weatherEvent: true;
 	};
 }>;
+
+export interface HistoricWeatherEventData {
+	risks: WeatherEventRisk[],
+	actions: WeatherEventAction[],
+}
