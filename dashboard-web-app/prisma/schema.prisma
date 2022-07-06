@@ -142,11 +142,8 @@ model UnitStatus {
 
 enum WeatherEventType {
   STORM
-  TORNADO
   HAIL_STORM
   THUNDER_STORM
-  HURRICANE
-  BLIZZARD
   FLOOD
   COLD
   HEAT
