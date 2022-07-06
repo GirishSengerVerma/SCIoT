@@ -40,11 +40,8 @@ export const LOCATION_DISPLAY_NAME_BY_ICON = new Map<string, string>([
 
 export const WEATHER_EVENT_TYPE_DISPLAY_NAME_BY_NAME = new Map<string, string>([
   ['STORM', 'Storm'],
-  ['TORNADO', 'Tornado'],
   ['HAIL_STORM', 'Hail Storm'],
   ['THUNDER_STORM', 'Thunder Storm'],
-  ['HURRICANE', 'Hurricane'],
-  ['BLIZZARD', 'Blizzard'],
   ['FLOOD', 'Flood'],
   ['COLD', 'Cold'],
   ['HEAT', 'Heat'],

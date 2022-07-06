@@ -27,10 +27,12 @@
 	} from '$root/utils/socketio';
 	import type { ActuatorStatusDataWithRelatedWeatherEventData } from '$root/types/additionalPrismaTypes';
 	import ActuatorStatusHistory from '$root/components/actuators/ActuatorStatusHistory.svelte';
+	import { locationIconMap } from '$root/utils/locationUtils';
 
 	let initializingStores = true;
 
 	const selectedLocationOptions = Object.values(Location).map(enumValueToString);
+	const selectedLocationOptionsIcons = Object.values(Location).map(l => locationIconMap[l]);
 
 	let actuatorMetaDataAtLocation = new Map<string, ActuatorMetaData>();
 
@@ -45,7 +47,6 @@
 		socket.on(SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC, (message) => {
 			try {
 				const messageJSON = JSON.parse(message.toString());
-				console.log(JSON.stringify(messageJSON));
 				selectedActuatorHistoricStatusData =
 					messageJSON as ActuatorStatusDataWithRelatedWeatherEventData[];
 			} catch (error) {
@@ -116,6 +117,7 @@
 				loading={initializingStores}
 				initialValue={$selectedLocation}
 				options={selectedLocationOptions}
+				optionsIcons={selectedLocationOptionsIcons}
 				onChange={selectedLocation.set}
 			/>
 		</div>
@@ -134,7 +136,7 @@
 			{/if}
 		</div>
 		<div
-			class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-6 lg:mt-0 justify-between"
+			class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-6 lg:mt-0 justify-between items-start h-fit"
 		>
 			{#if initializingStores}
 				<LoadingSpinner />

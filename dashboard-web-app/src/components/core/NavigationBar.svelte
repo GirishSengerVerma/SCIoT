@@ -88,12 +88,12 @@
 			link="/authorities"
 			selected={route === 'authorities'}
 		/>
-		<NavigationBarItem
+		<!--<NavigationBarItem
 			iconName={ICON_COMMON_SOCIAL_MEDIA}
 			iconAlt="Social Media"
 			link="/socialmedia"
 			selected={route === 'socialmedia'}
-		/>
+		/>-->
 	</div>
 	<div class="hidden lg:block px-2 lg:p-5">
 		<NavigationBarItem

@@ -680,6 +680,9 @@ const initializeWebsocketServer = (io) => {
                     {
                         unitType: 'desc',
                     },
+                    {
+                        timestamp: 'desc',
+                    }
                 ],
             }).then(unitStatusData => {
                 unitStatusData.forEach((unitStatus) => {
@@ -687,7 +690,7 @@ const initializeWebsocketServer = (io) => {
                         return;
                     }
                     locationAndUnitTypesProcessed.add(unitStatus.location + '_' + unitStatus.unitType);
-                    socket.emit(authoritiesUnitStatusTopicPrefix, unitStatus);
+                    socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(unitStatus));
                 });
             });
         }
@@ -922,11 +925,11 @@ const initializeMQTTClient = async () => {
                     .then(data => data)
                     .catch(error => console.error('Data Service: Error persisting Weather Event Risk JSON data using Prisma: ', error));
             } else if(topic.startsWith(weatherEventActionTopicPrefix)) {
-                const weatherEventAction = JSON.stringify(messageJSON);
-
-                currentWebsocketConnections.forEach(socket => socket.emit(weatherEventActionTopicPrefix, weatherEventAction));
+                const weatherEventAction = messageJSON;
                 
-                prisma.weatherEventAction.create({ data: messageJSON })
+                currentWebsocketConnections.forEach(socket => socket.emit(weatherEventActionTopicPrefix, JSON.stringify(weatherEventAction)));
+                
+                const { id: weatherEventActionId } = await prisma.weatherEventAction.create({ data: weatherEventAction })
                     .then(data => data)
                     .catch(error => console.error('Data Service: Error persisting Weather Event Action JSON data using Prisma: ', error));
 
@@ -947,7 +950,7 @@ const initializeMQTTClient = async () => {
                                 instanceId: item.instanceId,
                                 timestamp,
                                 enabled,
-                                weatherEventActionId: weatherEventAction.id,
+                                weatherEventActionId: weatherEventActionId,
                             };
                         });
                         newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location, newActuatorStatus)); // will be persisted and sent via websosket when received in listener above
@@ -967,7 +970,7 @@ const initializeMQTTClient = async () => {
                                 instanceId: item.instanceId,
                                 timestamp,
                                 enabled,
-                                weatherEventActionId: weatherEventAction.id,
+                                weatherEventActionId: weatherEventActionId,
                             };
                         });
                         newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location, newActuatorStatus));   // will be persisted and sent via websosket when received in listener above
@@ -985,7 +988,7 @@ const initializeMQTTClient = async () => {
                                 instanceId: item.instanceId,
                                 timestamp,
                                 enabled: true,
-                                weatherEventActionId: weatherEventAction.id,
+                                weatherEventActionId: weatherEventActionId,
                             };
                         });
                         newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location, newActuatorStatus));   // will be persisted and sent via websosket when received in listener above
@@ -1003,7 +1006,7 @@ const initializeMQTTClient = async () => {
                                 instanceId: item.instanceId,
                                 timestamp,
                                 enabled: true,
-                                weatherEventActionId: weatherEventAction.id,
+                                weatherEventActionId: weatherEventActionId,
                             };
                         });
                         newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location, newActuatorStatus));   // will be persisted and sent via websosket when received in listener above
@@ -1093,20 +1096,20 @@ const initializeMQTTClient = async () => {
                         unitType: weatherEventAction.moveUnitsType,
                         location: weatherEventAction.moveUnitsFromLocation,
                         amount: moveUnitsFromLocationOldUnitsAmount - weatherEventAction.moveUnitsAmount,
-                        weatherEventActionId: weatherEventAction.id,
+                        weatherEventActionId: weatherEventActionId,
                     };
                     const newMoveToLocationUnitStatusData = {
                         unitType: weatherEventAction.moveUnitsType,
                         location: weatherEventAction.moveUnitsToLocation,
                         amount: moveUnitsToLocationOldUnitsAmount + weatherEventAction.moveUnitsAmount,
-                        weatherEventActionId: weatherEventAction.id,
+                        weatherEventActionId: weatherEventActionId,
                     };
 
                     currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(newMoveFromLocationUnitStatusData)));
                     currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(newMoveToLocationUnitStatusData)));
 
-                    await prisma.unitStatus.create(newMoveFromLocationUnitStatusData);
-                    await prisma.unitStatus.create(newMoveToLocationUnitStatusData);
+                    await prisma.unitStatus.create({ data: newMoveFromLocationUnitStatusData });
+                    await prisma.unitStatus.create({ data: newMoveToLocationUnitStatusData });
                 }
             }  
         } catch (error) {

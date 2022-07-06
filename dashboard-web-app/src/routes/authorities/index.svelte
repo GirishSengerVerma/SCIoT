@@ -11,6 +11,7 @@
 		selectedAuthorityLocationAndUnitType,
 		authoritiesUnitStatus,
 		type UnitStatusKey,
+parseUnitStatusKeyFromString,
 	} from '$root/stores/authoritiesStores';
 
 	import MainContent from '$root/components/core/MainContent.svelte';
@@ -25,12 +26,15 @@
 		SOCKET_RESPONSE_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC
 	} from '$root/utils/socketio';
 	import type { UnitsStatusDataWithRelatedWeatherEventData } from '$root/types/additionalPrismaTypes';
+	import AuthoritiesUnitStatusHistory from '$root/components/authorities/AuthoritiesUnitStatusHistory.svelte';
+	import { locationIconMap } from '$root/utils/locationUtils';
 
 	let initializingStores = true;
 
 	const selectedLocationOptions = Object.values(Location).map(enumValueToString);
+	const selectedLocationOptionsIcons = Object.values(Location).map(l => locationIconMap[l]);
 
-	let authoritiesUnitStatusDataAtLocation = new Map<UnitStatusKey, UnitStatus>();
+	let authoritiesUnitStatusDataAtLocation = new Map<string, UnitStatus>();
 
 	let fetchingHistoricAuthoritiesUnitStatusData = false;
 	let selectedAuthorityUnitsHistoricStatusData:
@@ -43,7 +47,6 @@
 		socket.on(SOCKET_RESPONSE_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC, (message) => {
 			try {
 				const messageJSON = JSON.parse(message.toString());
-				console.log(JSON.stringify(messageJSON));
 				selectedAuthorityUnitsHistoricStatusData =
 					messageJSON as UnitsStatusDataWithRelatedWeatherEventData[];
 			} catch (error) {
@@ -64,43 +67,33 @@
 
 	const updateLiveData = (
 		selectedLocation: Location,
-		authoritiesUnitStatus: Map<UnitStatusKey, UnitStatus>
+		authoritiesUnitStatus: Map<string, UnitStatus>
 	) => {
 		authoritiesUnitStatusDataAtLocation = new Map(
 			[...authoritiesUnitStatus]
-				.filter(([k, v]) => k.location === selectedLocation)
-				.sort((a, b) => a[0].unitType.localeCompare(b[0].unitType))
+				.filter(([k, v]) => parseUnitStatusKeyFromString(k).location === selectedLocation)
+				.sort((a, b) => parseUnitStatusKeyFromString(a[0]).unitType.localeCompare(parseUnitStatusKeyFromString(b[0]).unitType))
 		);
 
-		if (
-			$selectedAuthorityLocationAndUnitType &&
-			!authoritiesUnitStatusDataAtLocation.has(parseUnitStatusKeyFromString($selectedAuthorityLocationAndUnitType))
-		) {
+		if ($selectedAuthorityLocationAndUnitType && !authoritiesUnitStatusDataAtLocation.has($selectedAuthorityLocationAndUnitType)) {
 			selectedAuthorityLocationAndUnitType.set('');
+		} else if($selectedAuthorityLocationAndUnitType) {
+			updateHistoricAuthorityUnitsStatusData($selectedAuthorityLocationAndUnitType);
 		}
 	};
-
-	$: console.log(authoritiesUnitStatusDataAtLocation);
 
 	$: updateHistoricAuthorityUnitsStatusData($selectedAuthorityLocationAndUnitType);
 
 	const updateHistoricAuthorityUnitsStatusData = (selectedAuthorityLocationAndUnitType: string) => {
+		const unitStatusKey = parseUnitStatusKeyFromString(selectedAuthorityLocationAndUnitType);
+		if(!unitStatusKey.location || !unitStatusKey.unitType) {
+			return;
+		}
 		fetchingHistoricAuthoritiesUnitStatusData = true;
 		socket.emit(
 			SOCKET_REQUEST_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC,
 			JSON.stringify(parseUnitStatusKeyFromString(selectedAuthorityLocationAndUnitType))
 		);
-	};
-
-	const parseUnitStatusKeyFromString = (s: string): UnitStatusKey => {
-		return { 
-			location: stringToEnumValue(Location, s.split('|')[0]), 
-			unitType: stringToEnumValue(UnitType, s.split('|')[1]),
-		};
-	};
-
-	const unitStatusKeyToString = (unitStatusKey: UnitStatusKey): string => {
-		return unitStatusKey.location + '|' + unitStatusKey.unitType;
 	};
 </script>
 
@@ -118,6 +111,7 @@
 				loading={initializingStores}
 				initialValue={$selectedLocation}
 				options={selectedLocationOptions}
+				optionsIcons={selectedLocationOptionsIcons}
 				onChange={selectedLocation.set}
 			/>
 		</div>
@@ -128,24 +122,26 @@
 		>
 			{#if initializingStores}
 				<LoadingSpinner />
-			{:else if $selectedAuthorityLocationAndUnitType && authoritiesUnitStatusDataAtLocation.has(parseUnitStatusKeyFromString($selectedAuthorityLocationAndUnitType))}
-				<!-- TODO DWA Implement <AuthorityUnitsStatusHistory
+			{:else if $selectedAuthorityLocationAndUnitType}
+				<AuthoritiesUnitStatusHistory
 					loading={initializingStores || fetchingHistoricAuthoritiesUnitStatusData}
-					authoritiesUnitsHistoricStatusData={selectedAuthorityUnitsHistoricStatusData}
-				/>-->
+					authoritiesHistoricUnitStatusData={selectedAuthorityUnitsHistoricStatusData}
+				/>
 			{/if}
 		</div>
 		<div
-			class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-6 lg:mt-0 justify-between"
+			class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-6 lg:mt-0 justify-between items-start h-fit"
 		>
 			{#if initializingStores}
 				<LoadingSpinner />
 			{:else}
 				{#each [...authoritiesUnitStatusDataAtLocation] as [key, unitStatusData]}
 					<AuthoritiesUnitStatus
-						isSelected={key === parseUnitStatusKeyFromString($selectedAuthorityLocationAndUnitType)}
+						isSelected={key === $selectedAuthorityLocationAndUnitType}
 						unitStatus={unitStatusData}
-						onClick={() => selectedAuthorityLocationAndUnitType.set(unitStatusKeyToString(key))}
+						onClick={() => {
+							selectedAuthorityLocationAndUnitType.set(key);
+						}}
 					/>
 				{/each}
 			{/if}

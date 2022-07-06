@@ -19,6 +19,7 @@ import {
   weatherEventActionTopicName,
   mqttClient,
   mqttListenerActive,
+  weatherEventInstanceTopicName,
 } from './utils/mqtt';
 import {
   getWeatherEventLocationById,
@@ -230,42 +231,53 @@ let testRequestId = 0;
 
 // Used for simulating an incoming move units request
 bot.command('testrequest', async (_) => {
-  const weatherEventId = weatherEventIds.size;
+  const weatherEventId = Math.max(...weatherEventIds.values()) + 1;
   const weatherEventType = randomFromMapKeys(
     WEATHER_EVENT_TYPE_DISPLAY_NAME_BY_NAME
   );
   const weatherEventLocation = randomFromMapKeys(LOCATION_DISPLAY_NAME_BY_NAME);
-  const moveUnitsType = randomFromMapKeys(UNIT_TYPE_ICON_BY_NAME);
-  let moveUnitsFromLocation = randomFromMapKeys(LOCATION_ICON_BY_NAME);
-  while (getUnitStatus(moveUnitsFromLocation, moveUnitsType) === 0) {
-    moveUnitsFromLocation = randomFromMapKeys(LOCATION_ICON_BY_NAME);
-  }
-  const moveUnitsToLocation = randomFromMapKeys(LOCATION_ICON_BY_NAME);
-  const moveUnitsAmount = randomIntFromInterval(
-    1,
-    getUnitStatus(moveUnitsFromLocation, moveUnitsType)
-  );
 
-  const requestMessage = {
-    id: testRequestId++,
-    weatherEvent: {
-      id: weatherEventId,
-      location: weatherEventLocation,
-      type: weatherEventType,
-    },
-    type: 'COUNTER_MEASURE_MOVE_UNITS_REQUEST',
+  const weatherEventInstanceMessage = {
+    id: weatherEventId,
+    type: weatherEventType,
     location: weatherEventLocation,
-    moveUnitsType,
-    moveUnitsAmount,
-    moveUnitsFromLocation,
-    moveUnitsToLocation,
   };
 
   mqttClient.publish(
-    weatherEventActionTopicName + '/' + moveUnitsToLocation,
-    JSON.stringify(requestMessage),
-    { qos: 1, retain: false }
+    weatherEventInstanceTopicName + '/' + weatherEventLocation,
+    JSON.stringify(weatherEventInstanceMessage),
+    { qos: 1 }
   );
+
+  setTimeout(() => {
+    const moveUnitsType = randomFromMapKeys(UNIT_TYPE_ICON_BY_NAME);
+    let moveUnitsFromLocation = randomFromMapKeys(LOCATION_ICON_BY_NAME);
+    while (getUnitStatus(moveUnitsFromLocation, moveUnitsType) === 0) {
+      moveUnitsFromLocation = randomFromMapKeys(LOCATION_ICON_BY_NAME);
+    }
+    const moveUnitsToLocation = randomFromMapKeys(LOCATION_ICON_BY_NAME);
+    const moveUnitsAmount = randomIntFromInterval(
+      1,
+      getUnitStatus(moveUnitsFromLocation, moveUnitsType)
+    );
+
+    const requestMessage = {
+      id: testRequestId++,
+      weatherEventId: weatherEventId,
+      type: 'COUNTER_MEASURE_MOVE_UNITS_REQUEST',
+      location: weatherEventLocation,
+      moveUnitsType,
+      moveUnitsAmount,
+      moveUnitsFromLocation,
+      moveUnitsToLocation,
+    };
+
+    mqttClient.publish(
+      weatherEventActionTopicName + '/' + moveUnitsToLocation,
+      JSON.stringify(requestMessage),
+      { qos: 1 }
+    );
+  }, 500);
 });
 
 // Enable graceful stop

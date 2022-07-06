@@ -32,11 +32,14 @@
 		SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC
 	} from '$root/utils/socketio';
 	import LoadingSpinner from '$root/components/core/LoadingSpinner.svelte';
+import { locationIconMap } from '$root/utils/locationUtils';
 
 	let initializingStores = true;
 	let fetchingData = false;
 
 	const selectedLocationOptions = Object.values(Location).map(enumValueToString);
+	const selectedLocationOptionsIcons = Object.values(Location).map(l => locationIconMap[l]);
+
 	const sensorDataPeriodOptions = Object.values(DataPeriod).map(enumValueToString);
 
 	$: $sensorDataPeriod === enumValueToString(DataPeriod.LIVE_DATA)
@@ -151,6 +154,7 @@
 				loading={initializingStores}
 				initialValue={$selectedLocation}
 				options={selectedLocationOptions}
+				optionsIcons={selectedLocationOptionsIcons}
 				onChange={selectedLocation.set}
 			/>
 			<DropdownSelect
@@ -173,7 +177,7 @@
 			{#if initializingStores || fetchingData}
 				<LoadingSpinner />
 			{:else if $selectedSensorInstanceId && sensorMetaDataAtLocation.has($selectedSensorInstanceId) && $liveSensorData.has($selectedSensorInstanceId)}
-				<div class="w-full max-w-screen-lg">
+				<div class="w-11/12 max-w-screen-lg">
 					<SensorChart
 						sensorMetaData={sensorMetaDataAtLocation.get($selectedSensorInstanceId)}
 						data={isLiveData
@@ -186,7 +190,7 @@
 			{/if}
 		</div>
 		<div
-			class="flex flex-wrap lg:max-w-xl gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-6 lg:mt-0 justify-between lg:justify-end"
+			class="flex flex-wrap lg:max-w-xl gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-6 lg:mt-0 justify-between lg:justify-end items-start h-fit"
 		>
 			{#if initializingStores || fetchingData}
 				<LoadingSpinner />

@@ -34,7 +34,7 @@ client.connect().then(async (reason: any) => {
     for (const row of res.rows) {
       unitStatus.set(row.location + '|' + row.unitType, row.amount);
     }
-    console.log(unitStatus);
+    console.log('Initial Units Status:', unitStatus);
   } catch (e) {
     if (e instanceof Error) {
       console.log(e.stack);

@@ -4,6 +4,9 @@ SVG Icons:
     https://codepen.io/shaneparsons/pen/MpgEma (licensed under MIT license)
     https://tablericons.com/ (No attribution required. For commercial use.)
     https://www.iconfinder.com/icons/352426/history_icon (licensed under CC BY-SA 3.0)
+    https://www.svgrepo.com/svg/347300/police-car (licensed under Apache License)
+    https://www.svgrepo.com/svg/80142/firetruck (licensed under CC0)
+    https://www.svgrepo.com/svg/31727/emergency-medical-vehicle (licensed under CC0)
 
 Favicon:
     https://favicon.io/emoji-favicons/chart-decreasing/ (licensed under CC-BY 4.0)

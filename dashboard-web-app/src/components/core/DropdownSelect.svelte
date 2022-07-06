@@ -9,6 +9,7 @@
 	export let iconName: string;
 	export let iconAlt: string;
 	export let options: string[];
+	export let optionsIcons: string[] = [];
 	export let loading = false;
 	export let initialValue: string;
 	export let currentValue: string = initialValue;
@@ -93,7 +94,7 @@
 						class={(selectedItemIndex === i ? 'block' : 'hidden') +
 							' w-full text-sm md:text-base font-medium'}
 					>
-						{option}
+						{optionsIcons.length > i ? (optionsIcons[i] + ' ') : ''}{option}
 					</p>
 				</div>
 			{/each}
@@ -117,7 +118,7 @@
 						for={name + '-' + i}
 						aria-hidden="true"
 					>
-						{option}
+						{optionsIcons.length > i ? (optionsIcons[i] + ' ') : ''}{option}
 					</label>
 					{#if i < options.length - 1}
 						<hr class="border-accentLight dark:border-accentDark" />

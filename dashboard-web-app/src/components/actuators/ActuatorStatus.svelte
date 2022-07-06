@@ -17,7 +17,7 @@
 </script>
 
 <div
-	class={'flex md:flex-grow md:flex-shrink w-[48%] md:w-60 relative px-4 py-2 md:p-4 border md:border-accentLight md:dark:border-accentDark' +
+	class={'flex md:flex-grow md:flex-shrink w-[48%] md:w-60 max-h-36 relative px-4 py-2 md:p-4 border md:border-accentLight md:dark:border-accentDark' +
 		(isSelected ? ' md:border-primary outline outline-primary outline-1' : '') +
 		' rounded-lg text-center justify-center cursor-pointer hover:bg-accentLight/20 dark:hover:bg-accentDark/10 transition-colors'}
 	on:click={() => onClick()}
