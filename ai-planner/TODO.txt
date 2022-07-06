@@ -61,17 +61,25 @@
 				Wind Speed
 					>= 12 km/h < 74 km/h
 						Pressure < 990 hPa:
-								-> Storm		HIGH Risk
+							Light Sensor High:
+								-> THUNDER_STORM	HIGH Risk
+							Else:
+								-> STORM			HIGH Risk
 					
 						Pressure >= 990 hPa <= 1005 hPa:
-								-> Storm		MEDIUM Risk
+							Light Sensor High:
+								-> THUNDER_STORM	MEDIUM Risk
+							Else:
+								-> STORM			MEDIUM Risk
 								
 					> 74 km/h 
 						< 1°C :
-								-> HAIL_STORM	EXTREME Risk
+								-> HAIL_STORM		EXTREME Risk
 						else:
-							// TODO How to decide between STORM, TORNADO and HURRICANE ?
-							// TODO THUNDER_STORM currently not detectable -> Add Light Sensor?
+							Light Sensor High:
+								-> THUNDER_STORM	EXTREME Risk
+							Else:
+								-> STORM			EXTREME Risk
 					
 				Vibration
 					> 2 Ri. <= 3 Ri.
@@ -138,3 +146,7 @@
 		When to disable Alarm Lights, Alarm Sounds, Lockdown, Water Protection Wall again?
 		
 			just manually?
+	
+	
+	
+	
