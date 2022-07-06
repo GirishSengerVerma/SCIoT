@@ -50,3 +50,13 @@ export const ICON_ACTUATORS_BY_NAME: Map<string, string> = new Map<string, strin
 	['LOCKDOWN', ICON_ACTUATORS_LOCKDOWN],
 	['WATER_PROTECTION_WALL', ICON_ACTUATORS_WATER_PROTECTION_WALL]
 ]);
+
+export const ICON_AUTHORITIES_UNIT_TYPE_POLICE_CAR = 'authorities/police-car';
+export const ICON_AUTHORITIES_UNIT_TYPE_FIRE_TRUCK = 'authorities/fire-truck';
+export const ICON_AUTHORITIES_UNIT_TYPE_AMBULANCE = 'authorities/ambulance';
+
+export const ICON_AUTHORITIES_UNIT_TYPE_BY_NAME: Map<string, string> = new Map<string, string>([
+	['POLICE_CAR', ICON_AUTHORITIES_UNIT_TYPE_POLICE_CAR],
+	['FIRE_TRUCK', ICON_AUTHORITIES_UNIT_TYPE_FIRE_TRUCK],
+	['AMBULANCE', ICON_AUTHORITIES_UNIT_TYPE_AMBULANCE],
+]);

@@ -483,9 +483,9 @@ const getInitialUnitStatusData = () => {
     for (let location of Object.values(Location)) {
         for (let unitType of Object.values(UnitType)) {
             if (location === Location.AUTHORITIES_HUB) {
-                initialData.push({ location, unitType, amount: 3 });
+                initialData.push({ location, unitType, timestamp, amount: 3 });
             } else {
-                initialData.push({ location, unitType, amount: 0 });
+                initialData.push({ location, unitType, timestamp, amount: 0 });
             }
         }
     }
@@ -576,16 +576,12 @@ const initializePrisma = async () => {
 
     {
         console.log('Data Service: Prisma Client: Initializing Units Data..');
-        for (let unitStatus of getInitialUnitStatusData()) {
-            await prisma.unitStatus.upsert({
-                create: unitStatus,
-                update: {},
-                where: {
-                    unitType_location: {
-                        location: unitStatus.location,
-                        unitType: unitStatus.unitType,
-                    },
-                },
+
+        const isUnitStatusTableEmpty = (await prisma.unitStatus.count()) == 0;
+
+        if (isUnitStatusTableEmpty) {
+            await prisma.unitStatus.createMany({
+                data: getInitialUnitStatusData(),
             });
         }
     }
@@ -598,6 +594,9 @@ const SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC = 'responseHistoricSensorData';
 
 const SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'requestHistoricActuatorStatusData';
 const SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'responseHistoricActuatorStatusData';
+
+const SOCKET_REQUEST_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC = 'requestHistoricAuthoritiesUnitStatusData';
+const SOCKET_RESPONSE_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC = 'responseHistoricAuthoritiesUnitStatusData';
 
 let currentWebsocketConnections = [];
 
@@ -670,34 +669,30 @@ const initializeWebsocketServer = (io) => {
         // TODO DWA Send current Weather Events and for each: current WeatherEventRisk and possibly also action(s) ?
 
         // Send current Authorities Unit Status
-        
-        const locationAndUnitTypesProcessed = new Set([]);
+        {
+            const locationAndUnitTypesProcessed = new Set([]);
 
-        prisma.unitStatus.findMany({
-            include: {
-                lastChangedBy: {
-                    include: {
-                        weatherEvent: true,
+            prisma.unitStatus.findMany({
+                orderBy: [
+                    {
+                        location: 'desc', 
                     },
-                },
-            },
-            orderBy: [
-                {
-                    location: 'desc', 
-                },
-                {
-                    unitType: 'desc',
-                },
-            ],
-        }).then(unitStatusData => {
-            unitStatusData.forEach((unitStatus) => {
-                if(locationAndUnitTypesProcessed.has(unitStatus.location + '_' + unitStatus.unitType)) { // only choose most recent entries for each pair
-                    return;
-                }
-                locationAndUnitTypesProcessed.add(unitStatus.location + '_' + unitStatus.unitType);
-                socket.emit(authoritiesUnitStatusTopicPrefix, unitStatus);
+                    {
+                        unitType: 'desc',
+                    },
+                ],
+            }).then(unitStatusData => {
+                unitStatusData.forEach((unitStatus) => {
+                    if(locationAndUnitTypesProcessed.has(unitStatus.location + '_' + unitStatus.unitType)) { // only choose most recent entries for each pair
+                        return;
+                    }
+                    locationAndUnitTypesProcessed.add(unitStatus.location + '_' + unitStatus.unitType);
+                    socket.emit(authoritiesUnitStatusTopicPrefix, unitStatus);
+                });
             });
-        });
+        }
+
+        // Socket Message Listeners
 
         socket.on(SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC, (message) => {
             try {
@@ -782,7 +777,11 @@ const initializeWebsocketServer = (io) => {
                 let historicSelectedActuatorStatusData = await prisma.actuatorStatusData.findMany({
                     where: {
                         instanceId: selectedActuatorInstanceId,
-                    }, include: {
+                    },
+                    orderBy: {
+                        timestamp: 'desc'
+                    },
+                    include: {
                         lastChangedBy: {
                             include: {
                                 weatherEvent: true
@@ -795,6 +794,39 @@ const initializeWebsocketServer = (io) => {
             } catch (error) {
                 console.error(
                     'Data Service: Error processing incoming Historic Actuator Status Data Request Socket IO message: ',
+                    error
+                );
+            }
+        });
+
+        socket.on(SOCKET_REQUEST_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC, async (message) => {
+            try {
+                const messageJSON = JSON.parse(message.toString());
+
+                const location = messageJSON['location'];
+                const unitType = messageJSON['unitType'];
+
+                let historicSelectedAuthoritiesLocationAndUnitTypeData = await prisma.unitStatus.findMany({
+                    where: {
+                        location, 
+                        unitType
+                    },
+                    orderBy: {
+                        timestamp: 'desc'
+                    },
+                    include: {
+                        changedBy: {
+                            include: {
+                                weatherEvent: true
+                            },
+                        },
+                    },
+                });
+
+                socket.emit(SOCKET_RESPONSE_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC, JSON.stringify(historicSelectedAuthoritiesLocationAndUnitTypeData));
+            } catch (error) {
+                console.error(
+                    'Data Service: Error processing incoming Historic Authorities Units Status Data Request Socket IO message: ',
                     error
                 );
             }
@@ -1046,10 +1078,35 @@ const initializeMQTTClient = async () => {
 
                     mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEventAction.location, newWeatherEventRisk);  // will be persisted and sent via websosket when received in listener above
                 } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_MOVE_UNITS_RESPONSE) {
-                    await prisma.unitStatus.update( where: {}, data: {  } );
+                    const { amount: moveUnitsFromLocationOldUnitsAmount } = await prisma.unitStatus.findFirst({ 
+                        select: { amount: true }, 
+                        where: { unitType: weatherEventAction.moveUnitsType, location: weatherEventAction.moveUnitsFromLocation }, 
+                        orderBy: { timestamp: 'desc' } 
+                    });
+                    const { amount: moveUnitsToLocationOldUnitsAmount } = await prisma.unitStatus.findFirst({ 
+                        select: { amount: true }, 
+                        where: { unitType: weatherEventAction.moveUnitsType, location: weatherEventAction.moveUnitsToLocation }, 
+                        orderBy: { timestamp: 'desc' } 
+                    });
+                    
+                    const newMoveFromLocationUnitStatusData = {
+                        unitType: weatherEventAction.moveUnitsType,
+                        location: weatherEventAction.moveUnitsFromLocation,
+                        amount: moveUnitsFromLocationOldUnitsAmount - weatherEventAction.moveUnitsAmount,
+                        weatherEventActionId: weatherEventAction.id,
+                    };
+                    const newMoveToLocationUnitStatusData = {
+                        unitType: weatherEventAction.moveUnitsType,
+                        location: weatherEventAction.moveUnitsToLocation,
+                        amount: moveUnitsToLocationOldUnitsAmount + weatherEventAction.moveUnitsAmount,
+                        weatherEventActionId: weatherEventAction.id,
+                    };
 
-                    // TODO DWA Update Number of Units at from and to Location
-                    // TODO DWA Emit authoritiesUnitStatus message via Socket Message
+                    currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(newMoveFromLocationUnitStatusData)));
+                    currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(newMoveToLocationUnitStatusData)));
+
+                    await prisma.unitStatus.create(newMoveFromLocationUnitStatusData);
+                    await prisma.unitStatus.create(newMoveToLocationUnitStatusData);
                 }
             }  
         } catch (error) {

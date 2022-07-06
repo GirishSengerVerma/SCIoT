@@ -3,7 +3,6 @@
 import { localStorageStore } from '@babichjacob/svelte-localstorage/svelte-kit';
 import { writable, type Writable } from 'svelte/store';
 
-import { socket } from '$root/utils/socketio';
 import type { Actuator, ActuatorMetaData, ActuatorStatusData } from '@prisma/client';
 
 interface ActuatorStore extends Writable<Map<string, Actuator>> {

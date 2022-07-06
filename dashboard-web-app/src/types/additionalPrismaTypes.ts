@@ -10,6 +10,16 @@ export type ActuatorStatusDataWithRelatedWeatherEventData = Prisma.ActuatorStatu
 	};
 }>;
 
+export type UnitsStatusDataWithRelatedWeatherEventData = Prisma.UnitStatusGetPayload<{
+	include: {
+		changedBy: {
+			include: {
+				weatherEvent: true;
+			};
+		};
+	};
+}>;
+
 export type WeatherEventActionWithWeatherEvent = Prisma.WeatherEventActionGetPayload<{
 	include: {
 		weatherEvent: true;

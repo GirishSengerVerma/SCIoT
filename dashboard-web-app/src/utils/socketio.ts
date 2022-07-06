@@ -26,10 +26,12 @@ const authoritiesUnitStatusTopicPrefix = 'authorities/unitstatus';
 export const SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC = 'requestHistoricSensorData';
 export const SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC = 'responseHistoricSensorData';
 
-export const SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC =
-	'requestHistoricActuatorStatusData';
-export const SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC =
-	'responseHistoricActuatorStatusData';
+export const SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'requestHistoricActuatorStatusData';
+export const SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'responseHistoricActuatorStatusData';
+
+
+export const SOCKET_REQUEST_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC = 'requestHistoricAuthoritiesUnitStatusData';
+export const SOCKET_RESPONSE_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC = 'responseHistoricAuthoritiesUnitStatusData';
 
 export const socket = io();
 
@@ -104,6 +106,7 @@ socket.on(authoritiesUnitStatusTopicPrefix, (message) => {
 		const messageJSON = JSON.parse(message.toString());
 		authoritiesUnitStatus.setStatus(messageJSON as UnitStatus);
 	} catch (error) {
+		// TODO DWA Fix reading Authorities UnitStatus Socket Message
 		console.error(
 			'Web App: Error processing incoming Authorities UnitStatus Socket IO message: ',
 			error
