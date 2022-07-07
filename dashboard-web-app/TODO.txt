@@ -1,11 +1,18 @@
 TODO
 	MQTT Client Automatic Reconnect
 	
-	Create Weather Event, Create Sensor, Create Sensor, Create Actuator
+	Weather Events:
+		Manually change risk
+		Manually take action
 	
 	Actuator:
-		Change Status Button
+		Manually change status
 			possible to select corresponding WeatherEvent or leave empty
 	
 	Authorities:
-		Move Units Manually
+		Manually move units
+			possible to select corresponding WeatherEvent or leave empty
+	
+	Create Weather Event, Create Sensor, Create Sensor, Create Actuator
+	
+	
