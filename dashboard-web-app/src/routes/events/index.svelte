@@ -1,6 +1,11 @@
 <script lang="ts">
-	import { Location, type ActuatorMetaData, type ActuatorStatusData, type WeatherEvent, type WeatherEventRisk } from '@prisma/client';
-	import { hasContext, onDestroy, onMount } from 'svelte';
+	import dayjs from 'dayjs';
+	import utc from 'dayjs/plugin/utc.js';
+
+	dayjs.extend(utc);
+
+	import { Location, type WeatherEvent, type WeatherEventRisk } from '@prisma/client';
+	import { onDestroy, onMount } from 'svelte';
 
 	import { enumValueToString, stringToEnumValue } from '$root/utils/enumUtil';
 	import { ICON_COMMON_LOCATION, ICON_BUTTON_ADD } from '$root/constants/iconConstants';
@@ -72,25 +77,26 @@
 		weatherEventsAtLocation = new Map(
 			[...weatherEvents]
 				.filter(([_, v]) => !v.end && v.location === selectedLocation)
-				.sort((a, b) => b[1].start.getDate() - a[1].start.getDate())
+				.sort((a, b) => dayjs(b[1].start).diff(dayjs(a[1].start)))
 		);
 		pastWeatherEventsAtLocation = new Map(
 			[...weatherEvents]
 				.filter(([_, v]) => v.end && v.location === selectedLocation)
-				.sort((a, b) => b[1].start.getDate() - a[1].start.getDate())
+				.sort((a, b) => dayjs(b[1].start).diff(dayjs(a[1].start)))
 		);
 
 		if (
-			$selectedWeatherEventId && !weatherEventsAtLocation.has($selectedWeatherEventId) && !pastWeatherEventsAtLocation.has($selectedWeatherEventId)
+			$selectedWeatherEventId && Number($selectedWeatherEventId) >= 0 
+			&& !weatherEventsAtLocation.has(Number($selectedWeatherEventId)) && !pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId))
 		) {
-			selectedWeatherEventId.set(-1);
+			selectedWeatherEventId.set('-1');
 		}
 	};
 
-	$: updateHistoricWeatherEventData($selectedWeatherEventId);
+	$: updateHistoricWeatherEventData(Number($selectedWeatherEventId));
 
 	const updateHistoricWeatherEventData = (selectedWeatherEventId: number) => {
-		if(selectedWeatherEventId < 0) {
+		if(selectedWeatherEventId == null || selectedWeatherEventId < 0) {
 			return;
 		}
 		fetchingHistoricWeatherEventData = true;
@@ -135,45 +141,54 @@
 		>
 			{#if initializingStores}
 				<LoadingSpinner />
-			{:else if $selectedWeatherEventId && (weatherEventsAtLocation.has($selectedWeatherEventId) || pastWeatherEventsAtLocation.has($selectedWeatherEventId))}
-				<!-- TODO DWA Implement <WeatherEventHistory
-					isPast={pastWeatherEventsAtLocation.has($selectedWeatherEventId)}
+			{:else if $selectedWeatherEventId != null && Number($selectedWeatherEventId) >= 0 && (weatherEventsAtLocation.has(Number($selectedWeatherEventId)) || pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId)))}
+				<WeatherEventHistory
+					isPast={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId))}
 					loading={initializingStores || fetchingHistoricWeatherEventData}
+					weatherEvent={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId)) ? pastWeatherEventsAtLocation.get(Number($selectedWeatherEventId)) : weatherEventsAtLocation.get(Number($selectedWeatherEventId))}
 					historicWeatherEventData={selectedWeatherEventHistoricData}
-				/>-->
+				/>
 			{/if}
 		</div>
 		<div
-			class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-6 lg:mt-0 justify-between items-start h-fit"
+			class="flex flex-col min-w-[210px]"
 		>
-			<SubTitle text='Current Weather Events'/>
-			{#if initializingStores}
-				<LoadingSpinner />
-			{:else}
-				{#each [...weatherEventsAtLocation] as [key, weatherEvent]}
-					<WeatherEventStatus
-						isPast={false}
-						weatherEvent={weatherEvent}
-						currentWeatherEventRisk={$currentWeatherEventRisk.get(key)}
-						isSelected={key === $selectedWeatherEventId}
-						onClick={() => selectedWeatherEventId.set(key)}
-					/>
-				{/each}
-			{/if}
-			<SubTitle text='Past Weather Events'/>
-			{#if initializingStores}
-				<LoadingSpinner />
-			{:else}
-				{#each [...pastWeatherEventsAtLocation] as [key, weatherEvent]}
-					<WeatherEventStatus
-						isPast={true}
-						weatherEvent={weatherEvent}
-						currentWeatherEventRisk={$currentWeatherEventRisk.get(key)}
-						isSelected={key === $selectedWeatherEventId}
-						onClick={() => selectedWeatherEventId.set(key)}
-					/>
-				{/each}
-			{/if}
+			<SubTitle text='Current Weather Events' clazz="mt-3 md:mt-0"/>
+			<div class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-5 justify-between items-start h-fit">
+				{#if initializingStores}
+					<LoadingSpinner />
+				{:else if weatherEventsAtLocation.size > 0}
+					{#each [...weatherEventsAtLocation] as [key, weatherEvent]}
+						<WeatherEventStatus
+							isPast={false}
+							weatherEvent={weatherEvent}
+							currentWeatherEventRisk={$currentWeatherEventRisk.get(key)}
+							isSelected={key === Number($selectedWeatherEventId)}
+							onClick={() => selectedWeatherEventId.set('' + key)}
+						/>
+					{/each}
+				{:else}
+					None
+				{/if}
+			</div>
+			<SubTitle text='Past Weather Events' clazz="mt-8"/>
+			<div class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-5 justify-between items-start h-fit">
+				{#if initializingStores}
+					<LoadingSpinner />
+				{:else if pastWeatherEventsAtLocation.size > 0}
+					{#each [...pastWeatherEventsAtLocation] as [key, weatherEvent]}
+						<WeatherEventStatus
+							isPast={true}
+							weatherEvent={weatherEvent}
+							currentWeatherEventRisk={$currentWeatherEventRisk.get(key)}
+							isSelected={key === Number($selectedWeatherEventId)}
+							onClick={() => selectedWeatherEventId.set('' + key)}
+						/>
+					{/each}
+				{:else}
+					None
+				{/if}
+			</div>
 		</div>
 	</div>
 </MainContent>

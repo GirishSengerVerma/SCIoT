@@ -36,11 +36,15 @@ export const SOCKET_RESPONSE_HISTORIC_WEATHER_EVENT_DATA_TOPIC = 'responseHistor
 export const SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC = 'requestHistoricSensorData';
 export const SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC = 'responseHistoricSensorData';
 
-export const SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'requestHistoricActuatorStatusData';
-export const SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'responseHistoricActuatorStatusData';
+export const SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC =
+	'requestHistoricActuatorStatusData';
+export const SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC =
+	'responseHistoricActuatorStatusData';
 
-export const SOCKET_REQUEST_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC = 'requestHistoricAuthoritiesUnitStatusData';
-export const SOCKET_RESPONSE_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC = 'responseHistoricAuthoritiesUnitStatusData';
+export const SOCKET_REQUEST_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC =
+	'requestHistoricAuthoritiesUnitStatusData';
+export const SOCKET_RESPONSE_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC =
+	'responseHistoricAuthoritiesUnitStatusData';
 
 export const socket = io();
 
@@ -49,7 +53,10 @@ socket.on(weatherEventInstanceTopicPrefix, (message) => {
 		const messageJSON = JSON.parse(message.toString());
 		weatherEvents.add(messageJSON as WeatherEvent);
 	} catch (error) {
-		console.error('Web App: Error processing incoming Weather Event Instance Socket IO message: ', error);
+		console.error(
+			'Web App: Error processing incoming Weather Event Instance Socket IO message: ',
+			error
+		);
 	}
 });
 
@@ -58,7 +65,10 @@ socket.on(weatherEventRiskTopicPrefix, (message) => {
 		const messageJSON = JSON.parse(message.toString());
 		currentWeatherEventRisk.addValue(messageJSON as WeatherEventRisk);
 	} catch (error) {
-		console.error('Web App: Error processing incoming Weather Event Risk Socket IO message: ', error);
+		console.error(
+			'Web App: Error processing incoming Weather Event Risk Socket IO message: ',
+			error
+		);
 	}
 });
 

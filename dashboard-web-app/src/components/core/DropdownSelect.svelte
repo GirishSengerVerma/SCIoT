@@ -51,7 +51,7 @@
 			<img
 				src={'icons/' + iconName + '.svg'}
 				alt={iconAlt}
-				class="w-5 mr-2 md:mr-3 dark:invert"
+				class="w-5 max-w-none mr-2 md:mr-3 dark:invert"
 				aria-hidden="true"
 			/>
 			<div class="flex">
@@ -75,7 +75,7 @@
 			<img
 				src={'icons/' + iconName + '.svg'}
 				alt={iconAlt}
-				class="w-5 mr-2 md:mr-3 dark:invert"
+				class="w-5 max-w-none mr-2 md:mr-3 dark:invert"
 				aria-hidden="true"
 			/>
 			{#each options as option, i}
@@ -99,7 +99,7 @@
 				</div>
 			{/each}
 			<img
-				class={'w-5 ml-1 md:ml-3 dark:invert transition duration-200' +
+				class={'w-5 max-w-none ml-1 md:ml-3 dark:invert transition duration-200' +
 					(dropdownMenuOpen ? ' rotate-180' : '')}
 				src={'icons/' + ICON_DROPDOWN_CHEVRON_DOWN + '.svg'}
 				alt={iconAlt}

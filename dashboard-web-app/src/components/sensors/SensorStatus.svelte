@@ -103,7 +103,7 @@
 				class="hidden md:flex bg-accentLight dark:bg-accentDark bg-opacity-30 rounded-lg mr-8 lg:mr-7 p-1 md:p-3"
 			>
 				<img
-					class={'w-8 h-8 dark:invert'}
+					class={'w-8 h-8 max-w-none dark:invert'}
 					src={'icons/' + ICON_SENSORS_BY_NAME.get(metaData.measure) + '.svg'}
 					alt={enumValueToString(metaData.measure)}
 					aria-hidden="true"

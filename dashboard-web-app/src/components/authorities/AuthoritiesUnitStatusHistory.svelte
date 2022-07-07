@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { format } from 'timeago.js';
+	
 	import dayjs from 'dayjs';
 	import utc from 'dayjs/plugin/utc.js';
 
@@ -31,7 +33,7 @@
 					{#each authoritiesHistoricUnitStatusData as unitStatus, i}
 						<tr class={"text-center" + ((i < authoritiesHistoricUnitStatusData.length - 1) ? " border-b border-accentLight dark:border-accentDark" : "")}>
 							<td class="py-4 px-2 font-semibold whitespace-nowrap"
-								>{dayjs(unitStatus.timestamp).format('DD.MM.YYYY HH:mm:ss')}</td
+								>{dayjs(unitStatus.timestamp).format('DD.MM.YYYY HH:mm:ss')} ({format(unitStatus.timestamp, 'en_US')})</td
 							>
 							<td
 								><div

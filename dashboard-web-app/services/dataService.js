@@ -589,6 +589,9 @@ const initializePrisma = async () => {
     console.log('Data Service: Prisma Client: Done.\n');
 }
 
+const SOCKET_REQUEST_HISTORIC_WEATHER_EVENT_DATA_TOPIC = 'requestHistoricWeatherEventData';
+const SOCKET_RESPONSE_HISTORIC_WEATHER_EVENT_DATA_TOPIC = 'responseHistoricWeatherEventData';
+
 const SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC = 'requestHistoricSensorData';
 const SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC = 'responseHistoricSensorData';
 
@@ -666,7 +669,45 @@ const initializeWebsocketServer = (io) => {
             });
         });
 
-        // TODO DWA Send current Weather Events and for each: current WeatherEventRisk
+        // Send current and past Weather Events and for each: most recent WeatherEventRisk
+        {
+            prisma.weatherEvent.findMany({
+                orderBy: [
+                    {
+                        location: 'desc', 
+                    },
+                    {
+                        type: 'desc',
+                    },
+                    {
+                        start: 'desc',
+                    },
+                    {
+                        end: 'desc',
+                    }
+                ],
+            }).then(weatherEventData => {
+                weatherEventData.forEach(async (weatherEvent) => {
+                    socket.emit(weatherEventInstanceTopicPrefix, JSON.stringify(weatherEvent));
+                    const mostRecentWeatherEventRisk = await prisma.weatherEventRisk.findFirst({
+                        where: {
+                            weatherEventId: weatherEvent.id,
+                        },
+                        orderBy: [
+                            {
+                                start: 'desc',
+                            },
+                            {
+                                end: 'desc',
+                            },
+                        ],
+                    });
+                    if(mostRecentWeatherEventRisk) {
+                        socket.emit(weatherEventRiskTopicPrefix, JSON.stringify(mostRecentWeatherEventRisk));
+                    }
+                });
+            });
+        }
         
         // Send current Authorities Unit Status
         {
@@ -802,7 +843,52 @@ const initializeWebsocketServer = (io) => {
             }
         });
 
-        // TODO DWA Implement Historic Weather Event Data Fetching
+        socket.on(SOCKET_REQUEST_HISTORIC_WEATHER_EVENT_DATA_TOPIC, async (message) => {
+            try {
+                const messageJSON = JSON.parse(message.toString());
+
+                const selectedWeatherEventId = messageJSON['selectedWeatherEventId'];
+                if(selectedWeatherEventId == null || selectedWeatherEventId < 0 || !(await prisma.weatherEvent.findFirst({ where: { id: selectedWeatherEventId } }))) {
+                    socket.emit(SOCKET_RESPONSE_HISTORIC_WEATHER_EVENT_DATA_TOPIC, JSON.stringify({ risks: [], actions: [] }));
+                    return;
+                }
+
+                const allWeatherEventRisks = await prisma.weatherEventRisk.findMany({
+                    where: {
+                        weatherEventId: selectedWeatherEventId,
+                    },
+                    orderBy: [
+                        {
+                            start: 'desc',
+                        },
+                        {
+                            end: 'desc',
+                        },
+                    ],
+                });
+
+                const allWeatherEventActions = await prisma.weatherEventAction.findMany({
+                    where: {
+                        weatherEventId: selectedWeatherEventId,
+                    },
+                    orderBy: {
+                        timestamp: 'desc',
+                    }
+                });
+
+                const historicWeatherEventData = {
+                    risks: allWeatherEventRisks,
+                    actions: allWeatherEventActions,
+                };
+
+                socket.emit(SOCKET_RESPONSE_HISTORIC_WEATHER_EVENT_DATA_TOPIC, JSON.stringify(historicWeatherEventData));
+            } catch (error) {
+                console.error(
+                    'Data Service: Error processing incoming Historic Weather Event Data Request Socket IO message: ',
+                    error
+                );
+            }
+        });
 
         socket.on(SOCKET_REQUEST_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC, async (message) => {
             try {
@@ -882,57 +968,50 @@ const initializeMQTTClient = async () => {
             const timestamp = dayjs().toISOString();
 
              if (topic.startsWith(sensorInstanceTopicPrefix)) {
-                currentWebsocketConnections.forEach(socket => socket.emit(sensorInstanceTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.sensor.upsert({ create: messageJSON, where: { instanceId: messageJSON.instanceId }})
-                    .then(data => data)
+                    .then(data => currentWebsocketConnections.forEach(socket => socket.emit(sensorInstanceTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Sensor Instance JSON data using Prisma: ', error));
             } else if (topic.startsWith(sensorTelemetryTopicPrefix)) {
-                currentWebsocketConnections.forEach(socket => socket.emit(sensorTelemetryTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.sensorTelemetryData.create({ data: messageJSON })
-                    .then(data => data)
+                    .then(data => currentWebsocketConnections.forEach(socket => socket.emit(sensorTelemetryTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Sensor Telemetry JSON data using Prisma: ', error));
             } else if (topic.startsWith(sensorMetadataTopicPrefix)) {
-                currentWebsocketConnections.forEach(socket => socket.emit(sensorMetadataTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.sensorMetaData.create({ data: messageJSON })
-                    .then(data => data)
+                    .then(data => currentWebsocketConnections.forEach(socket => socket.emit(sensorMetadataTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Sensor MetaData JSON data using Prisma: ', error));
             }else if (topic.startsWith(actuatorInstanceTopicPrefix)) {
-                currentWebsocketConnections.forEach(socket => socket.emit(actuatorInstanceTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.actuator.upsert({ 
                     create: messageJSON, 
                     where: { 
                         instanceId: messageJSON.instanceId 
                     }
                 })
-                    .then(data => data)
+                    .then(data => currentWebsocketConnections.forEach(socket => socket.emit(actuatorInstanceTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Actuator Instance JSON data using Prisma: ', error));
             } else if (topic.startsWith(actuatorStatusDataTopicPrefix)) {
-                currentWebsocketConnections.forEach(socket => socket.emit(actuatorStatusDataTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.actuatorStatusData.create({ data: messageJSON })
-                    .then(data => data)
+                    .then(data => currentWebsocketConnections.forEach(socket => socket.emit(actuatorStatusDataTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Actuator Status JSON data using Prisma: ', error));
             } else if (topic.startsWith(actuatorsMetadataTopicPrefix)) {
-                currentWebsocketConnections.forEach(socket => socket.emit(actuatorsMetadataTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.actuatorMetaData.create({ data: messageJSON })
-                    .then(data => data)
+                    .then(data => currentWebsocketConnections.forEach(socket => socket.emit(actuatorsMetadataTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Actuator MetaData JSON data using Prisma: ', error));
             } else if (topic.startsWith(weatherEventInstanceTopicPrefix)) {
-                currentWebsocketConnections.forEach(socket => socket.emit(weatherEventInstanceTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.weatherEvent.upsert({ create: messageJSON, update: { end: messageJSON.end }, where: { id: messageJSON.id } })
-                    .then(data => data)
+                    .then(data => currentWebsocketConnections.forEach(socket => socket.emit(weatherEventInstanceTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Weather Event Instance JSON data using Prisma: ', error));
             } else if (topic.startsWith(weatherEventRiskTopicPrefix)) {
-                currentWebsocketConnections.forEach(socket => socket.emit(weatherEventRiskTopicPrefix, JSON.stringify(messageJSON)));
                 prisma.weatherEventRisk.create({ data: messageJSON })
-                    .then(data => data)
+                    .then(data => currentWebsocketConnections.forEach(socket => socket.emit(weatherEventRiskTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Weather Event Risk JSON data using Prisma: ', error));
             } else if(topic.startsWith(weatherEventActionTopicPrefix)) {
                 const weatherEventAction = messageJSON;
                 
-                currentWebsocketConnections.forEach(socket => socket.emit(weatherEventActionTopicPrefix, JSON.stringify(weatherEventAction)));
-                
                 const { id: weatherEventActionId } = await prisma.weatherEventAction.create({ data: weatherEventAction })
-                    .then(data => data)
+                    .then(data => {
+                        currentWebsocketConnections.forEach(socket => socket.emit(weatherEventActionTopicPrefix, JSON.stringify(data)));
+                        return data;
+                    })
                     .catch(error => console.error('Data Service: Error persisting Weather Event Action JSON data using Prisma: ', error));
 
                 if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_DEVICE_NOTIFICATION) {
@@ -1043,7 +1122,8 @@ const initializeMQTTClient = async () => {
                         riskLevel: newWeatherEventRiskLevel,
                     };
 
-                    await prisma.weatherEventRisk.update({ where: { id: currentWeatherEventRisk.id }, data: { end: timestamp } });
+                    const updatedCurrentWeatherEventRisk = await prisma.weatherEventRisk.update({ where: { id: currentWeatherEventRisk.id }, data: { end: timestamp } });
+                    currentWebsocketConnections.forEach(socket => socket.emit(weatherEventRiskTopicPrefix, JSON.stringify(updatedCurrentWeatherEventRisk)));
                     
                     mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEventAction.location, newWeatherEventRisk);  // will be persisted and sent via websosket when received in listener above
                 } else if(weatherEventAction.type === WeatherEventActionType.PLANNING_DECREASE_RISK_LEVEL) {
@@ -1051,12 +1131,18 @@ const initializeMQTTClient = async () => {
                         where: { 
                             weatherEventId: weatherEventAction.weatherEventId,
                         },
-                        orderBy: {
-                            timestamp: 'desc',
-                        }
+                        orderBy: [
+                            {
+                                start: 'desc',
+                            },
+                            {
+                                end: 'desc',
+                            },
+                        ],
                     });
 
-                    await prisma.weatherEventRisk.update({ where: { id: currentWeatherEventRisk.id }, data: { end: timestamp } });
+                    const updatedCurrentWeatherEventRisk = await prisma.weatherEventRisk.update({ where: { id: currentWeatherEventRisk.id }, data: { end: timestamp } });
+                    currentWebsocketConnections.forEach(socket => socket.emit(weatherEventRiskTopicPrefix, JSON.stringify(updatedCurrentWeatherEventRisk)));
 
                     let newWeatherEventRiskLevel = undefined;
                     if(currentWeatherEventRisk) {
@@ -1110,8 +1196,13 @@ const initializeMQTTClient = async () => {
                     currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(newMoveFromLocationUnitStatusData)));
                     currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(newMoveToLocationUnitStatusData)));
 
-                    await prisma.unitStatus.create({ data: newMoveFromLocationUnitStatusData });
-                    await prisma.unitStatus.create({ data: newMoveToLocationUnitStatusData });
+                    prisma.unitStatus.create({ data: newMoveFromLocationUnitStatusData })
+                        .then(data => currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(data))))
+                        .catch(error => console.error('Data Service: Error persisting new Move From Location Unit Status JSON data using Prisma: ', error));
+
+                    prisma.unitStatus.create({ data: newMoveToLocationUnitStatusData })
+                        .then(data => currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(data))))
+                        .catch(error => console.error('Data Service: Error persisting new Move To Location Unit Status JSON data using Prisma: ', error));
                 }
             }  
         } catch (error) {

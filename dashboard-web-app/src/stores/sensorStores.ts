@@ -5,7 +5,6 @@ import type { Sensor, SensorMetaData, SensorTelemetryData } from '@prisma/client
 import { writable, type Writable } from 'svelte/store';
 
 import { DataPeriod } from '$root/types/dataPeriod';
-import { socket } from '$root/utils/socketio';
 import { enumValueToString } from '$root/utils/enumUtil';
 
 const initialSensorDataPeriod = enumValueToString(DataPeriod.LIVE_DATA);

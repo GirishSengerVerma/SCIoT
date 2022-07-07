@@ -20,8 +20,10 @@ import {
   mqttClient,
   mqttListenerActive,
   weatherEventInstanceTopicName,
+  weatherEventRiskTopicName,
 } from './utils/mqtt';
 import {
+  addWeatherEvent,
   getWeatherEventLocationById,
   getWeatherEventTypeById,
   hasWeatherEventWithId,
@@ -219,8 +221,12 @@ bot.command('moveunits', async (ctx) => {
 
 const randomFromMapKeys = (mapping: Map<string, string>): string => {
   const keys = Array.from(mapping.keys());
-  const index = Math.floor(Math.random() * keys.length);
-  return keys[index];
+  return randomFromArray(keys);
+};
+
+const randomFromArray = (array: Array<string>): string => {
+  const index = Math.floor(Math.random() * array.length);
+  return array[index];
 };
 
 const randomIntFromInterval = (min: number, max: number) => {
@@ -231,7 +237,8 @@ let testRequestId = 0;
 
 // Used for simulating an incoming move units request
 bot.command('testrequest', async (_) => {
-  const weatherEventId = Math.max(...weatherEventIds.values()) + 1;
+  const weatherEventId =
+    Math.max(...[...weatherEventIds.values()].concat([0])) + 1;
   const weatherEventType = randomFromMapKeys(
     WEATHER_EVENT_TYPE_DISPLAY_NAME_BY_NAME
   );
@@ -243,6 +250,8 @@ bot.command('testrequest', async (_) => {
     location: weatherEventLocation,
   };
 
+  addWeatherEvent(weatherEventId, weatherEventLocation, weatherEventType);
+
   mqttClient.publish(
     weatherEventInstanceTopicName + '/' + weatherEventLocation,
     JSON.stringify(weatherEventInstanceMessage),
@@ -250,6 +259,17 @@ bot.command('testrequest', async (_) => {
   );
 
   setTimeout(() => {
+    const weatherEventRiskMessage = {
+      weatherEventId,
+      riskLevel: randomFromArray(['LOW', 'MEDIUM', 'HIGH', 'EXTREME']),
+    };
+
+    mqttClient.publish(
+      weatherEventRiskTopicName + '/' + weatherEventLocation,
+      JSON.stringify(weatherEventRiskMessage),
+      { qos: 1 }
+    );
+
     const moveUnitsType = randomFromMapKeys(UNIT_TYPE_ICON_BY_NAME);
     let moveUnitsFromLocation = randomFromMapKeys(LOCATION_ICON_BY_NAME);
     while (getUnitStatus(moveUnitsFromLocation, moveUnitsType) === 0) {
@@ -261,9 +281,8 @@ bot.command('testrequest', async (_) => {
       getUnitStatus(moveUnitsFromLocation, moveUnitsType)
     );
 
-    const requestMessage = {
-      id: testRequestId++,
-      weatherEventId: weatherEventId,
+    const weatherEventActionRequestUnitsMessage = {
+      weatherEventId,
       type: 'COUNTER_MEASURE_MOVE_UNITS_REQUEST',
       location: weatherEventLocation,
       moveUnitsType,
@@ -274,7 +293,7 @@ bot.command('testrequest', async (_) => {
 
     mqttClient.publish(
       weatherEventActionTopicName + '/' + moveUnitsToLocation,
-      JSON.stringify(requestMessage),
+      JSON.stringify(weatherEventActionRequestUnitsMessage),
       { qos: 1 }
     );
   }, 500);

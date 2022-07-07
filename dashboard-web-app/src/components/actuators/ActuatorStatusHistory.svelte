@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { format } from 'timeago.js';
+
 	import dayjs from 'dayjs';
 	import utc from 'dayjs/plugin/utc.js';
 
@@ -30,7 +32,7 @@
 					{#each actuatorHistoricStatusData as statusData, i}
 						<tr class={"text-center" + ((i < actuatorHistoricStatusData.length - 1) ? " border-b border-accentLight dark:border-accentDark" : "")}>
 							<td class="py-4 px-2 font-semibold whitespace-nowrap"
-								>{dayjs(statusData.timestamp).format('DD.MM.YYYY HH:mm:ss')}</td
+								>{dayjs(statusData.timestamp).format('DD.MM.YYYY HH:mm:ss')} ({format(statusData.timestamp, 'en_US')})</td
 							>
 							<td
 								><div

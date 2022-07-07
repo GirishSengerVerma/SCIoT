@@ -1,5 +1,5 @@
 TODO
-	Weather Events Page
+	MQTT Client Automatic Reconnect
 	
 	Create Weather Event, Create Sensor, Create Sensor, Create Actuator
 	

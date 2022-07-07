@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { Actuator, ActuatorMetaData, ActuatorStatusData, WeatherEvent, WeatherEventRisk } from '@prisma/client';
+	import { format } from 'timeago.js';
+	import type { WeatherEvent, WeatherEventRisk } from '@prisma/client';
 
 	import { enumValueToString, stringToEnumValue } from '$root/utils/enumUtil';
     import { getWeatherEventRiskLevelColor } from '$root/utils/weatherEventUtils';
@@ -21,40 +22,48 @@
 	on:click={() => onClick()}
 >
 	<div
-		class="hidden md:block absolute -top-2 md:-top-3 left-0 right-0 ml-auto mr-auto w-24 rounded-full bg-accentLight dark:bg-accentDark text-xs md:text-sm"
+		class="hidden md:block absolute -top-2 md:-top-3 left-0 right-0 ml-auto mr-auto px-2 w-fit rounded-full bg-accentLight dark:bg-accentDark text-xs md:text-sm"
 	>
-		{isPast ? 'Past' : 'Current'}
-	</div>
-	<div class="md:hidden w-6 h-6 mr-3 bg-accentLight dark:bg-accentDark rounded-full self-center">
-		{isPast ? 'P' : 'C'}
+		{#if isPast}
+			Ended {weatherEvent.end ? format(weatherEvent.end, 'en_US') : ''}
+		{:else}
+			Started {format(weatherEvent.start, 'en_US')}
+		{/if}
 	</div>
 	<div class="flex flex-col flex-grow">
-		<div class="md:text-lg md:font-medium text-right md:text-center">
+		<div class="md:text-lg md:font-medium text-center">
 			{enumValueToString(weatherEvent.type)}
 		</div>
-		<div class="flex md:px-5 mt-1 md:mt-3 justify-end md:justify-between">
+		<div class="flex md:px-5 mt-1 md:mt-3 justify-center md:justify-between">
 			<div
 				class="hidden md:flex bg-accentLight dark:bg-accentDark bg-opacity-30 rounded-lg mr-8 lg:mr-7 p-1 md:p-3"
 			>
 				<img
-					class={'w-8 h-8 dark:invert'}
+					class={'w-8 h-8 max-w-none dark:invert'}
 					src={'icons/' + ICON_WEATHER_EVENTS_BY_NAME.get(weatherEvent.type) + '.svg'}
 					alt={enumValueToString(weatherEvent.type)}
 					aria-hidden="true"
 				/>
 			</div>
-			<div class="flex flex-col justify-around">
+			<div class="flex flex-col justify-around items-center">
 				{#if currentWeatherEventRisk}
 					<div
-						class={'rounded-full ' +
+						class={'rounded-full w-fit whitespace-nowrap ' +
 							getWeatherEventRiskLevelColor(currentWeatherEventRisk.riskLevel) +
 							' text-xs md:text-sm text-black px-3'}
 					>
-						{enumValueToString(currentWeatherEventRisk.riskLevel)}
+						{enumValueToString(currentWeatherEventRisk.riskLevel)} Risk
 					</div>
 				{:else}
 					<LoadingSpinner />
 				{/if}
+				<div class="md:hidden text-xs pt-2">
+					{#if isPast}
+						Ended {weatherEvent.end ? format(weatherEvent.end, 'en_US') : ''}
+					{:else}
+						Started {format(weatherEvent.start, 'en_US')}
+					{/if}
+				</div>
 			</div>
 		</div>
 	</div>

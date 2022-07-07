@@ -36,6 +36,7 @@ console.log(
 );
 
 export const weatherEventInstanceTopicName = 'weatherevents/instance';
+export const weatherEventRiskTopicName = 'weatherevents/risk';
 export const weatherEventActionTopicName = 'weatherevents/action';
 
 export const mqttClient = mqtt.connect(host, options);
@@ -78,7 +79,6 @@ export const listenToMQTTMessages = (ctx: Context) => {
         addWeatherEvent(id, location, type);
       } else if (
         topic.startsWith(weatherEventActionTopicName) &&
-        messageJSON.hasOwnProperty('id') &&
         messageJSON.hasOwnProperty('weatherEventId') &&
         messageJSON.hasOwnProperty('type') &&
         messageJSON.hasOwnProperty('location') &&
@@ -88,7 +88,6 @@ export const listenToMQTTMessages = (ctx: Context) => {
         messageJSON.hasOwnProperty('moveUnitsToLocation')
       ) {
         const {
-          id,
           weatherEventId,
           type: actionType,
           location: actionLocation,
@@ -102,7 +101,7 @@ export const listenToMQTTMessages = (ctx: Context) => {
           return;
         }
 
-        console.log('Processing Move Units Request ' + id + '..');
+        console.log('Processing Move Units Request..');
 
         const location = getWeatherEventLocationById(weatherEventId)!;
         const type = getWeatherEventTypeById(weatherEventId)!;

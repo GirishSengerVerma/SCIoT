@@ -25,7 +25,7 @@
 				class="hidden md:flex bg-accentLight dark:bg-accentDark bg-opacity-30 rounded-lg mr-8 lg:mr-7 p-1 md:p-3"
 			>
 				<img
-					class={'w-10 h-10 dark:invert'}
+					class={'w-10 h-10 max-w-none dark:invert'}
 					src={'icons/' + ICON_AUTHORITIES_UNIT_TYPE_BY_NAME.get(unitStatus.unitType) + '.svg'}
 					alt={enumValueToString(unitStatus.unitType)}
 					aria-hidden="true"

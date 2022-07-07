@@ -7,6 +7,7 @@ SVG Icons:
     https://www.svgrepo.com/svg/347300/police-car (licensed under Apache License)
     https://www.svgrepo.com/svg/80142/firetruck (licensed under CC0)
     https://www.svgrepo.com/svg/31727/emergency-medical-vehicle (licensed under CC0)
+    https://iconmonstr.com/ (license: https://iconmonstr.com/license/)
 
 Favicon:
     https://favicon.io/emoji-favicons/chart-decreasing/ (licensed under CC-BY 4.0)
