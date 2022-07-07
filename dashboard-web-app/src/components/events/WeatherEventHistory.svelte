@@ -18,9 +18,9 @@
 	export let historicWeatherEventData: HistoricWeatherEventData | undefined;
 </script>
 
-<div class="w-full flex flex-col py-3 min-h-[220px] max-h-40 lg:max-h-96 justify-evenly">
-	<SubTitle text={(isPast ? 'Past ' : '') + 'Weather Event Risk History'} />
-	<div class="overflow-auto border border-accentLight dark:border-accentDark rounded-lg my-2">
+<div class="w-full flex flex-col py-1 lg:py-3 min-h-[340px] max-h-40 lg:max-h-96 justify-evenly">
+	<SubTitle text={(isPast ? 'Past ' : '') + 'Weather Event Risk History'} clazz="mb-1 lg:mb-3" />
+	<div class="overflow-auto border border-accentLight dark:border-accentDark rounded-lg lg:my-2">
 		<table class="table-auto w-full text-xs lg:text-sm text-left">
 			<thead class="uppercase text-center border-b border-accentLight dark:border-accentDark">
 				<tr>
@@ -58,8 +58,8 @@
 			</tbody>
 		</table>
 	</div>
-	<SubTitle text={(isPast ? 'Past ' : '') + 'Weather Event Actions History'} clazz="mt-10" />
-	<div class="overflow-auto border border-accentLight dark:border-accentDark rounded-lg my-2">
+	<SubTitle text={(isPast ? 'Past ' : '') + 'Weather Event Actions History'} clazz="mt-4 lg:mt-10 mb-1 lg:mb-3" />
+	<div class="overflow-auto border border-accentLight dark:border-accentDark rounded-lg lg:my-2">
 		<table class="table-auto w-full text-xs lg:text-sm text-left">
 			<thead class="uppercase text-center border-b border-accentLight dark:border-accentDark">
 				<tr>
