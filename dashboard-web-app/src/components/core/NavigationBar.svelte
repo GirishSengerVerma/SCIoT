@@ -68,13 +68,13 @@
 				link={route}
 				onClick={() => theme.switch()}
 			/>
-			<NavigationBarItem
+			<!--<NavigationBarItem
 				iconName={ICON_COMMON_SETTINGS}
 				iconAlt="Settings"
 				options
 				link="/settings"
 				selected={route === 'settings'}
-			/>
+			/>-->
 		</div>
 		<NavigationBarItem
 			iconName={ICON_COMMON_ACTUATOR}

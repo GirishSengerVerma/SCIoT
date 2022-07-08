@@ -16,7 +16,7 @@
 				class={'hover:cursor-pointer transition border rounded-lg px-2 lg:p-5' +
 					(selected && options ? ' bg-accentLight bg-opacity-80 dark:bg-opacity-20' : '') +
 					(options
-						? ' p-1 lg:my-2 lg:p-2 border-transparent lg:border-accentLight lg:dark:border-accentDark hover:bg-accentLight/[.20] dark:hover:bg-accentDark/[.25]'
+						? ' p-2 lg:my-2 lg:p-2 border-transparent lg:border-accentLight lg:dark:border-accentDark hover:bg-accentLight/[.20] dark:hover:bg-accentDark/[.25]'
 						: ' p-2 lg:my-4 lg:p-4 rounded-lg border-transparent  hover:border hover:rounded-lg hover:border-accentLight dark:hover:border-accentDark')}
 			>
 				<img
