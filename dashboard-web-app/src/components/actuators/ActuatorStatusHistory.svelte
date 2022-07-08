@@ -16,25 +16,25 @@
 		| undefined;
 </script>
 
-<div class="w-full flex flex-col py-3 min-h-[220px] max-h-40 lg:max-h-96 justify-evenly">
+<div class="w-full flex flex-col py-3 justify-evenly">
 	<SubTitle text="Actuator Status History" />
-	<div class="overflow-auto border border-accentLight dark:border-accentDark rounded-lg my-2">
-		<table class="table-auto w-full text-xs lg:text-sm text-left">
-			<thead class="uppercase text-center border-b border-accentLight dark:border-accentDark">
-				<tr>
-					<th scope="col" class="px-6 py-3">Date and Time</th>
-					<th scope="col" class="px-6 py-3">Status</th>
-					<th scope="col" class="px-6 py-3">Caused by</th>
+	<div class="w-full border border-accentLight dark:border-accentDark rounded-lg my-2">
+		<table class="w-full text-xs lg:text-sm text-left">
+			<thead class="flex w-full overflow-scroll uppercase text-center border-b border-accentLight dark:border-accentDark">
+				<tr class="flex w-full">
+					<th scope="col" class="w-1/3 px-6 py-3">Date and Time</th>
+					<th scope="col" class="w-1/3 px-6 py-3">Status</th>
+					<th scope="col" class="w-1/3 px-6 py-3">Caused by</th>
 				</tr>
 			</thead>
-			<tbody>
+			<tbody class="flex flex-col items-center justify-between overflow-scroll w-full max-h-[200px]">
 				{#if !loading && actuatorHistoricStatusData}
 					{#each actuatorHistoricStatusData as statusData, i}
-						<tr class={"text-center" + ((i < actuatorHistoricStatusData.length - 1) ? " border-b border-accentLight dark:border-accentDark" : "")}>
-							<td class="py-4 px-2 font-semibold whitespace-nowrap"
+						<tr class={"flex w-full text-center" + ((i < actuatorHistoricStatusData.length - 1) ? " border-b border-accentLight dark:border-accentDark" : "")}>
+							<td class="w-1/3 py-4 px-2 font-semibold"
 								>{dayjs(statusData.timestamp).format('DD.MM.YYYY HH:mm:ss')} ({format(statusData.timestamp, 'en_US')})</td
 							>
-							<td
+							<td class="flex w-1/3 justify-center items-center"
 								><div
 									class={'rounded-full w-fit mx-auto ' +
 										(statusData.enabled ? 'bg-green-300' : 'bg-red-300') +
@@ -43,7 +43,7 @@
 									{statusData.enabled ? 'Enabled' : 'Disabled'}
 								</div>
 							</td>
-							<td>
+							<td class="flex w-1/3 justify-center items-center">
 								{statusData.lastChangedBy
 									? formatWeatherEventAction(statusData.lastChangedBy, true, false, false)
 									: '-'}
@@ -51,10 +51,10 @@
 						</tr>
 					{/each}
 				{:else}
-					<tr class="text-center">
-						<td class="py-4 px-2 font-semibold ">Loading..</td>
-						<td>Loading..</td>
-						<td>Loading..</td>
+					<tr class="flex w-full text-center">
+						<td class="w-1/3 py-4 px-2 font-semibold ">Loading..</td>
+						<td class="w-1/3">Loading..</td>
+						<td class="w-1/3">Loading..</td>
 					</tr>
 				{/if}
 			</tbody>
