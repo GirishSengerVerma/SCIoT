@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { localStorageStore } from '@babichjacob/svelte-localstorage/svelte-kit';
@@ -52,7 +53,13 @@ const createSensorMetaDataStore = () => {
 	const sensorMetaDataStore: SensorMetaDataStore = {
 		...store,
 		addValue: (value: SensorMetaData) =>
-			store.update((currentMap) => currentMap.set(value.instanceId, value)),
+			store.update((currentMap) => {
+				if (currentMap.has(value.instanceId) && currentMap.get(value.instanceId)!.timestamp > value.timestamp) {
+					console.log('Reject older sensor metadata value');
+					return currentMap; // reject older value
+				}
+				return currentMap.set(value.instanceId, value);
+			}),
 		resetSensor: (sensorInstanceId: string) =>
 			store.update((currentMap) => {
 				currentMap.delete(sensorInstanceId);
@@ -80,9 +87,15 @@ const createLiveSensorDataStore = () => {
 	const liveSensorDataStore: LiveSensorDataStore = {
 		...store,
 		addValue: (value: SensorTelemetryData) =>
-			store.update((currentMap) =>
-				currentMap.set(value.instanceId, [...(currentMap.get(value.instanceId) ?? []), value])
-			),
+			store.update((currentMap) => {
+				if (currentMap.has(value.instanceId)
+					&& currentMap.get(value.instanceId)!.length > 0
+					&& currentMap.get(value.instanceId)![currentMap.get(value.instanceId)!.length - 1].timestamp > value.timestamp) {
+					console.log('Reject older sensor telemetry value');
+					return currentMap; // reject older value
+				}
+				return currentMap.set(value.instanceId, [...(currentMap.get(value.instanceId) ?? []), value]);
+			}),
 		resetSensor: (sensorInstanceId: string) =>
 			store.update((currentMap) => {
 				currentMap.delete(sensorInstanceId);

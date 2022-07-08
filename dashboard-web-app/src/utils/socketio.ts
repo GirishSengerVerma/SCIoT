@@ -15,6 +15,7 @@ import type {
 import { sensors, liveSensorData, sensorMetaData } from '$root/stores/sensorStores';
 import { authoritiesUnitStatus } from '$root/stores/authoritiesStores';
 import { currentWeatherEventRisk, weatherEvents } from '$root/stores/weatherEventStores';
+import { get } from 'svelte/store';
 
 const weatherEventInstanceTopicPrefix = 'weatherevents/instance';
 const weatherEventRiskTopicPrefix = 'weatherevents/risk';
@@ -32,6 +33,7 @@ const authoritiesUnitStatusTopicPrefix = 'authorities/unitstatus';
 
 export const SOCKET_REQUEST_HISTORIC_WEATHER_EVENT_DATA_TOPIC = 'requestHistoricWeatherEventData';
 export const SOCKET_RESPONSE_HISTORIC_WEATHER_EVENT_DATA_TOPIC = 'responseHistoricWeatherEventData';
+export const SOCKET_REQUEST_CHANGE_WEATHER_EVENT_RISK_LEVEL_TOPIC = 'requestChangeWeatherEventRiskLevel';
 
 export const SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC = 'requestHistoricSensorData';
 export const SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC = 'responseHistoricSensorData';

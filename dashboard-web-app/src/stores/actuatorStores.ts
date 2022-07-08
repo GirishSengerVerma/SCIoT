@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { localStorageStore } from '@babichjacob/svelte-localstorage/svelte-kit';
@@ -46,7 +47,13 @@ const createActuatorMetaDataStore = () => {
 	const actuatorMetaDataStore: ActuatorMetaDataStore = {
 		...store,
 		addValue: (value: ActuatorMetaData) =>
-			store.update((currentMap) => currentMap.set(value.instanceId, value)),
+			store.update((currentMap) => {
+				if (currentMap.has(value.instanceId) && currentMap.get(value.instanceId)!.timestamp > value.timestamp) {
+					console.log('Reject older actuator metadata value');
+					return currentMap; // reject older value
+				}
+				return currentMap.set(value.instanceId, value);
+			}),
 		resetActuator: (actuatorInstanceId: string) =>
 			store.update((currentMap) => {
 				currentMap.delete(actuatorInstanceId);
@@ -74,9 +81,15 @@ const createActuatorStatusDataStore = () => {
 	const actuatorStatusDataStore: ActuatorStatusDataStore = {
 		...store,
 		addValue: (value: ActuatorStatusData) =>
-			store.update((currentMap) =>
-				currentMap.set(value.instanceId, [...(currentMap.get(value.instanceId) ?? []), value])
-			),
+			store.update((currentMap) => {
+				if (currentMap.has(value.instanceId)
+					&& currentMap.get(value.instanceId)!.length > 0
+					&& currentMap.get(value.instanceId)![currentMap.get(value.instanceId)!.length - 1].timestamp > value.timestamp) {
+					console.log('Reject older actuator telemetry value');
+					return currentMap; // reject older value
+				}
+				return currentMap.set(value.instanceId, [...(currentMap.get(value.instanceId) ?? []), value]);
+			}),
 		resetActuator: (actuatorInstanceId: string) =>
 			store.update((currentMap) => {
 				currentMap.delete(actuatorInstanceId);

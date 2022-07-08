@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { localStorageStore } from '@babichjacob/svelte-localstorage/svelte-kit';
 import { writable, type Writable } from 'svelte/store';
 
-import type { WeatherEvent, WeatherEventRisk } from '@prisma/client';
+import { WeatherEventRiskLevel, type WeatherEvent, type WeatherEventRisk } from '@prisma/client';
+import { enumValueToString } from '$root/utils/enumUtil';
 
 interface WeatherEventStore extends Writable<Map<number, WeatherEvent>> {
 	add(value: WeatherEvent): void;
@@ -43,8 +45,13 @@ const createCurrentWeatherEventRiskStore = () => {
 
 	const currentWeatherEventRiskStore: CurrentWeatherEventRiskStore = {
 		...store,
-		addValue: (value: WeatherEventRisk) =>
-			store.update((currentMap) => currentMap.set(value.weatherEventId, value)),
+		addValue: (value: WeatherEventRisk) => store.update((currentMap) => {
+			if (currentMap.has(value.weatherEventId) && currentMap.get(value.weatherEventId)!.start > value.start) {
+				console.log('Reject older weather event risk value');
+				return currentMap; // reject older value
+			}
+			return currentMap.set(value.weatherEventId, value);
+		}),
 		resetForWeatherEvent: (weatherEventId: number) =>
 			store.update((currentMap) => {
 				currentMap.delete(weatherEventId);
@@ -62,4 +69,10 @@ export const currentWeatherEventRisk: CurrentWeatherEventRiskStore =
 export const selectedWeatherEventId: Writable<string> = localStorageStore(
 	'selectedWeatherEventId',
 	'-1'
+);
+
+const initialSelectedWeatherEventRiskLevel = enumValueToString(WeatherEventRiskLevel.MEDIUM);
+export const selectedWeatherEventRiskLevel: Writable<string> = localStorageStore(
+	'selectedWeatherEventRiskLevel',
+	initialSelectedWeatherEventRiskLevel
 );

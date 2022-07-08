@@ -32,7 +32,7 @@
 		SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC
 	} from '$root/utils/socketio';
 	import LoadingSpinner from '$root/components/core/LoadingSpinner.svelte';
-import { locationIconMap } from '$root/utils/locationUtils';
+	import { locationIconMap } from '$root/utils/locationUtils';
 
 	let initializingStores = true;
 	let fetchingData = false;

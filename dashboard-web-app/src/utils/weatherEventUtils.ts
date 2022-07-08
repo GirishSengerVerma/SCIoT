@@ -75,3 +75,10 @@ export const getWeatherEventRiskLevelColor = (weatherEventRiskLevel: WeatherEven
 		return "";
 	}
 };
+
+export const weatherEventRiskLevelIconMap = {
+	[WeatherEventRiskLevel.LOW]: '🟢',
+	[WeatherEventRiskLevel.MEDIUM]: '🟡',
+	[WeatherEventRiskLevel.HIGH]: '🟠',
+	[WeatherEventRiskLevel.EXTREME]: '🔴',
+};

@@ -34,6 +34,7 @@
 	import WeatherEventStatus from '$root/components/events/WeatherEventStatus.svelte';
 	import WeatherEventHistory from '$root/components/events/WeatherEventHistory.svelte';
 	import type { HistoricWeatherEventData } from '$root/types/additionalPrismaTypes';
+	import WeatherEventChangeRiskLevel from '$root/components/events/WeatherEventChangeRiskLevel.svelte';
 
 	let initializingStores = true;
 
@@ -93,9 +94,9 @@
 		}
 	};
 
-	$: updateHistoricWeatherEventData(Number($selectedWeatherEventId));
+	$: updateHistoricWeatherEventData(Number($selectedWeatherEventId), $currentWeatherEventRisk);
 
-	const updateHistoricWeatherEventData = (selectedWeatherEventId: number) => {
+	const updateHistoricWeatherEventData = (selectedWeatherEventId: number, currentWeatherEventRisk: Map<number, WeatherEventRisk>) => {
 		if(selectedWeatherEventId == null || selectedWeatherEventId < 0) {
 			return;
 		}
@@ -148,6 +149,7 @@
 					weatherEvent={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId)) ? pastWeatherEventsAtLocation.get(Number($selectedWeatherEventId)) : weatherEventsAtLocation.get(Number($selectedWeatherEventId))}
 					historicWeatherEventData={selectedWeatherEventHistoricData}
 				/>
+				<WeatherEventChangeRiskLevel loading={initializingStores} weatherEvent={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId)) ? pastWeatherEventsAtLocation.get(Number($selectedWeatherEventId)) : weatherEventsAtLocation.get(Number($selectedWeatherEventId))}/>
 			{/if}
 		</div>
 		<div

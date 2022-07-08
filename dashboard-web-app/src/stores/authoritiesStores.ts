@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import { localStorageStore } from '@babichjacob/svelte-localstorage/svelte-kit';
@@ -32,7 +33,13 @@ const createAuthoritiesUnitStatusStore = () => {
 	const authoritiesUnitStatusStore: AuthoritiesUnitStatusStore = {
 		...store,
 		setStatus: (value: UnitStatus) =>
-			store.update((currentMap) => currentMap.set(value.location + '|' + value.unitType, value)),
+			store.update((currentMap) => {
+				if (currentMap.has(value.location + '|' + value.unitType) && currentMap.get(value.location + '|' + value.unitType)!.timestamp > value.timestamp) {
+					console.log('Reject older authorities unit status value');
+					return currentMap; // reject older value
+				}
+				return currentMap.set(value.location + '|' + value.unitType, value);
+			}),
 		resetStatus: (key: UnitStatusKey) =>
 			store.update((currentMap) => {
 				currentMap.delete(unitStatusKeyToString(key));

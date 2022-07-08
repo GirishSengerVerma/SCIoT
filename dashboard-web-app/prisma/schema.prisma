@@ -167,6 +167,8 @@ model WeatherEvent {
   end                DateTime?
   WeatherEventRisk   WeatherEventRisk[]
   WeatherEventAction WeatherEventAction[]
+
+  @@unique([location, type, start])
 }
 
 model WeatherEventRisk {
@@ -176,6 +178,8 @@ model WeatherEventRisk {
   riskLevel      WeatherEventRiskLevel @default(LOW)
   start          DateTime              @default(now())
   end            DateTime?
+
+  @@unique([weatherEventId, start])
 }
 
 enum WeatherEventActionType {
