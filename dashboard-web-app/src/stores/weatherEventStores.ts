@@ -4,7 +4,7 @@
 import { localStorageStore } from '@babichjacob/svelte-localstorage/svelte-kit';
 import { writable, type Writable } from 'svelte/store';
 
-import { WeatherEventRiskLevel, type WeatherEvent, type WeatherEventRisk } from '@prisma/client';
+import { WeatherEventActionType, WeatherEventRiskLevel, type WeatherEvent, type WeatherEventRisk } from '@prisma/client';
 import { enumValueToString } from '$root/utils/enumUtil';
 
 interface WeatherEventStore extends Writable<Map<number, WeatherEvent>> {
@@ -75,4 +75,10 @@ const initialSelectedWeatherEventRiskLevel = enumValueToString(WeatherEventRiskL
 export const selectedWeatherEventRiskLevel: Writable<string> = localStorageStore(
 	'selectedWeatherEventRiskLevel',
 	initialSelectedWeatherEventRiskLevel
+);
+
+const initialSelectedWeatherEventActionType = enumValueToString(WeatherEventActionType.ALERT_LOCALS_BY_LIGHT);
+export const selectedWeatherEventActionType: Writable<string> = localStorageStore(
+	'selectedWeatherEventActionType',
+	initialSelectedWeatherEventActionType
 );

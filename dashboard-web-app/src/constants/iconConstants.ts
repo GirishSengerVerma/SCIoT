@@ -39,6 +39,7 @@ export const ICON_WEATHER_EVENTS_BY_NAME: Map<string, string> = new Map<string, 
 ]);
 
 export const ICON_WEATHER_EVENTS_RISK_LEVEL = 'weatherevents/risk-level';
+export const ICON_WEATHER_EVENTS_ACTION = 'weatherevents/action';
 
 export const ICON_SENSORS_TEMPERATURE = 'sensors/thermometer';
 export const ICON_SENSORS_PRESSURE = 'sensors/pressure';

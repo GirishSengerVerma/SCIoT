@@ -2,8 +2,7 @@ TODO
 	MQTT Client Automatic Reconnect
 	
 	Weather Events:
-		Manually change risk
-		Manually take action
+		Test and Fix Weather Event Action Handlers
 	
 	Actuator:
 		Manually change status

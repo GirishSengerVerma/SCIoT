@@ -29,12 +29,14 @@
 	import {
 		socket,
 		SOCKET_REQUEST_HISTORIC_WEATHER_EVENT_DATA_TOPIC,
-		SOCKET_RESPONSE_HISTORIC_WEATHER_EVENT_DATA_TOPIC
+		SOCKET_RESPONSE_HISTORIC_WEATHER_EVENT_DATA_TOPIC,
+weatherEventActionTopicPrefix
 	} from '$root/utils/socketio';
 	import WeatherEventStatus from '$root/components/events/WeatherEventStatus.svelte';
 	import WeatherEventHistory from '$root/components/events/WeatherEventHistory.svelte';
 	import type { HistoricWeatherEventData } from '$root/types/additionalPrismaTypes';
 	import WeatherEventChangeRiskLevel from '$root/components/events/WeatherEventChangeRiskLevel.svelte';
+import WeatherEventTakeAction from '$root/components/events/WeatherEventTakeAction.svelte';
 
 	let initializingStores = true;
 
@@ -62,10 +64,15 @@
 			}
 			fetchingHistoricWeatherEventData = false;
 		});
+
+		socket.on(weatherEventActionTopicPrefix, (_) => {
+			updateHistoricWeatherEventData(Number($selectedWeatherEventId), $currentWeatherEventRisk);
+		});
 	});
 
 	onDestroy(() => {
 		socket.off(SOCKET_RESPONSE_HISTORIC_WEATHER_EVENT_DATA_TOPIC);
+		socket.off(weatherEventActionTopicPrefix);
 	});
 
 	$: updateLiveData(stringToEnumValue(Location, $selectedLocation), $weatherEvents, $currentWeatherEventRisk);
@@ -150,6 +157,7 @@
 					historicWeatherEventData={selectedWeatherEventHistoricData}
 				/>
 				<WeatherEventChangeRiskLevel loading={initializingStores} weatherEvent={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId)) ? pastWeatherEventsAtLocation.get(Number($selectedWeatherEventId)) : weatherEventsAtLocation.get(Number($selectedWeatherEventId))}/>
+				<WeatherEventTakeAction loading={initializingStores} weatherEvent={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId)) ? pastWeatherEventsAtLocation.get(Number($selectedWeatherEventId)) : weatherEventsAtLocation.get(Number($selectedWeatherEventId))}/>
 			{/if}
 		</div>
 		<div

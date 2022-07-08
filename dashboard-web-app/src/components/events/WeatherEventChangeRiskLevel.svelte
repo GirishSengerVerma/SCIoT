@@ -22,9 +22,7 @@
 
     $: onRiskLevelChange($currentWeatherEventRisk);
 
-    // TODO DWA Fix: not being updated after request is processed
-    const onRiskLevelChange = (currentWeatherEventRisk: Map<number, WeatherEventRisk>) => {
-        console.log('Received update');
+    const onRiskLevelChange = (_: Map<number, WeatherEventRisk>) => {
         updating = false;
     };
 
