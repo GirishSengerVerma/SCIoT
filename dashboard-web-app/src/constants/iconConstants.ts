@@ -76,6 +76,7 @@ export const ICON_ACTUATORS_BY_NAME: Map<string, string> = new Map<string, strin
 ]);
 
 export const ICON_ACTUATOR_STATUS = 'actuators/status';
+export const ICON_ACTUATORS_WEATHER_EVENT = 'actuators/weather-event';
 
 export const ICON_AUTHORITIES_UNIT_TYPE_POLICE_CAR = 'authorities/police-car';
 export const ICON_AUTHORITIES_UNIT_TYPE_FIRE_TRUCK = 'authorities/fire-truck';

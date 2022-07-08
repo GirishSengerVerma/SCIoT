@@ -857,10 +857,45 @@ const initializeWebsocketServer = (io) => {
                 const location = messageJSON['location'];
                 const type = messageJSON['type'];
 
-                mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + location + '/' + type, JSON.stringify({
-                    enabled,
-                    instanceId,
-                }));
+                if('weatherEventId' in messageJSON && messageJSON['weatherEventId']) {
+                    const weatherEventId = messageJSON['weatherEventId'];
+
+                    let selectedWeatherEventActionType;
+                    if(type === ActuatorType.ALARM_LIGHT) {
+                        if(enabled) {
+                            selectedWeatherEventActionType = WeatherEventActionType.ALERT_LOCALS_BY_LIGHT;
+                        } else {
+                            selectedWeatherEventActionType = WeatherEventActionType.STOP_ALERT_LOCALS_BY_LIGHT;
+                        }
+                    } else if(type === ActuatorType.ALARM_SOUND) {
+                        if(enabled) {
+                            selectedWeatherEventActionType = WeatherEventActionType.ALERT_LOCALS_BY_SOUND;
+                        } else {
+                            selectedWeatherEventActionType = WeatherEventActionType.STOP_ALERT_LOCALS_BY_SOUND;
+                        }
+                    } else if(type === ActuatorType.LOCKDOWN) {
+                        if(enabled) {
+                            selectedWeatherEventActionType = WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION;
+                        } else {
+                            selectedWeatherEventActionType = WeatherEventActionType.COUNTER_MEASURE_REOPEN_LOCATION;
+                        }
+                    } else if(type === ActuatorType.WATER_PROTECTION_WALL) {
+                        if(enabled) {
+                            selectedWeatherEventActionType = WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL;
+                        } else {
+                            selectedWeatherEventActionType = WeatherEventActionType.COUNTER_MEASURE_DRIVE_DOWN_WATER_PROTECTION_WALL;
+                        }
+                    } else {
+                        return; //invalid type
+                    }
+
+                    manuallyTakeWeatherEventAction(JSON.stringify({ selectedWeatherEventActionType, location, weatherEventId }));
+                } else {
+                    mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + location + '/' + type, JSON.stringify({
+                        enabled,
+                        instanceId,
+                    }));
+                }
             } catch (error) {
                 console.error(
                     'Data Service: Error processing incoming Manually Change Actuator Status Request Socket IO message: ',
@@ -947,7 +982,7 @@ const initializeWebsocketServer = (io) => {
             }
         });
 
-        socket.on(SOCKET_REQUEST_MANUALLY_TAKE_WEATHER_EVENT_ACTION_TOPIC, async (message) => {
+        const manuallyTakeWeatherEventAction = async (message) => {
             try {
                 const messageJSON = JSON.parse(message.toString());
 
@@ -967,6 +1002,10 @@ const initializeWebsocketServer = (io) => {
                     error
                 );
             }
+        };
+
+        socket.on(SOCKET_REQUEST_MANUALLY_TAKE_WEATHER_EVENT_ACTION_TOPIC, async (message) => {
+            manuallyTakeWeatherEventAction(message);
         });
 
         socket.on(SOCKET_REQUEST_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC, async (message) => {
@@ -1085,7 +1124,7 @@ const initializeMQTTClient = async () => {
                     .catch(error => console.error('Data Service: Error persisting Weather Event Risk JSON data using Prisma: ', error));
             } else if(topic.startsWith(weatherEventActionTopicPrefix)) {
                 const weatherEventAction = messageJSON;
-                
+
                 const { id: weatherEventActionId } = await prisma.weatherEventAction.create({ data: weatherEventAction })
                     .then(data => {
                         currentWebsocketConnections.forEach(socket => socket.emit(weatherEventActionTopicPrefix, JSON.stringify(data)));
@@ -1115,7 +1154,7 @@ const initializeMQTTClient = async () => {
                                 weatherEventActionId: weatherEventActionId,
                             };
                         });
-                        newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location, JSON.stringify(newActuatorStatus))); // will be persisted and sent via websosket when received in listener above
+                        newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location + '/' + ActuatorType.LOCKDOWN, JSON.stringify(newActuatorStatus))); // will be persisted and sent via websosket when received in listener above
                     });
                 } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL || weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_DOWN_WATER_PROTECTION_WALL) {
                     const enabled = weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL;
@@ -1135,9 +1174,10 @@ const initializeMQTTClient = async () => {
                                 weatherEventActionId: weatherEventActionId,
                             };
                         });
-                        newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location, JSON.stringify(newActuatorStatus)));   // will be persisted and sent via websosket when received in listener above
+                        newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location + '/' + ActuatorType.WATER_PROTECTION_WALL, JSON.stringify(newActuatorStatus)));   // will be persisted and sent via websosket when received in listener above
                     });
-                } else if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_LIGHT) {
+                } else if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_LIGHT || weatherEventAction.type === WeatherEventActionType.STOP_ALERT_LOCALS_BY_LIGHT) {
+                    const enabled = weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_LIGHT;
                     prisma.actuatorMetaData.findMany({ 
                         select: { instanceId: true }, 
                         where: {
@@ -1149,13 +1189,14 @@ const initializeMQTTClient = async () => {
                             return {
                                 instanceId: item.instanceId,
                                 timestamp,
-                                enabled: true,
+                                enabled,
                                 weatherEventActionId: weatherEventActionId,
                             };
                         });
-                        newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location, JSON.stringify(newActuatorStatus)));   // will be persisted and sent via websosket when received in listener above
+                        newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location + '/' + ActuatorType.ALARM_LIGHT, JSON.stringify(newActuatorStatus)));   // will be persisted and sent via websosket when received in listener above
                     });
-                } else if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_SOUND) {
+                } else if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_SOUND || weatherEventAction.type === WeatherEventActionType.STOP_ALERT_LOCALS_BY_SOUND) {
+                    const enabled = weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_SOUND;
                     prisma.actuatorMetaData.findMany({ 
                         select: { instanceId: true }, 
                         where: {
@@ -1167,11 +1208,11 @@ const initializeMQTTClient = async () => {
                             return {
                                 instanceId: item.instanceId,
                                 timestamp,
-                                enabled: true,
+                                enabled,
                                 weatherEventActionId: weatherEventActionId,
                             };
                         });
-                        newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location, JSON.stringify(newActuatorStatus)));   // will be persisted and sent via websosket when received in listener above
+                        newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location + '/' + ActuatorType.ALARM_SOUND, JSON.stringify(newActuatorStatus)));   // will be persisted and sent via websosket when received in listener above
                     });
                 } else if(weatherEventAction.type === WeatherEventActionType.PLANNING_INCREASE_RISK_LEVEL) {
                     const currentWeatherEventRisk = await prisma.weatherEventRisk.findFirst({ 

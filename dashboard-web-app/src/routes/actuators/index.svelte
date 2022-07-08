@@ -134,7 +134,10 @@
 					loading={initializingStores || fetchingHistoricActuatorsData}
 					actuatorHistoricStatusData={selectedActuatorHistoricStatusData}
 				/>
-				<ActuatorChangeStatus loading={initializingStores || fetchingHistoricActuatorsData} actuator={$actuators.get($selectedActuatorInstanceId)}/>
+				<ActuatorChangeStatus 
+					loading={initializingStores || fetchingHistoricActuatorsData} 
+					actuator={$actuators.get($selectedActuatorInstanceId)}
+					actuatorMetaData={actuatorMetaDataAtLocation.get($selectedActuatorInstanceId)}/>
 			{/if}
 		</div>
 		<div

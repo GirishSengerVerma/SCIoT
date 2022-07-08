@@ -1,8 +1,15 @@
 <script lang="ts">
-    import type { Actuator, ActuatorStatusData } from '@prisma/client';
+    import dayjs from 'dayjs';
+	import utc from 'dayjs/plugin/utc.js';
 
-    import { ICON_ACTUATOR_STATUS, ICON_BUTTON_SAVE } from '$root/constants/iconConstants';
-    import { actuatorMetaData, actuatorStatusData, selectedActuatorStatus } from '$root/stores/actuatorStores';
+	dayjs.extend(utc);
+
+    import type { Actuator, ActuatorMetaData, ActuatorStatusData } from '@prisma/client';
+
+    import { formatWeatherEvent } from '$root/utils/weatherEventUtils';
+    import { ICON_ACTUATOR_STATUS, ICON_ACTUATORS_WEATHER_EVENT, ICON_BUTTON_SAVE } from '$root/constants/iconConstants';
+    import { actuatorStatusData, selectedActuatorStatus } from '$root/stores/actuatorStores';
+    import { weatherEvents, selectedWeatherEventId } from '$root/stores/weatherEventStores';
 
 	import SubTitle from '$root/components/core/SubTitle.svelte';
     import DropdownSelect from '$root/components/core/DropdownSelect.svelte';
@@ -12,15 +19,28 @@
     const selectedStatusOptions = ['Enabled', 'Disabled'];
 	const selectedStatusOptionsIcons = ['🟢', '🔴'];
 
+    $: currentWeatherEventsAtLocation = new Map(
+			[...$weatherEvents]
+				.filter(([_, v]) => !v.end && v.location === actuatorMetaData!.location)
+				.sort((a, b) => dayjs(b[1].start).diff(dayjs(a[1].start)))
+		) ?? new Map();
+
+    $: selectedWeatherEventOptions = ['None'].concat([...currentWeatherEventsAtLocation.keys()].map(id => formatWeatherEvent(currentWeatherEventsAtLocation.get(id)!, true, false)));
+
+    $: initialSelectedLocationOption = ($selectedWeatherEventId === '-1' || !currentWeatherEventsAtLocation.has(Number($selectedWeatherEventId))) 
+        ? 'None' 
+        : formatWeatherEvent(currentWeatherEventsAtLocation.get(Number($selectedWeatherEventId))!, true, false);
+
     let updating = false; 
 
-    const onSave = (selectedActuatorStatus: boolean) => {
+    const onSave = (selectedActuatorStatus: boolean, selectedWeatherEventId: string) => {
         updating = true;
         socket.emit(SOCKET_REQUEST_MANUALLY_CHANGE_ACTUATOR_STATUS_TOPIC, JSON.stringify({ 
             selectedActuatorStatus, 
             instanceId: actuator?.instanceId, 
-            type: $actuatorMetaData.get(actuator?.instanceId!)?.type,
-            location: $actuatorMetaData.get(actuator?.instanceId!)?.location,
+            type: actuatorMetaData!.type,
+            location: actuatorMetaData!.location,
+            weatherEventId: (selectedWeatherEventId === '-1' || !currentWeatherEventsAtLocation.has(Number(selectedWeatherEventId))) ? undefined : Number(selectedWeatherEventId),
         }));
     };
 
@@ -30,10 +50,19 @@
         updating = false;
     };
 
-    const onDropdownSelectionChange = (option: string) => selectedActuatorStatus.set(option === 'Enabled');
+    const onStatusDropdownSelectionChange = (option: string) => selectedActuatorStatus.set(option === 'Enabled');
+
+    const onLocationDropdownSelectionChange = (option: string) => {
+      if(option === 'None') {
+        selectedWeatherEventId.set('-1');
+      } else {
+        selectedWeatherEventId.set(('' + [...currentWeatherEventsAtLocation.keys()].find(id => formatWeatherEvent(currentWeatherEventsAtLocation.get(id)!, true, false) === option)) ?? '-1');
+      }
+    };
 
     export let loading: boolean;
     export let actuator: Actuator | undefined;
+    export let actuatorMetaData: ActuatorMetaData | undefined;
 </script>
 
 <div class="w-full flex flex-col py-2 lg:py-4">
@@ -47,14 +76,24 @@
             initialValue={$selectedActuatorStatus ? 'Enabled' : 'Disabled'}
             options={selectedStatusOptions}
             optionsIcons={selectedStatusOptionsIcons}
-            onChange={onDropdownSelectionChange}
+            onChange={onStatusDropdownSelectionChange}
+            class='mx-0 mr-3'
+        />
+        <DropdownSelect
+            name="selectedWeatherEvent"
+            iconName={ICON_ACTUATORS_WEATHER_EVENT}
+            iconAlt="WeatherEvent"
+            loading={loading}
+            initialValue={initialSelectedLocationOption}
+            options={selectedWeatherEventOptions}
+            onChange={onLocationDropdownSelectionChange}
             class='mx-0 mr-3'
         />
         <ActionButton 
             iconName={ICON_BUTTON_SAVE} 
             iconAlt='Save' 
             label="Update"
-            onClick={() => onSave($selectedActuatorStatus)}
+            onClick={() => onSave($selectedActuatorStatus, $selectedWeatherEventId)}
             {updating}/>
     </div>
 </div>

@@ -30,13 +30,13 @@
 		socket,
 		SOCKET_REQUEST_HISTORIC_WEATHER_EVENT_DATA_TOPIC,
 		SOCKET_RESPONSE_HISTORIC_WEATHER_EVENT_DATA_TOPIC,
-weatherEventActionTopicPrefix
+		weatherEventActionTopicPrefix
 	} from '$root/utils/socketio';
 	import WeatherEventStatus from '$root/components/events/WeatherEventStatus.svelte';
 	import WeatherEventHistory from '$root/components/events/WeatherEventHistory.svelte';
 	import type { HistoricWeatherEventData } from '$root/types/additionalPrismaTypes';
 	import WeatherEventChangeRiskLevel from '$root/components/events/WeatherEventChangeRiskLevel.svelte';
-import WeatherEventTakeAction from '$root/components/events/WeatherEventTakeAction.svelte';
+	import WeatherEventTakeAction from '$root/components/events/WeatherEventTakeAction.svelte';
 
 	let initializingStores = true;
 

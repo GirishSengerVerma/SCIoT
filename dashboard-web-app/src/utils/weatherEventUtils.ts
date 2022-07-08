@@ -1,9 +1,20 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import type { WeatherEventActionWithWeatherEvent } from '$root/types/additionalPrismaTypes';
-import { WeatherEventActionType, WeatherEventRiskLevel } from '@prisma/client';
+import { WeatherEventActionType, WeatherEventRiskLevel, type WeatherEvent } from '@prisma/client';
 import { enumValueToString } from '$root/utils/enumUtil';
 import { locationIconMap } from '$root/utils/locationUtils';
 import { unitTypeIconMap } from '$root/utils/unitTypeUtils';
+
+export const formatWeatherEvent = (weatherEvent: WeatherEvent, includeEventLocation: boolean, useFullNames: boolean) => {
+	let formattedWeatherEvent = enumValueToString(weatherEvent.type);
+	if (includeEventLocation) {
+		formattedWeatherEvent +=
+			' at ' +
+			locationIconMap[weatherEvent.location] +
+			(useFullNames ? ' ' + enumValueToString(weatherEvent.location) : '');
+	}
+	return formattedWeatherEvent;
+};
 
 export const formatWeatherEventAction = (
 	weatherEventAction: WeatherEventActionWithWeatherEvent,
@@ -14,15 +25,7 @@ export const formatWeatherEventAction = (
 	let formattedWeatherEventAction = '';
 
 	if (includeEvent && weatherEventAction.weatherEvent) {
-		formattedWeatherEventAction +=
-			'Due to ' + enumValueToString(weatherEventAction.weatherEvent.type);
-		if (includeEventLocation) {
-			formattedWeatherEventAction +=
-				' at ' +
-				locationIconMap[weatherEventAction.weatherEvent.location] +
-				(useFullNames ? ' ' + enumValueToString(weatherEventAction.weatherEvent.location) : '');
-		}
-		formattedWeatherEventAction += ': ';
+		formattedWeatherEventAction += 'Due to ' + formatWeatherEvent(weatherEventAction.weatherEvent, includeEventLocation, useFullNames) + ': ';
 	}
 
 	if (weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_MOVE_UNITS_REQUEST) {
