@@ -107,3 +107,8 @@ export const selectedActuatorInstanceId: Writable<string> = localStorageStore(
 );
 
 export const actuatorStatusData: ActuatorStatusDataStore = createActuatorStatusDataStore();
+
+export const selectedActuatorStatus: Writable<boolean> = localStorageStore(
+	'selectedActuatorStatus',
+	false
+);

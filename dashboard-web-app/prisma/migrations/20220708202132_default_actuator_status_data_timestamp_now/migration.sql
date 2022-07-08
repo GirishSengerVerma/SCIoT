@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "ActuatorStatusData" ALTER COLUMN "timestamp" SET DEFAULT CURRENT_TIMESTAMP;

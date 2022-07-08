@@ -75,6 +75,8 @@ export const ICON_ACTUATORS_BY_NAME: Map<string, string> = new Map<string, strin
 	['WATER_PROTECTION_WALL', ICON_ACTUATORS_WATER_PROTECTION_WALL]
 ]);
 
+export const ICON_ACTUATOR_STATUS = 'actuators/status';
+
 export const ICON_AUTHORITIES_UNIT_TYPE_POLICE_CAR = 'authorities/police-car';
 export const ICON_AUTHORITIES_UNIT_TYPE_FIRE_TRUCK = 'authorities/fire-truck';
 export const ICON_AUTHORITIES_UNIT_TYPE_AMBULANCE = 'authorities/ambulance';

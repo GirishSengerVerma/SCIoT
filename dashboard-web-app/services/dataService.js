@@ -601,6 +601,7 @@ const SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC = 'responseHistoricSensorData';
 
 const SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'requestHistoricActuatorStatusData';
 const SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'responseHistoricActuatorStatusData';
+const SOCKET_REQUEST_MANUALLY_CHANGE_ACTUATOR_STATUS_TOPIC = 'requestManuallyChangeActuatorStatus';
 
 const SOCKET_REQUEST_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC = 'requestHistoricAuthoritiesUnitStatusData';
 const SOCKET_RESPONSE_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC = 'responseHistoricAuthoritiesUnitStatusData';
@@ -842,6 +843,27 @@ const initializeWebsocketServer = (io) => {
             } catch (error) {
                 console.error(
                     'Data Service: Error processing incoming Historic Actuator Status Data Request Socket IO message: ',
+                    error
+                );
+            }
+        });
+
+        socket.on(SOCKET_REQUEST_MANUALLY_CHANGE_ACTUATOR_STATUS_TOPIC, async (message) => {
+            try {
+                const messageJSON = JSON.parse(message.toString());
+
+                const enabled = messageJSON['selectedActuatorStatus'];
+                const instanceId = messageJSON['instanceId'];
+                const location = messageJSON['location'];
+                const type = messageJSON['type'];
+
+                mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + location + '/' + type, JSON.stringify({
+                    enabled,
+                    instanceId,
+                }));
+            } catch (error) {
+                console.error(
+                    'Data Service: Error processing incoming Manually Change Actuator Status Request Socket IO message: ',
                     error
                 );
             }

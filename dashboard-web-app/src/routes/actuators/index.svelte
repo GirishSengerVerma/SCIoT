@@ -4,6 +4,7 @@
 
 	import { enumValueToString, stringToEnumValue } from '$root/utils/enumUtil';
 	import { ICON_COMMON_LOCATION, ICON_BUTTON_ADD } from '$root/constants/iconConstants';
+	import { locationIconMap } from '$root/utils/locationUtils';
 
 	import { selectedLocation } from '$root/stores/locationStores';
 
@@ -27,7 +28,7 @@
 	} from '$root/utils/socketio';
 	import type { ActuatorStatusDataWithRelatedWeatherEventData } from '$root/types/additionalPrismaTypes';
 	import ActuatorStatusHistory from '$root/components/actuators/ActuatorStatusHistory.svelte';
-	import { locationIconMap } from '$root/utils/locationUtils';
+	import ActuatorChangeStatus from '$root/components/actuators/ActuatorChangeStatus.svelte';
 
 	let initializingStores = true;
 
@@ -83,9 +84,9 @@
 		}
 	};
 
-	$: updateHistoricActuatorsStatusData($selectedActuatorInstanceId);
+	$: updateHistoricActuatorsStatusData($selectedActuatorInstanceId, $actuatorStatusData);
 
-	const updateHistoricActuatorsStatusData = (selectedActuatorInstanceId: string) => {
+	const updateHistoricActuatorsStatusData = (selectedActuatorInstanceId: string, _: Map<string, ActuatorStatusData[]>) => {
 		fetchingHistoricActuatorsData = true;
 		socket.emit(
 			SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC,
@@ -133,6 +134,7 @@
 					loading={initializingStores || fetchingHistoricActuatorsData}
 					actuatorHistoricStatusData={selectedActuatorHistoricStatusData}
 				/>
+				<ActuatorChangeStatus loading={initializingStores || fetchingHistoricActuatorsData} actuator={$actuators.get($selectedActuatorInstanceId)}/>
 			{/if}
 		</div>
 		<div

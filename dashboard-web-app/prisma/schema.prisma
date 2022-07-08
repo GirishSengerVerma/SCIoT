@@ -116,7 +116,7 @@ model ActuatorStatusData {
   id                   Int                 @id @default(autoincrement())
   actuator             Actuator            @relation(fields: [instanceId], references: [instanceId])
   instanceId           String
-  timestamp            DateTime
+  timestamp            DateTime            @default(now())
   enabled              Boolean
   lastChangedBy        WeatherEventAction? @relation(fields: [weatherEventActionId], references: [id])
   weatherEventActionId Int?

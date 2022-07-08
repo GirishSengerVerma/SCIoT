@@ -103,7 +103,7 @@ import WeatherEventTakeAction from '$root/components/events/WeatherEventTakeActi
 
 	$: updateHistoricWeatherEventData(Number($selectedWeatherEventId), $currentWeatherEventRisk);
 
-	const updateHistoricWeatherEventData = (selectedWeatherEventId: number, currentWeatherEventRisk: Map<number, WeatherEventRisk>) => {
+	const updateHistoricWeatherEventData = (selectedWeatherEventId: number, _: Map<number, WeatherEventRisk>) => {
 		if(selectedWeatherEventId == null || selectedWeatherEventId < 0) {
 			return;
 		}
