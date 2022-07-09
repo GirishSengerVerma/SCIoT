@@ -1,12 +1,8 @@
 TODO
 	MQTT Client Automatic Reconnect
 	
-	Weather Events:
-		Test Weather Event Action Handlers
-	
-	Authorities:
-		Manually move units
-			possible to select corresponding WeatherEvent or leave empty
+	Sensors
+		Data Chart
 	
 	Create Weather Event, Create Sensor, Create Sensor, Create Actuator
 	
