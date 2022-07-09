@@ -26,7 +26,7 @@
     $: selectedMoveToLocationOptions = Object.values(Location).filter(l => l !== unitStatus?.location).map(enumValueToString);
 	$: selectedMoveToLocationOptionsIcons = Object.values(Location).filter(l => l !== unitStatus?.location).map(l => locationIconMap[l]);
     $: initialSelectedMoveToLocationOption = selectedMoveToLocationOptions[0];
-    let selectedMoveToLocation: Location = Object.values(Location)[0];
+    $: selectedMoveToLocation = Object.values(Location).filter(l => l !== unitStatus?.location)[0];
 
     $: currentWeatherEventsAtLocation = new Map(
 			[...$weatherEvents]
@@ -44,7 +44,6 @@
 
     const onSave = (selectedUnitsAmount: number, selectedWeatherEventId: string) => {
         updating = true;
-        console.log(selectedUnitsAmount);
         socket.emit(SOCKET_REQUEST_MANUALLY_MOVE_AUTHORITIES_UNITS_TOPIC, JSON.stringify({ 
             moveUnitsAmount: selectedUnitsAmount, 
             moveUnitsType: unitStatus!.unitType,
