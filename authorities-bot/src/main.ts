@@ -56,10 +56,10 @@ bot.start((ctx) => {
 bot.help(async (ctx) => {
   await ctx.reply(
     'Help Menu:\n\n' +
-      '/start : receive a greeting\n' +
-      '/moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:🌲|🏢|🚤> <To:🌲|🏢|🚤>] : respond that for a certain weather event a certain number of units was moved from one location to another\n' +
-      '/status : see status of where all units are currently stationed\n' +
-      '/events : see overview of current weather events'
+    '/start : receive a greeting\n' +
+    '/moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:🌲|🏢|🚤> <To:🌲|🏢|🚤>] : respond that for a certain weather event a certain number of units was moved from one location to another\n' +
+    '/status : see status of where all units are currently stationed\n' +
+    '/events : see overview of current weather events'
   );
 });
 
@@ -123,35 +123,35 @@ bot.command('moveunits', async (ctx) => {
     if (!/\d/.test(args[1])) {
       ctx.reply(
         'First argument (WeatherEventId) must be an integer!\n\n' +
-          'Syntax: /moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:🧿|🌲|🏢|🚤> <To:🧿|🌲|🏢|🚤>]'
+        'Syntax: /moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:🧿|🌲|🏢|🚤> <To:🧿|🌲|🏢|🚤>]'
       );
       return;
     }
     if (!/\d/.test(args[2])) {
       ctx.reply(
         'Second argument (Amount) must be an integer!\n\n' +
-          'Syntax: /moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:🧿|🌲|🏢|🚤> <To:🧿|🌲|🏢|🚤>]'
+        'Syntax: /moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:🧿|🌲|🏢|🚤> <To:🧿|🌲|🏢|🚤>]'
       );
       return;
     }
     if (!['🚑', '🚓', '🚒'].includes(args[3])) {
       ctx.reply(
         'Third argument (Type) must be a valid unit type (🚑|🚓|🚒)!\n\n' +
-          'Syntax: /moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:🧿|🌲|🏢|🚤> <To:🧿|🌲|🏢|🚤>]'
+        'Syntax: /moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:🧿|🌲|🏢|🚤> <To:🧿|🌲|🏢|🚤>]'
       );
       return;
     }
     if (!['🧿', '🌲', '🏢', '🚤'].includes(args[4])) {
       ctx.reply(
         'Fourth argument (From) must be a valid location (🧿|🌲|🏢|🚤)!\n\n' +
-          'Syntax: /moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:|🧿🌲|🏢|🚤> <To:🧿|🌲|🏢|🚤>]'
+        'Syntax: /moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:|🧿🌲|🏢|🚤> <To:🧿|🌲|🏢|🚤>]'
       );
       return;
     }
     if (!['🧿', '🌲', '🏢', '🚤'].includes(args[5])) {
       ctx.reply(
         'Fifth argument (To) must be a valid location (🧿|🌲|🏢|🚤)!\n\n' +
-          'Syntax: /moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:🧿|🌲|🏢|🚤> <To:🧿|🌲|🏢|🚤>]'
+        'Syntax: /moveunits [<WeatherEventId> <Amount> <Type:🚑|🚓|🚒> <From:🧿|🌲|🏢|🚤> <To:🧿|🌲|🏢|🚤>]'
       );
       return;
     }
@@ -160,9 +160,9 @@ bot.command('moveunits', async (ctx) => {
     if (!hasWeatherEventWithId(weatherEventId)) {
       ctx.reply(
         'There is no weather event with the given id (' +
-          weatherEventId +
-          ')!\n\n' +
-          'Run /events to see an overview of current weather events.'
+        weatherEventId +
+        ')!\n\n' +
+        'Run /events to see an overview of current weather events.'
       );
       return;
     }
@@ -197,7 +197,7 @@ bot.command('moveunits', async (ctx) => {
     if (!/\d/.test(args[1])) {
       ctx.reply(
         'If specified, first argument (WeatherEventId) must be an integer!\n\n' +
-          'Syntax: /moveunits [<WeatherEventId>]'
+        'Syntax: /moveunits [<WeatherEventId>]'
       );
       return;
     }
@@ -206,9 +206,9 @@ bot.command('moveunits', async (ctx) => {
     if (!hasWeatherEventWithId(weatherEventId)) {
       ctx.reply(
         'There is no weather event with the given id (' +
-          weatherEventId +
-          ')!\n\n' +
-          'Run /events to see an overview of current weather events.'
+        weatherEventId +
+        ')!\n\n' +
+        'Run /events to see an overview of current weather events.'
       );
       return;
     }
@@ -233,8 +233,6 @@ const randomIntFromInterval = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1) + min);
 };
 
-let testRequestId = 0;
-
 // Used for simulating an incoming move units request
 bot.command('testrequest', async (_) => {
   const weatherEventId =
@@ -255,7 +253,7 @@ bot.command('testrequest', async (_) => {
   mqttClient.publish(
     weatherEventInstanceTopicName + '/' + weatherEventLocation,
     JSON.stringify(weatherEventInstanceMessage),
-    { qos: 1 }
+    { qos: 0 }
   );
 
   setTimeout(() => {
@@ -267,7 +265,7 @@ bot.command('testrequest', async (_) => {
     mqttClient.publish(
       weatherEventRiskTopicName + '/' + weatherEventLocation,
       JSON.stringify(weatherEventRiskMessage),
-      { qos: 1 }
+      { qos: 0 }
     );
 
     const moveUnitsType = randomFromMapKeys(UNIT_TYPE_ICON_BY_NAME);
@@ -294,7 +292,7 @@ bot.command('testrequest', async (_) => {
     mqttClient.publish(
       weatherEventActionTopicName + '/' + moveUnitsToLocation,
       JSON.stringify(weatherEventActionRequestUnitsMessage),
-      { qos: 1 }
+      { qos: 0 }
     );
   }, 500);
 });

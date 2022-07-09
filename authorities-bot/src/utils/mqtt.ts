@@ -6,6 +6,7 @@ import {
   UNIT_TYPE_ICON_BY_NAME,
   WEATHER_EVENT_TYPE_DISPLAY_NAME_BY_NAME,
 } from './mappings';
+import { setUnitStatus } from './unitStatus';
 import {
   addWeatherEvent,
   getWeatherEventLocationById,
@@ -39,6 +40,8 @@ export const weatherEventInstanceTopicName = 'weatherevents/instance';
 export const weatherEventRiskTopicName = 'weatherevents/risk';
 export const weatherEventActionTopicName = 'weatherevents/action';
 
+const authoritiesUnitStatusTopicPrefix = 'authorities/unitstatus';
+
 export const mqttClient = mqtt.connect(host, options);
 
 mqttClient.on('error', (err) => {
@@ -52,8 +55,9 @@ mqttClient.on('reconnect', () => {
 
 mqttClient.on('connect', () => {
   console.log('MQTT Client: Connected.');
-  mqttClient.subscribe(weatherEventInstanceTopicName + '/+', { qos: 1 });
-  mqttClient.subscribe(weatherEventActionTopicName + '/+', { qos: 1 });
+  mqttClient.subscribe(weatherEventInstanceTopicName + '/+', { qos: 0 });
+  mqttClient.subscribe(weatherEventActionTopicName + '/+', { qos: 0 });
+  mqttClient.subscribe(authoritiesUnitStatusTopicPrefix + '/+/+', { qos: 0 });
 });
 
 export let mqttListenerActive = false;
@@ -143,6 +147,24 @@ export const listenToMQTTMessages = (ctx: Context) => {
         } = messageJSON;
 
         addWeatherEvent(weatherEventId, location, type);
+      } else if (topic.startsWith(authoritiesUnitStatusTopicPrefix)) {
+        const { unitType, location, amount } = messageJSON;
+        console.log('New unit status', location, unitType, amount);
+        setUnitStatus(location, unitType, amount);
+
+        const unitsTypeIcon = UNIT_TYPE_ICON_BY_NAME.get(unitType)!;
+        const locationDisplayName =
+          LOCATION_DISPLAY_NAME_BY_NAME.get(location)!;
+
+        const telegramMessage =
+          'ℹ️ New Number of ' +
+          unitsTypeIcon +
+          ' at ' +
+          locationDisplayName +
+          ' is ' +
+          amount +
+          '.';
+        await ctx.reply(telegramMessage);
       }
     } catch (error) {
       console.error('Error processing incoming MQTT message: ', error);
@@ -170,9 +192,6 @@ export const sendMoveUnitsResponseMessage = (
   mqttClient.publish(
     weatherEventActionTopicName + '/' + moveUnitsToLocation,
     JSON.stringify(message),
-    {
-      qos: 1,
-      retain: false,
-    }
+    { qos: 0 }
   );
 };

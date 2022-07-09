@@ -1098,15 +1098,15 @@ const initializeMQTTClient = async () => {
     mqttClient.on('error', (err) => {
         console.log('Data Service: MQTT Client: Connection error: ', err);
         mqttClient.end();
-    })
+    });
 
     mqttClient.on('reconnect', () => {
         console.log('Data Service: MQTT Client: Reconnecting...');
-    })
+    });
 
     mqttClient.on('connect', () => {
         console.log('Data Service: MQTT Client: Connected.');
-
+        
         mqttClient.subscribe(sensorInstanceTopicPrefix + '/+/+', { qos: 0 });
         mqttClient.subscribe(sensorTelemetryTopicPrefix + '/+/+', { qos: 0 });
         mqttClient.subscribe(sensorMetadataTopicPrefix + '/+/+', { qos: 0 });
@@ -1120,7 +1120,13 @@ const initializeMQTTClient = async () => {
         mqttClient.subscribe(weatherEventInstanceTopicPrefix + '/+', { qos: 0 });
         mqttClient.subscribe(weatherEventActionTopicPrefix + '/+', { qos: 0 });
         mqttClient.subscribe(weatherEventRiskTopicPrefix + '/+', { qos: 0 });
-    })
+        
+        mqttClient.on('offline', () => {
+            mqttClient.end(true, () => {
+                initializeMQTTClient();
+            });
+        });
+    });
 
     mqttClient.on('message', async function (topic, message) {
         try {
