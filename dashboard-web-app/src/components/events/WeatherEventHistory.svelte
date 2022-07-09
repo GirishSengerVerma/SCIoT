@@ -23,10 +23,10 @@
 	<div class="w-full border border-accentLight dark:border-accentDark rounded-lg lg:my-2">
 		<table class="w-full text-xs lg:text-sm text-left">
 			<thead class="flex w-full overflow-scroll uppercase text-center border-b border-accentLight dark:border-accentDark">
-				<tr class="flex w-full">
-					<th scope="col" class="w-1/3 px-6 py-3">Start Date and Time</th>
-					<th scope="col" class="w-1/3 px-6 py-3">End Date and Time</th>
-					<th scope="col" class="w-1/3 px-6 py-3">Risk Level</th>
+				<tr class="flex w-full items-center">
+					<th scope="col" class="w-1/3 lg:px-6 py-1 lg:py-3">Start Date and Time</th>
+					<th scope="col" class="w-1/3 lg:px-6 py-1 lg:py-3">End Date and Time</th>
+					<th scope="col" class="w-1/3 lg:px-6 py-1 lg:py-3">Risk Level</th>
 				</tr>
 			</thead>
 			<tbody class="flex flex-col items-center justify-between overflow-scroll w-full max-h-[200px]">
