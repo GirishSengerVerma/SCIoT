@@ -107,13 +107,13 @@
 			/>
 		</div>
 		<ul
-			class={'absolute left-0 w-full mt-9 lg:mt-11 bg-white dark:bg-black rounded-md border border-accentLight dark:border-accentDark list-none text-center transition duration-200' +
+			class={'absolute left-0 w-full max-h-44 overflow-auto mt-14 lg:mt-11 bg-white dark:bg-black rounded-md border border-accentLight dark:border-accentDark list-none text-center transition duration-200' +
 				(dropdownMenuOpen ? ' opacity-1 z-20' : ' opacity-0 -z-20')}
 		>
 			{#each options as option, i}
 				<li>
 					<label
-						class={'block w-full px-3 py-2 text-sm md:text-base hover:bg-accentLight/[.20] dark:hover:bg-accentDark/[.20] focus:bg-accentLight/[.20] focus:hover:bg-accentDark/[.20]' +
+						class={'block w-full p-1 lg:px-3 lg:py-2 text-sm md:text-base hover:bg-accentLight/[.20] dark:hover:bg-accentDark/[.20] focus:bg-accentLight/[.20] focus:hover:bg-accentDark/[.20]' +
 							(dropdownMenuOpen ? ' cursor-pointer' : '')}
 						for={name + '-' + i}
 						aria-hidden="true"
