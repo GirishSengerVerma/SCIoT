@@ -39,16 +39,13 @@ export const SOCKET_REQUEST_MANUALLY_TAKE_WEATHER_EVENT_ACTION_TOPIC = 'requestM
 export const SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC = 'requestHistoricSensorData';
 export const SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC = 'responseHistoricSensorData';
 
-export const SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC =
-	'requestHistoricActuatorStatusData';
-export const SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC =
-	'responseHistoricActuatorStatusData';
+export const SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'requestHistoricActuatorStatusData';
+export const SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'responseHistoricActuatorStatusData';
 export const SOCKET_REQUEST_MANUALLY_CHANGE_ACTUATOR_STATUS_TOPIC = 'requestManuallyChangeActuatorStatus';
 
-export const SOCKET_REQUEST_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC =
-	'requestHistoricAuthoritiesUnitStatusData';
-export const SOCKET_RESPONSE_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC =
-	'responseHistoricAuthoritiesUnitStatusData';
+export const SOCKET_REQUEST_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC = 'requestHistoricAuthoritiesUnitStatusData';
+export const SOCKET_RESPONSE_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC = 'responseHistoricAuthoritiesUnitStatusData';
+export const SOCKET_REQUEST_MANUALLY_MOVE_AUTHORITIES_UNITS_TOPIC = 'requestManuallyMoveAuthoritiesUnits';
 
 export const socket = io();
 

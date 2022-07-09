@@ -6,6 +6,7 @@ export const ICON_COMMON_AUTHORITY = 'common/shield';
 export const ICON_COMMON_SOCIAL_MEDIA = 'common/globe';
 export const ICON_COMMON_THEME_SWITCH = 'common/moon';
 export const ICON_COMMON_SETTINGS = 'common/settings';
+export const ICON_COMMON_HASH = 'common/hash';
 
 export const ICON_DROPDOWN_CHEVRON_UP = 'dropdown/chevron-up';
 export const ICON_DROPDOWN_CHEVRON_DOWN = 'dropdown/chevron-down';
@@ -87,3 +88,5 @@ export const ICON_AUTHORITIES_UNIT_TYPE_BY_NAME: Map<string, string> = new Map<s
 	['FIRE_TRUCK', ICON_AUTHORITIES_UNIT_TYPE_FIRE_TRUCK],
 	['AMBULANCE', ICON_AUTHORITIES_UNIT_TYPE_AMBULANCE]
 ]);
+
+export const ICON_AUTHORITIES_MOVE = 'authorities/move';

@@ -22,7 +22,7 @@
 
     const onAdd = (selectedWeatherEventActionType: WeatherEventActionType) => {
         updating = true;
-        socket.emit(SOCKET_REQUEST_MANUALLY_TAKE_WEATHER_EVENT_ACTION_TOPIC, JSON.stringify({ selectedWeatherEventActionType, location: weatherEvent?.location, weatherEventId: weatherEvent?.id }));
+        socket.emit(SOCKET_REQUEST_MANUALLY_TAKE_WEATHER_EVENT_ACTION_TOPIC, JSON.stringify({ type: selectedWeatherEventActionType, location: weatherEvent?.location, weatherEventId: weatherEvent?.id }));
 
         socket.on(weatherEventActionTopicPrefix, (_) => {
 			updating = false;

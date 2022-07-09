@@ -605,6 +605,7 @@ const SOCKET_REQUEST_MANUALLY_CHANGE_ACTUATOR_STATUS_TOPIC = 'requestManuallyCha
 
 const SOCKET_REQUEST_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC = 'requestHistoricAuthoritiesUnitStatusData';
 const SOCKET_RESPONSE_HISTORIC_AUTHORITIES_UNIT_STATUS_DATA_TOPIC = 'responseHistoricAuthoritiesUnitStatusData';
+const SOCKET_REQUEST_MANUALLY_MOVE_AUTHORITIES_UNITS_TOPIC = 'requestManuallyMoveAuthoritiesUnits';
 
 let currentWebsocketConnections = [];
 
@@ -889,7 +890,7 @@ const initializeWebsocketServer = (io) => {
                         return; //invalid type
                     }
 
-                    manuallyTakeWeatherEventAction(JSON.stringify({ selectedWeatherEventActionType, location, weatherEventId }));
+                    manuallyTakeWeatherEventAction(JSON.stringify({ type: selectedWeatherEventActionType, location, weatherEventId }));
                 } else {
                     mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + location + '/' + type, JSON.stringify({
                         enabled,
@@ -985,15 +986,11 @@ const initializeWebsocketServer = (io) => {
         const manuallyTakeWeatherEventAction = async (message) => {
             try {
                 const messageJSON = JSON.parse(message.toString());
-
-                const type = messageJSON['selectedWeatherEventActionType'];
-                const weatherEventId = messageJSON['weatherEventId'];
+                
                 const location = messageJSON['location'];
                 
                 mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
-                    weatherEventId,
-                    type,
-                    location,
+                    ...messageJSON,
                     wasManuallyTaken: true,
                 }));
             } catch (error) {
@@ -1041,6 +1038,50 @@ const initializeWebsocketServer = (io) => {
             }
         });
 
+        socket.on(SOCKET_REQUEST_MANUALLY_MOVE_AUTHORITIES_UNITS_TOPIC, async (message) => {
+            try {
+                const messageJSON = JSON.parse(message.toString());
+
+                const moveUnitsAmount = messageJSON['moveUnitsAmount'];
+                const moveUnitsFromLocation = messageJSON['moveUnitsFromLocation'];
+                const moveUnitsToLocation = messageJSON['moveUnitsToLocation'];
+                const moveUnitsType = messageJSON['moveUnitsType'];
+
+                if('weatherEventId' in messageJSON && messageJSON['weatherEventId']) {
+                    const weatherEventId = messageJSON['weatherEventId'];
+                    const type = WeatherEventActionType.COUNTER_MEASURE_MOVE_UNITS_RESPONSE;
+                    manuallyTakeWeatherEventAction(JSON.stringify({ type, location: moveUnitsFromLocation, weatherEventId, moveUnitsAmount, moveUnitsFromLocation, moveUnitsToLocation, moveUnitsType }));
+                } else {
+                    const { amount: currentUnitsAmountAtFromLocation } = await prisma.unitStatus.findFirst({ 
+                        where: { location: moveUnitsFromLocation, unitType: moveUnitsType }, 
+                        orderBy: { 'timestamp': 'desc' } 
+                    });
+
+                    const { amount: currentUnitsAmountAtToLocation } = await prisma.unitStatus.findFirst({ 
+                        where: { location: moveUnitsToLocation, unitType: moveUnitsType }, 
+                        orderBy: { 'timestamp': 'desc' } 
+                    });
+
+                    mqttClient.publish(authoritiesUnitStatusTopicPrefix + '/' + moveUnitsFromLocation + '/' + moveUnitsType, JSON.stringify({
+                        location: moveUnitsFromLocation,
+                        unitType: moveUnitsType,
+                        amount: currentUnitsAmountAtFromLocation - moveUnitsAmount,
+                    }));
+
+                    mqttClient.publish(authoritiesUnitStatusTopicPrefix + '/' + moveUnitsToLocation + '/' + moveUnitsType, JSON.stringify({
+                        location: moveUnitsToLocation,
+                        unitType: moveUnitsType,
+                        amount: currentUnitsAmountAtToLocation + moveUnitsAmount,
+                    }));
+                }
+            } catch (error) {
+                console.error(
+                    'Data Service: Error processing incoming Manually Move Authorities Units Request Socket IO message: ',
+                    error
+                );
+            }
+        });
+
         socket.conn.on("close", (_) => {
             currentWebsocketConnections = currentWebsocketConnections.filter(con => con !== socket);
         });
@@ -1073,6 +1114,8 @@ const initializeMQTTClient = async () => {
         mqttClient.subscribe(actuatorInstanceTopicPrefix + '/+/+', { qos: 0 });
         mqttClient.subscribe(actuatorStatusDataTopicPrefix + '/+/+', { qos: 0 });
         mqttClient.subscribe(actuatorsMetadataTopicPrefix + '/+/+', { qos: 0 });
+
+        mqttClient.subscribe(authoritiesUnitStatusTopicPrefix + '/+/+', { qos: 0 });
 
         mqttClient.subscribe(weatherEventInstanceTopicPrefix + '/+', { qos: 0 });
         mqttClient.subscribe(weatherEventActionTopicPrefix + '/+', { qos: 0 });
@@ -1114,6 +1157,10 @@ const initializeMQTTClient = async () => {
                 prisma.actuatorMetaData.create({ data: messageJSON })
                     .then(data => currentWebsocketConnections.forEach(socket => socket.emit(actuatorsMetadataTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Actuator MetaData JSON data using Prisma: ', error));
+            } else if ( topic.startsWith(authoritiesUnitStatusTopicPrefix)) {
+                prisma.unitStatus.create({ data: messageJSON })
+                    .then(data => currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(data))))
+                    .catch(error => console.error('Data Service: Error persisting new Unit Status JSON data using Prisma: ', error));
             } else if (topic.startsWith(weatherEventInstanceTopicPrefix)) {
                 prisma.weatherEvent.upsert({ create: messageJSON, update: { end: messageJSON.end }, where: { location_type_start: { location: messageJSON.location, type: messageJSON.type, start: messageJSON.start ?? timestamp } } })
                     .then(data => currentWebsocketConnections.forEach(socket => socket.emit(weatherEventInstanceTopicPrefix, JSON.stringify(data))))
@@ -1315,16 +1362,8 @@ const initializeMQTTClient = async () => {
                         weatherEventActionId: weatherEventActionId,
                     };
 
-                    currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(newMoveFromLocationUnitStatusData)));
-                    currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(newMoveToLocationUnitStatusData)));
-
-                    prisma.unitStatus.create({ data: newMoveFromLocationUnitStatusData })
-                        .then(data => currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(data))))
-                        .catch(error => console.error('Data Service: Error persisting new Move From Location Unit Status JSON data using Prisma: ', error));
-
-                    prisma.unitStatus.create({ data: newMoveToLocationUnitStatusData })
-                        .then(data => currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(data))))
-                        .catch(error => console.error('Data Service: Error persisting new Move To Location Unit Status JSON data using Prisma: ', error));
+                    mqttClient.publish(authoritiesUnitStatusTopicPrefix + '/' + weatherEventAction.moveUnitsFromLocation + '/' + weatherEventAction.moveUnitsType, JSON.stringify(newMoveFromLocationUnitStatusData));  // will be persisted and sent via websosket when received in listener above
+                    mqttClient.publish(authoritiesUnitStatusTopicPrefix + '/' + weatherEventAction.moveUnitsToLocation + '/' + weatherEventAction.moveUnitsType, JSON.stringify(newMoveToLocationUnitStatusData));  // will be persisted and sent via websosket when received in listener above
                 }
             }  
         } catch (error) {

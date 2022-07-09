@@ -2,11 +2,7 @@ TODO
 	MQTT Client Automatic Reconnect
 	
 	Weather Events:
-		Test and Fix Weather Event Action Handlers
-	
-	Actuator:
-		Manually change status
-			possible to select corresponding WeatherEvent or leave empty
+		Test Weather Event Action Handlers
 	
 	Authorities:
 		Manually move units

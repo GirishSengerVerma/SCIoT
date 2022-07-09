@@ -10,8 +10,7 @@
 	import {
 		selectedAuthorityLocationAndUnitType,
 		authoritiesUnitStatus,
-		type UnitStatusKey,
-parseUnitStatusKeyFromString,
+		parseUnitStatusKeyFromString,
 	} from '$root/stores/authoritiesStores';
 
 	import MainContent from '$root/components/core/MainContent.svelte';
@@ -28,6 +27,7 @@ parseUnitStatusKeyFromString,
 	import type { UnitsStatusDataWithRelatedWeatherEventData } from '$root/types/additionalPrismaTypes';
 	import AuthoritiesUnitStatusHistory from '$root/components/authorities/AuthoritiesUnitStatusHistory.svelte';
 	import { locationIconMap } from '$root/utils/locationUtils';
+	import AuthoritiesMoveUnits from '$root/components/authorities/AuthoritiesMoveUnits.svelte';
 
 	let initializingStores = true;
 
@@ -127,6 +127,7 @@ parseUnitStatusKeyFromString,
 					loading={initializingStores || fetchingHistoricAuthoritiesUnitStatusData}
 					authoritiesHistoricUnitStatusData={selectedAuthorityUnitsHistoricStatusData}
 				/>
+				<AuthoritiesMoveUnits loading={initializingStores} unitStatus={authoritiesUnitStatusDataAtLocation.get($selectedAuthorityLocationAndUnitType)}/>
 			{/if}
 		</div>
 		<div
