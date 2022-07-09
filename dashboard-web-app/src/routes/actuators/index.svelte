@@ -29,11 +29,13 @@
 	import type { ActuatorStatusDataWithRelatedWeatherEventData } from '$root/types/additionalPrismaTypes';
 	import ActuatorStatusHistory from '$root/components/actuators/ActuatorStatusHistory.svelte';
 	import ActuatorChangeStatus from '$root/components/actuators/ActuatorChangeStatus.svelte';
+	import { isModalOpen } from '$root/stores/modalstore';
+	import CreateActuatorModal from '$root/components/actuators/CreateActuatorModal.svelte';
 
 	let initializingStores = true;
 
 	const selectedLocationOptions = Object.values(Location).map(enumValueToString);
-	const selectedLocationOptionsIcons = Object.values(Location).map(l => locationIconMap[l]);
+	const selectedLocationOptionsIcons = Object.values(Location).map((l) => locationIconMap[l]);
 
 	let actuatorMetaDataAtLocation = new Map<string, ActuatorMetaData>();
 
@@ -86,7 +88,10 @@
 
 	$: updateHistoricActuatorsStatusData($selectedActuatorInstanceId, $actuatorStatusData);
 
-	const updateHistoricActuatorsStatusData = (selectedActuatorInstanceId: string, _: Map<string, ActuatorStatusData[]>) => {
+	const updateHistoricActuatorsStatusData = (
+		selectedActuatorInstanceId: string,
+		_: Map<string, ActuatorStatusData[]>
+	) => {
 		fetchingHistoricActuatorsData = true;
 		socket.emit(
 			SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC,
@@ -109,7 +114,7 @@
 				iconName={ICON_BUTTON_ADD}
 				iconAlt="Add"
 				label="Create Actuator"
-				onClick={() => alert('TODO DWA Implement')}
+				onClick={() => isModalOpen.set(true)}
 			/>
 			<DropdownSelect
 				name="selectedLocation"
@@ -134,10 +139,11 @@
 					loading={initializingStores || fetchingHistoricActuatorsData}
 					actuatorHistoricStatusData={selectedActuatorHistoricStatusData}
 				/>
-				<ActuatorChangeStatus 
-					loading={initializingStores || fetchingHistoricActuatorsData} 
+				<ActuatorChangeStatus
+					loading={initializingStores || fetchingHistoricActuatorsData}
 					actuator={$actuators.get($selectedActuatorInstanceId)}
-					actuatorMetaData={actuatorMetaDataAtLocation.get($selectedActuatorInstanceId)}/>
+					actuatorMetaData={actuatorMetaDataAtLocation.get($selectedActuatorInstanceId)}
+				/>
 			{/if}
 		</div>
 		<div
@@ -159,3 +165,4 @@
 		</div>
 	</div>
 </MainContent>
+<CreateActuatorModal />

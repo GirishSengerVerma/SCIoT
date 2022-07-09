@@ -7,6 +7,7 @@ export const ICON_COMMON_SOCIAL_MEDIA = 'common/globe';
 export const ICON_COMMON_THEME_SWITCH = 'common/moon';
 export const ICON_COMMON_SETTINGS = 'common/settings';
 export const ICON_COMMON_HASH = 'common/hash';
+export const ICON_COMMON_CLOSE = 'common/close';
 
 export const ICON_DROPDOWN_CHEVRON_UP = 'dropdown/chevron-up';
 export const ICON_DROPDOWN_CHEVRON_DOWN = 'dropdown/chevron-down';
@@ -78,6 +79,8 @@ export const ICON_ACTUATORS_BY_NAME: Map<string, string> = new Map<string, strin
 
 export const ICON_ACTUATOR_STATUS = 'actuators/status';
 export const ICON_ACTUATORS_WEATHER_EVENT = 'actuators/weather-event';
+export const ICON_ACTUATORS_SIMULATED = 'actuators/simulated';
+export const ICON_ACTUATORS_TYPE = 'actuators/type';
 
 export const ICON_AUTHORITIES_UNIT_TYPE_POLICE_CAR = 'authorities/police-car';
 export const ICON_AUTHORITIES_UNIT_TYPE_FIRE_TRUCK = 'authorities/fire-truck';
