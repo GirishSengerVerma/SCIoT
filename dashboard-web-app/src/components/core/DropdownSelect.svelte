@@ -94,7 +94,7 @@
 						class={(selectedItemIndex === i ? 'block' : 'hidden') +
 							' w-full text-sm md:text-base font-medium'}
 					>
-						{optionsIcons.length > i ? (optionsIcons[i] + ' ') : ''}{option}
+						{optionsIcons.length > i ? optionsIcons[i] + ' ' : ''}{option}
 					</p>
 				</div>
 			{/each}
@@ -107,7 +107,7 @@
 			/>
 		</div>
 		<ul
-			class={'absolute left-0 w-full max-h-44 overflow-auto mt-14 lg:mt-11 bg-white dark:bg-black rounded-md border border-accentLight dark:border-accentDark list-none text-center transition duration-200' +
+			class={'absolute left-0 w-full max-h-44 overflow-auto mt-8 lg:mt-11 bg-white dark:bg-black rounded-md border border-accentLight dark:border-accentDark list-none text-center transition duration-200' +
 				(dropdownMenuOpen ? ' opacity-1 z-20' : ' opacity-0 -z-20')}
 		>
 			{#each options as option, i}
@@ -118,7 +118,7 @@
 						for={name + '-' + i}
 						aria-hidden="true"
 					>
-						{optionsIcons.length > i ? (optionsIcons[i] + ' ') : ''}{option}
+						{optionsIcons.length > i ? optionsIcons[i] + ' ' : ''}{option}
 					</label>
 					{#if i < options.length - 1}
 						<hr class="border-accentLight dark:border-accentDark" />
