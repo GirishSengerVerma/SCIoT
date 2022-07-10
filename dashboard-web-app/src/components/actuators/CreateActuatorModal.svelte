@@ -9,51 +9,125 @@
 	} from '$root/constants/iconConstants';
 	import { enumValueToString, stringToEnumValue } from '$root/utils/enumUtil';
 	import { locationIconMap } from '$root/utils/locationUtils';
+	import { socket, SOCKET_REQUEST_CREATE_ACTUATOR_TOPIC } from '$root/utils/socketio';
+	import { actuators } from '$root/stores/actuatorStores';
+	import { isModalOpen } from '$root/stores/modalstore';
+	import { selectedLocation } from '$root/stores/locationStores';
 
 	import Modal from '$root/components/core/Modal.svelte';
 	import SubTitle from '$root/components/core/SubTitle.svelte';
 	import DropdownSelect from '$root/components/core/DropdownSelect.svelte';
-	import ActionButton from '../core/ActionButton.svelte';
+	import ActionButton from '$root/components/core/ActionButton.svelte';
+	import TextInput from '$root/components/core/TextInput.svelte';
+	import { browser } from '$app/env';
 
 	let updating = false;
 
+	let instanceId = '';
+	let isInstanceIdValid = false;
+
+	const validateInstanceIdInput = (input: string) => {
+		isInstanceIdValid = input.length > 0 && !$actuators.has(input);
+		return isInstanceIdValid;
+	};
+	const invalidInstanceIdMessage = (input: string) =>
+		input.length === 0
+			? 'Instance id must not be empty!'
+			: 'Actuator with this instance id already exists!';
+
+	let name = '';
+	let isNameValid = false;
+
+	const validateNameInput = (input: string) => {
+		isNameValid = input.length > 0;
+		return isNameValid;
+	};
+	const invalidNameMessage = (input: string) => 'Name must not be empty!';
+
 	const initialSelectedIsPhysical = false;
 	let selectedIsPhysical = initialSelectedIsPhysical;
-
-	const selectedLocationOptions = Object.values(Location).map(enumValueToString);
-	const selectedLocationOptionsIcons = Object.values(Location).map((l) => locationIconMap[l]);
-	const initialSelectedLocationOption = selectedLocationOptions[0];
-	let selectedLocation = Object.values(Location)[0];
-
-	const selectedTypeOptions = Object.values(ActuatorType).map(enumValueToString);
-	const initialSelectedTypeOption = selectedTypeOptions[0];
-	let selectedType = Object.values(ActuatorType)[0];
 
 	const onPhysicalOrSimulatedDropdownSelectionChange = (option: string) => {
 		selectedIsPhysical = option === 'Physical';
 	};
 
+	const selectedActuatorLocationOptions = Object.values(Location).map(enumValueToString);
+	const selectedActuatorLocationOptionsIcons = Object.values(Location).map(
+		(l) => locationIconMap[l]
+	);
+	const initialselectedActuatorLocationOption = selectedActuatorLocationOptions[0];
+	let selectedActuatorLocation = Object.values(Location)[0];
+
 	const onLocationDropdownSelectionChange = (option: string) => {
-		selectedLocation = Object.values(Location).find((v) => enumValueToString(v) === option)!;
+		selectedActuatorLocation = Object.values(Location).find(
+			(v) => enumValueToString(v) === option
+		)!;
 	};
 
+	const selectedActuatorTypeOptions = Object.values(ActuatorType).map(enumValueToString);
+	const initialselectedActuatorTypeOption = selectedActuatorTypeOptions[0];
+	let selectedActuatorType = Object.values(ActuatorType)[0];
+
 	const onTypeDropdownSelectionChange = (option: string) => {
-		selectedType = stringToEnumValue(ActuatorType, option);
+		selectedActuatorType = stringToEnumValue(ActuatorType, option);
 	};
 
 	const onSave = (
+		instanceId: string,
+		name: string,
 		selectedIsPhysical: boolean,
-		selectedLocation: Location,
-		selectedType: ActuatorType
+		selectedActuatorLocation: Location,
+		selectedActuatorType: ActuatorType
 	) => {
-		// TODO DWA Implement create actuator
+		updating = true;
+
+		socket.emit(
+			SOCKET_REQUEST_CREATE_ACTUATOR_TOPIC,
+			JSON.stringify({
+				instanceId,
+				name,
+				isPhysical: selectedIsPhysical,
+				location: selectedActuatorLocation,
+				type: selectedActuatorType
+			})
+		);
+
+		selectedLocation.set(enumValueToString(selectedActuatorLocation));
+		if (browser) {
+			document
+				.getElementsByName('selectedLocation')
+				.forEach((e: any) => (e.value = enumValueToString(selectedActuatorLocation)));
+		}
+
+		handleOnSave();
+
+		isModalOpen.set(false);
+		updating = false;
 	};
+
+	export let handleOnSave: CallableFunction;
 </script>
 
 <Modal>
 	<div class="flex flex-col w-full items-center">
 		<SubTitle text="Create a new Actuator" />
 		<div class="w-full flex flex-col mt-4 justify-between items-center">
+			<TextInput
+				name="actuatorInstanceId"
+				placeholder="Unique Actuator Id"
+				bind:currentInput={instanceId}
+				validateInput={validateInstanceIdInput}
+				invalidInputMessage={invalidInstanceIdMessage}
+				class="mb-4"
+			/>
+			<TextInput
+				name="actuatorName"
+				placeholder="Actuator Name"
+				bind:currentInput={name}
+				validateInput={validateNameInput}
+				invalidInputMessage={invalidNameMessage}
+				class="mb-4"
+			/>
 			<DropdownSelect
 				name="selectedPhysicalOrSimulated"
 				iconName={ICON_ACTUATORS_SIMULATED}
@@ -61,24 +135,24 @@
 				initialValue={initialSelectedIsPhysical ? 'Physical' : 'Simulated'}
 				options={['Physical', 'Simulated']}
 				onChange={onPhysicalOrSimulatedDropdownSelectionChange}
-				class="my-2"
+				class="my-2 "
 			/>
 			<DropdownSelect
-				name="selectedLocation"
+				name="selectedActuatorLocation"
 				iconName={ICON_COMMON_LOCATION}
 				iconAlt="Location"
-				initialValue={initialSelectedLocationOption}
-				options={selectedLocationOptions}
-				optionsIcons={selectedLocationOptionsIcons}
+				initialValue={initialselectedActuatorLocationOption}
+				options={selectedActuatorLocationOptions}
+				optionsIcons={selectedActuatorLocationOptionsIcons}
 				onChange={onLocationDropdownSelectionChange}
 				class="my-2"
 			/>
 			<DropdownSelect
-				name="selectedType"
+				name="selectedActuatorType"
 				iconName={ICON_ACTUATORS_TYPE}
 				iconAlt="Type"
-				initialValue={initialSelectedTypeOption}
-				options={selectedTypeOptions}
+				initialValue={initialselectedActuatorTypeOption}
+				options={selectedActuatorTypeOptions}
 				onChange={onTypeDropdownSelectionChange}
 				class="my-2"
 			/>
@@ -86,10 +160,18 @@
 				iconName={ICON_BUTTON_SAVE}
 				iconAlt="Save"
 				label="Create"
-				onClick={() => onSave(selectedIsPhysical, selectedLocation, selectedType)}
+				onClick={() =>
+					onSave(
+						instanceId,
+						name,
+						selectedIsPhysical,
+						selectedActuatorLocation,
+						selectedActuatorType
+					)}
+				disabled={!isInstanceIdValid || !isNameValid}
 				{updating}
+				class="mt-5"
 			/>
-			<!-- instanceId, name -->
 		</div>
 	</div>
 </Modal>

@@ -31,6 +31,7 @@
 	import ActuatorChangeStatus from '$root/components/actuators/ActuatorChangeStatus.svelte';
 	import { isModalOpen } from '$root/stores/modalstore';
 	import CreateActuatorModal from '$root/components/actuators/CreateActuatorModal.svelte';
+	import DeleteActuator from '$root/components/actuators/DeleteActuator.svelte';
 
 	let initializingStores = true;
 
@@ -100,6 +101,12 @@
 			})
 		);
 	};
+
+	let selectLocationDropdown: DropdownSelect;
+
+	const handleOnCreateActuator = () => {
+		selectLocationDropdown.changeSelection($selectedLocation);
+	};
 </script>
 
 <svelte:head>
@@ -117,6 +124,7 @@
 				onClick={() => isModalOpen.set(true)}
 			/>
 			<DropdownSelect
+				bind:this={selectLocationDropdown}
 				name="selectedLocation"
 				iconName={ICON_COMMON_LOCATION}
 				iconAlt="ActuatorLocation"
@@ -144,6 +152,10 @@
 					actuator={$actuators.get($selectedActuatorInstanceId)}
 					actuatorMetaData={actuatorMetaDataAtLocation.get($selectedActuatorInstanceId)}
 				/>
+				<DeleteActuator
+					loading={initializingStores || fetchingHistoricActuatorsData}
+					actuator={$actuators.get($selectedActuatorInstanceId)}
+				/>
 			{/if}
 		</div>
 		<div
@@ -165,4 +177,4 @@
 		</div>
 	</div>
 </MainContent>
-<CreateActuatorModal />
+<CreateActuatorModal handleOnSave={handleOnCreateActuator} />

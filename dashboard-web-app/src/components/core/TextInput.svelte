@@ -2,9 +2,12 @@
 	export let name: string;
 	export let placeholder: string;
 	export let validateInput: CallableFunction;
+	export let showInvaidInputMessage = true;
 	export let invalidInputMessage: CallableFunction;
-
 	export let currentInput = '';
+	let additionalClass = '';
+	export { additionalClass as class };
+
 	let isInputValid = validateInput(currentInput);
 
 	const onInput = (event: any) => {
@@ -13,7 +16,7 @@
 	};
 </script>
 
-<div class="w-fit xl:w-full mb-4">
+<div class={additionalClass ? ' ' + additionalClass : ''}>
 	<input
 		class={'appearance-none block w-full rounded-md py-2 px-4 mb-1 placeholder:text-sm text-sm md:placeholder:text-base md:text-base border focus:outline focus:outline-1 ' +
 			(isInputValid
@@ -24,7 +27,7 @@
 		{placeholder}
 		on:input={onInput}
 	/>
-	{#if !isInputValid}
+	{#if !isInputValid && showInvaidInputMessage}
 		<p class="text-red-300 text-xs italic">{invalidInputMessage(currentInput)}</p>
 	{/if}
 </div>

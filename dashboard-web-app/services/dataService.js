@@ -599,6 +599,8 @@ const SOCKET_REQUEST_MANUALLY_TAKE_WEATHER_EVENT_ACTION_TOPIC = 'requestManually
 const SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC = 'requestHistoricSensorData';
 const SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC = 'responseHistoricSensorData';
 
+const SOCKET_REQUEST_CREATE_ACTUATOR_TOPIC = 'requestCreateActuator';
+const SOCKET_REQUEST_DELETE_ACTUATOR_TOPIC = 'requestDeleteActuator';
 const SOCKET_REQUEST_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'requestHistoricActuatorStatusData';
 const SOCKET_RESPONSE_HISTORIC_ACTUATOR_STATUS_DATA_TOPIC = 'responseHistoricActuatorStatusData';
 const SOCKET_REQUEST_MANUALLY_CHANGE_ACTUATOR_STATUS_TOPIC = 'requestManuallyChangeActuatorStatus';
@@ -813,6 +815,35 @@ const initializeWebsocketServer = (io) => {
             } catch (error) {
                 console.error(
                     'Data Service: Error processing incoming Historic Sensor Data Request Socket IO message: ',
+                    error
+                );
+            }
+        });
+
+        socket.on(SOCKET_REQUEST_CREATE_ACTUATOR_TOPIC, async (message) => {
+            try {
+                const {instanceId, name, isPhysical, location, type} = JSON.parse(message.toString());
+                mqttClient.publish(actuatorInstanceTopicPrefix + '/' + location + '/' + type, JSON.stringify({ instanceId, isPhysical }));
+                setTimeout(() => {
+                    mqttClient.publish(actuatorsMetadataTopicPrefix + '/' + location + '/' + type, JSON.stringify({ instanceId, name, location, type }));
+                    mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + location + '/' + type, JSON.stringify({ instanceId, enabled: false }));
+                }, 200);
+            } catch (error) {
+                console.error(
+                    'Data Service: Error processing incoming Create Actuator Request Socket IO message: ',
+                    error
+                );
+            }
+        });
+
+        socket.on(SOCKET_REQUEST_DELETE_ACTUATOR_TOPIC, async (message) => {
+            try {
+                const { instanceId } = JSON.parse(message.toString());
+                // TODO DWA Fix delete actuator and delete or update other values with this actuator in a FK
+                await prisma.actuator.delete({ where: { instanceId }, include: { ActuatorMetaData: true, ActuatorStatusData: true, _count: true } });
+            } catch (error) {
+                console.error(
+                    'Data Service: Error processing incoming Delete Actuator Request Socket IO message: ',
                     error
                 );
             }
@@ -1135,7 +1166,7 @@ const initializeMQTTClient = async () => {
             const timestamp = dayjs().toISOString();
 
              if (topic.startsWith(sensorInstanceTopicPrefix)) {
-                prisma.sensor.upsert({ create: messageJSON, where: { instanceId: messageJSON.instanceId }})
+                prisma.sensor.upsert({ create: messageJSON, where: { instanceId: messageJSON.instanceId }, update: { isPhysical: messageJSON.isPhysical } })
                     .then(data => currentWebsocketConnections.forEach(socket => socket.emit(sensorInstanceTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Sensor Instance JSON data using Prisma: ', error));
             } else if (topic.startsWith(sensorTelemetryTopicPrefix)) {
@@ -1151,7 +1182,8 @@ const initializeMQTTClient = async () => {
                     create: messageJSON, 
                     where: { 
                         instanceId: messageJSON.instanceId 
-                    }
+                    },
+                    update: { isPhysical: messageJSON.isPhysical }
                 })
                     .then(data => currentWebsocketConnections.forEach(socket => socket.emit(actuatorInstanceTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Actuator Instance JSON data using Prisma: ', error));

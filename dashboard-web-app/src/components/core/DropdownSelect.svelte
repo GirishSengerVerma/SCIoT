@@ -34,6 +34,9 @@
 		dropdownMenuOpen = false;
 		onChange(options[i]);
 	};
+
+	export const changeSelection = (newSelectedOption: string) =>
+		(selectedItemIndex = options.indexOf(newSelectedOption) ?? 0);
 </script>
 
 {#if loading}
