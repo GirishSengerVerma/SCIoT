@@ -8,12 +8,12 @@
 
 {#if $isModalOpen}
 	<div
-		class="fixed top-0 left-0 z-30 w-screen h-screen bg-black/40 transition"
+		class="fixed top-0 left-0 z-30 w-screen h-screen bg-black/40 dark:bg-white/10 transition"
 		in:fade={{ duration: 70 }}
 		out:fade={{ duration: 70 }}
 	>
 		<div
-			class="fixed w-full h-full top-0 left-0 xl:w-1/3 xl:h-1/2 xl:top-1/4 xl:left-1/3 xl:rounded-xl bg-white dark:bg-black border border-accentLight dark:border-accentDark p-14"
+			class="fixed w-full h-full top-0 left-0 xl:w-auto xl:h-auto xl:top-1/2 xl:left-1/2 xl:-translate-x-1/2 xl:-translate-y-1/2 xl:rounded-xl p-10 bg-white dark:bg-black border border-accentLight dark:border-accentDark"
 			use:clickOutside
 			on:click_outside={() => isModalOpen.set(false)}
 		>
