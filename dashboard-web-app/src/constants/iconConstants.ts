@@ -15,6 +15,7 @@ export const ICON_DROPDOWN_CHEVRON_DOWN = 'dropdown/chevron-down';
 export const ICON_BUTTON_ADD = 'button/plus';
 export const ICON_BUTTON_SAVE = 'button/save';
 export const ICON_BUTTON_DELETE = 'button/delete';
+export const ICON_BUTTON_END = 'button/end';
 
 export const ICON_DATA_PERIOD_LIVE_DATA = 'dataPeriod/live-data';
 export const ICON_DATA_PERIOD_HISTORIC_DATA = 'dataPeriod/historic-data';
@@ -41,6 +42,7 @@ export const ICON_WEATHER_EVENTS_BY_NAME: Map<string, string> = new Map<string, 
 	['BAD_AIR', ICON_WEATHER_EVENTS_BAD_AIR],
 ]);
 
+export const ICON_WEATHER_EVENTS_TYPE = 'weatherevents/type';
 export const ICON_WEATHER_EVENTS_RISK_LEVEL = 'weatherevents/risk-level';
 export const ICON_WEATHER_EVENTS_ACTION = 'weatherevents/action';
 

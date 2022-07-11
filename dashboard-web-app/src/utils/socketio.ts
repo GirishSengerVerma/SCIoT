@@ -31,6 +31,9 @@ const sensorMetadataTopicPrefix = 'sensors/metadata';
 
 const authoritiesUnitStatusTopicPrefix = 'authorities/unitstatus';
 
+export const SOCKET_REQUEST_CREATE_WEATHER_EVENT_TOPIC = 'requestCreateWeatherEvent';
+export const SOCKET_REQUEST_DELETE_WEATHER_EVENT_TOPIC = 'requestDeleteWeatherEvent';
+export const SOCKET_REQUEST_END_WEATHER_EVENT_TOPIC = 'requestEndWeatherEvent';
 export const SOCKET_REQUEST_HISTORIC_WEATHER_EVENT_DATA_TOPIC = 'requestHistoricWeatherEventData';
 export const SOCKET_RESPONSE_HISTORIC_WEATHER_EVENT_DATA_TOPIC = 'responseHistoricWeatherEventData';
 export const SOCKET_REQUEST_CHANGE_WEATHER_EVENT_RISK_LEVEL_TOPIC = 'requestChangeWeatherEventRiskLevel';

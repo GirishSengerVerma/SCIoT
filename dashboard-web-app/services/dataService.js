@@ -7,7 +7,7 @@ import utc from "dayjs/plugin/utc.js";
 
 dayjs.extend(utc)
 
-import { assert } from 'console';
+import { assert, time } from 'console';
 
 let mqttClient;
 
@@ -593,6 +593,9 @@ const initializePrisma = async () => {
     console.log('Data Service: Prisma Client: Done.\n');
 }
 
+const SOCKET_REQUEST_CREATE_WEATHER_EVENT_TOPIC = 'requestCreateWeatherEvent';
+const SOCKET_REQUEST_DELETE_WEATHER_EVENT_TOPIC = 'requestDeleteWeatherEvent';
+const SOCKET_REQUEST_END_WEATHER_EVENT_TOPIC = 'requestEndWeatherEvent';
 const SOCKET_REQUEST_HISTORIC_WEATHER_EVENT_DATA_TOPIC = 'requestHistoricWeatherEventData';
 const SOCKET_RESPONSE_HISTORIC_WEATHER_EVENT_DATA_TOPIC = 'responseHistoricWeatherEventData';
 const SOCKET_REQUEST_CHANGE_WEATHER_EVENT_RISK_LEVEL_TOPIC = 'requestChangeWeatherEventRiskLevel';
@@ -972,6 +975,63 @@ const initializeWebsocketServer = (io) => {
             }
         });
 
+        socket.on(SOCKET_REQUEST_CREATE_WEATHER_EVENT_TOPIC, async (message) => {
+            try {
+                const { location, type, initialRiskLevel } = JSON.parse(message.toString());
+                mqttClient.publish(weatherEventInstanceTopicPrefix + '/' + location, JSON.stringify({ location, type, initialRiskLevel }));
+            } catch (error) {
+                console.error(
+                    'Data Service: Error processing incoming End Weather Event Request Socket IO message: ',
+                    error
+                );
+            }
+        });
+
+        socket.on(SOCKET_REQUEST_END_WEATHER_EVENT_TOPIC, async (message) => {
+            try {
+                const { id } = JSON.parse(message.toString());
+
+                const timestamp = dayjs().toISOString();
+
+                const weatherEvent = await prisma.weatherEvent.findUnique({ where: { id } });
+
+                const currentRisk = await prisma.weatherEventRisk.findFirst({ 
+                    where: { weatherEventId: id }, 
+                    orderBy: [{ start: 'desc' }, { end: 'desc' }] 
+                });
+                mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEvent.location, JSON.stringify({
+                    ...currentRisk,
+                    end: timestamp,
+                }));
+
+                mqttClient.publish(weatherEventInstanceTopicPrefix + '/' + weatherEvent.location, JSON.stringify({
+                    ...weatherEvent,
+                    end: timestamp,
+                }));
+            } catch (error) {
+                console.error(
+                    'Data Service: Error processing incoming End Weather Event Request Socket IO message: ',
+                    error
+                );
+            }
+        });
+
+        socket.on(SOCKET_REQUEST_DELETE_WEATHER_EVENT_TOPIC, async (message) => {
+            try {
+                const { id } = JSON.parse(message.toString());
+                await prisma.actuatorStatusData.updateMany({ where: { lastChangedBy: { weatherEventId: id } }, data: { weatherEventActionId: null }});
+                await prisma.unitStatus.updateMany({ where: { changedBy: { weatherEventId: id } }, data: { weatherEventActionId: null }});
+                await prisma.weatherEventRisk.deleteMany({ where: { weatherEventId: id } });
+                await prisma.weatherEventAction.deleteMany({ where: { weatherEventId: id } });
+                await prisma.weatherEvent.delete({ where: { id } });
+            } catch (error) {
+                console.error(
+                    'Data Service: Error processing incoming Delete Weather Event Request Socket IO message: ',
+                    error
+                );
+            }
+        });
+
         socket.on(SOCKET_REQUEST_HISTORIC_WEATHER_EVENT_DATA_TOPIC, async (message) => {
             try {
                 const messageJSON = JSON.parse(message.toString());
@@ -1236,9 +1296,19 @@ const initializeMQTTClient = async () => {
                     .then(data => currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting new Unit Status JSON data using Prisma: ', error));
             } else if (topic.startsWith(weatherEventInstanceTopicPrefix)) {
-                prisma.weatherEvent.upsert({ create: messageJSON, update: { end: messageJSON.end }, where: { location_type_start: { location: messageJSON.location, type: messageJSON.type, start: messageJSON.start ?? timestamp } } })
-                    .then(data => currentWebsocketConnections.forEach(socket => socket.emit(weatherEventInstanceTopicPrefix, JSON.stringify(data))))
-                    .catch(error => console.error('Data Service: Error persisting Weather Event Instance JSON data using Prisma: ', error));
+                var weatherEvent = {...messageJSON};
+                if('initialRiskLevel' in weatherEvent) {
+                    delete weatherEvent.initialRiskLevel;
+                }
+
+                prisma.weatherEvent.upsert({ create: weatherEvent, update: { end: weatherEvent.end }, where: { location_type_start: { location: weatherEvent.location, type: weatherEvent.type, start: weatherEvent.start ?? timestamp } } })
+                .then(async (data) =>  {
+                    currentWebsocketConnections.forEach(socket => socket.emit(weatherEventInstanceTopicPrefix, JSON.stringify(data)));
+                    if('initialRiskLevel' in messageJSON && messageJSON['initialRiskLevel']) {
+                        mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEvent['location'], JSON.stringify({ weatherEventId: data.id, riskLevel: messageJSON['initialRiskLevel'] }));
+                    }
+                })
+                .catch(error => console.error('Data Service: Error persisting Weather Event Instance JSON data using Prisma: ', error));
             } else if (topic.startsWith(weatherEventRiskTopicPrefix)) {
                 prisma.weatherEventRisk.upsert({ create: messageJSON, update: { end: messageJSON.end }, where: { weatherEventId_start: { weatherEventId: messageJSON.weatherEventId, start: messageJSON.start || timestamp } } })
                     .then(data => currentWebsocketConnections.forEach(socket => socket.emit(weatherEventRiskTopicPrefix, JSON.stringify(data))))

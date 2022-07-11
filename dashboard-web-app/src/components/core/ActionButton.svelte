@@ -9,6 +9,7 @@
 	export let updating: boolean = false;
 	export let onClick: CallableFunction;
 	export let disabled = false;
+	export let showDisabledAsError = true;
 </script>
 
 <button
@@ -16,7 +17,9 @@
 	class={'flex items-center border hover:bg-accentLight/20 dark:hover:bg-accentDark/15 rounded-full mx-2 my-1 px-2 md:px-4 py-2 font-medium ' +
 		additionalClass +
 		(disabled
-			? ' border-red-300 cursor-not-allowed'
+			? showDisabledAsError
+				? ' border-red-300 cursor-not-allowed'
+				: ' opacity-60 cursor-not-allowed'
 			: ' border-accentLight dark:border-accentDark cursor-pointer')}
 	on:click={() => !updating && onClick()}
 >

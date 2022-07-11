@@ -13,10 +13,12 @@
 
 	import { selectedLocation } from '$root/stores/locationStores';
 
+	import { isModalOpen } from '$root/stores/modalstore';
+
 	import {
 		selectedWeatherEventId,
 		weatherEvents,
-		currentWeatherEventRisk,
+		currentWeatherEventRisk
 	} from '$root/stores/weatherEventStores';
 
 	import MainContent from '$root/components/core/MainContent.svelte';
@@ -25,7 +27,7 @@
 	import ActionButton from '$root/components/core/ActionButton.svelte';
 	import LoadingSpinner from '$root/components/core/LoadingSpinner.svelte';
 	import SubTitle from '$root/components/core/SubTitle.svelte';
-	
+
 	import {
 		socket,
 		SOCKET_REQUEST_HISTORIC_WEATHER_EVENT_DATA_TOPIC,
@@ -37,17 +39,20 @@
 	import type { HistoricWeatherEventData } from '$root/types/additionalPrismaTypes';
 	import WeatherEventChangeRiskLevel from '$root/components/events/WeatherEventChangeRiskLevel.svelte';
 	import WeatherEventTakeAction from '$root/components/events/WeatherEventTakeAction.svelte';
+	import DeleteWeatherEvent from '$root/components/events/DeleteWeatherEvent.svelte';
+	import EndWeatherEvent from '$root/components/events/EndWeatherEvent.svelte';
+	import CreateWeatherEventModal from '$root/components/events/CreateWeatherEventModal.svelte';
 
 	let initializingStores = true;
 
 	const selectedLocationOptions = Object.values(Location).map(enumValueToString);
-	const selectedLocationOptionsIcons = Object.values(Location).map(l => locationIconMap[l]);
+	const selectedLocationOptionsIcons = Object.values(Location).map((l) => locationIconMap[l]);
 
 	let weatherEventsAtLocation = new Map<number, WeatherEvent>();
 	let pastWeatherEventsAtLocation = new Map<number, WeatherEvent>();
 
 	let fetchingHistoricWeatherEventData = false;
-	let selectedWeatherEventHistoricData: HistoricWeatherEventData | undefined; 
+	let selectedWeatherEventHistoricData: HistoricWeatherEventData | undefined;
 
 	onMount(() => {
 		initializingStores = false;
@@ -75,7 +80,11 @@
 		socket.off(weatherEventActionTopicPrefix);
 	});
 
-	$: updateLiveData(stringToEnumValue(Location, $selectedLocation), $weatherEvents, $currentWeatherEventRisk);
+	$: updateLiveData(
+		stringToEnumValue(Location, $selectedLocation),
+		$weatherEvents,
+		$currentWeatherEventRisk
+	);
 
 	const updateLiveData = (
 		selectedLocation: Location,
@@ -94,8 +103,10 @@
 		);
 
 		if (
-			$selectedWeatherEventId && Number($selectedWeatherEventId) >= 0 
-			&& !weatherEventsAtLocation.has(Number($selectedWeatherEventId)) && !pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId))
+			$selectedWeatherEventId &&
+			Number($selectedWeatherEventId) >= 0 &&
+			!weatherEventsAtLocation.has(Number($selectedWeatherEventId)) &&
+			!pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId))
 		) {
 			selectedWeatherEventId.set('-1');
 		}
@@ -103,8 +114,11 @@
 
 	$: updateHistoricWeatherEventData(Number($selectedWeatherEventId), $currentWeatherEventRisk);
 
-	const updateHistoricWeatherEventData = (selectedWeatherEventId: number, _: Map<number, WeatherEventRisk>) => {
-		if(selectedWeatherEventId == null || selectedWeatherEventId < 0) {
+	const updateHistoricWeatherEventData = (
+		selectedWeatherEventId: number,
+		_: Map<number, WeatherEventRisk>
+	) => {
+		if (selectedWeatherEventId == null || selectedWeatherEventId < 0) {
 			return;
 		}
 		fetchingHistoricWeatherEventData = true;
@@ -114,6 +128,12 @@
 				selectedWeatherEventId
 			})
 		);
+	};
+
+	let selectLocationDropdown: DropdownSelect;
+
+	const handleOnCreateWeatherEvent = () => {
+		selectLocationDropdown.changeSelection($selectedLocation);
 	};
 </script>
 
@@ -129,9 +149,10 @@
 				iconName={ICON_BUTTON_ADD}
 				iconAlt="Add"
 				label="Create Weather Event"
-				onClick={() => alert('TODO DWA Implement')}
+				onClick={() => isModalOpen.set(true)}
 			/>
 			<DropdownSelect
+				bind:this={selectLocationDropdown}
 				name="selectedLocation"
 				iconName={ICON_COMMON_LOCATION}
 				iconAlt="WeatherEventLocation"
@@ -153,25 +174,51 @@
 				<WeatherEventHistory
 					isPast={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId))}
 					loading={initializingStores || fetchingHistoricWeatherEventData}
-					weatherEvent={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId)) ? pastWeatherEventsAtLocation.get(Number($selectedWeatherEventId)) : weatherEventsAtLocation.get(Number($selectedWeatherEventId))}
+					weatherEvent={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId))
+						? pastWeatherEventsAtLocation.get(Number($selectedWeatherEventId))
+						: weatherEventsAtLocation.get(Number($selectedWeatherEventId))}
 					historicWeatherEventData={selectedWeatherEventHistoricData}
 				/>
-				<WeatherEventChangeRiskLevel loading={initializingStores} weatherEvent={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId)) ? pastWeatherEventsAtLocation.get(Number($selectedWeatherEventId)) : weatherEventsAtLocation.get(Number($selectedWeatherEventId))}/>
-				<WeatherEventTakeAction loading={initializingStores} weatherEvent={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId)) ? pastWeatherEventsAtLocation.get(Number($selectedWeatherEventId)) : weatherEventsAtLocation.get(Number($selectedWeatherEventId))}/>
+				<WeatherEventChangeRiskLevel
+					loading={initializingStores}
+					weatherEvent={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId))
+						? pastWeatherEventsAtLocation.get(Number($selectedWeatherEventId))
+						: weatherEventsAtLocation.get(Number($selectedWeatherEventId))}
+				/>
+				<WeatherEventTakeAction
+					loading={initializingStores}
+					weatherEvent={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId))
+						? pastWeatherEventsAtLocation.get(Number($selectedWeatherEventId))
+						: weatherEventsAtLocation.get(Number($selectedWeatherEventId))}
+				/>
+				{#if weatherEventsAtLocation.get(Number($selectedWeatherEventId))}
+					<EndWeatherEvent
+						loading={initializingStores}
+						weatherEvent={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId))
+							? pastWeatherEventsAtLocation.get(Number($selectedWeatherEventId))
+							: weatherEventsAtLocation.get(Number($selectedWeatherEventId))}
+					/>
+				{/if}
+				<DeleteWeatherEvent
+					loading={initializingStores}
+					weatherEvent={pastWeatherEventsAtLocation.has(Number($selectedWeatherEventId))
+						? pastWeatherEventsAtLocation.get(Number($selectedWeatherEventId))
+						: weatherEventsAtLocation.get(Number($selectedWeatherEventId))}
+				/>
 			{/if}
 		</div>
-		<div
-			class="flex flex-col min-w-[210px]"
-		>
-			<SubTitle text='Current Weather Events' clazz="mt-3 md:mt-0"/>
-			<div class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-5 justify-between items-start h-fit">
+		<div class="flex flex-col min-w-[210px]">
+			<SubTitle text="Current Weather Events" clazz="mt-3 md:mt-0" />
+			<div
+				class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-5 justify-between items-start h-fit"
+			>
 				{#if initializingStores}
 					<LoadingSpinner />
 				{:else if weatherEventsAtLocation.size > 0}
 					{#each [...weatherEventsAtLocation] as [key, weatherEvent]}
 						<WeatherEventStatus
 							isPast={false}
-							weatherEvent={weatherEvent}
+							{weatherEvent}
 							currentWeatherEventRisk={$currentWeatherEventRisk.get(key)}
 							isSelected={key === Number($selectedWeatherEventId)}
 							onClick={() => selectedWeatherEventId.set('' + key)}
@@ -181,15 +228,17 @@
 					None
 				{/if}
 			</div>
-			<SubTitle text='Past Weather Events' clazz="mt-8"/>
-			<div class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-5 justify-between items-start h-fit">
+			<SubTitle text="Past Weather Events" clazz="mt-8" />
+			<div
+				class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-5 justify-between items-start h-fit"
+			>
 				{#if initializingStores}
 					<LoadingSpinner />
 				{:else if pastWeatherEventsAtLocation.size > 0}
 					{#each [...pastWeatherEventsAtLocation] as [key, weatherEvent]}
 						<WeatherEventStatus
 							isPast={true}
-							weatherEvent={weatherEvent}
+							{weatherEvent}
 							currentWeatherEventRisk={$currentWeatherEventRisk.get(key)}
 							isSelected={key === Number($selectedWeatherEventId)}
 							onClick={() => selectedWeatherEventId.set('' + key)}
@@ -202,3 +251,4 @@
 		</div>
 	</div>
 </MainContent>
+<CreateWeatherEventModal handleOnSave={handleOnCreateWeatherEvent} />

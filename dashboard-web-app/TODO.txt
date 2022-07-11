@@ -1,9 +1,6 @@
 TODO
-	MQTT Client Automatic Reconnect
-	
+	Dashboard Start Page: Show current events at all locations order by risk desc
+
 	Sensors
 		Data Chart
-	
-	Create Weather Event, Create Sensor, Create Sensor, Create Actuator
-	
 	
