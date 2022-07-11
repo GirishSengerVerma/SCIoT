@@ -839,8 +839,9 @@ const initializeWebsocketServer = (io) => {
         socket.on(SOCKET_REQUEST_DELETE_ACTUATOR_TOPIC, async (message) => {
             try {
                 const { instanceId } = JSON.parse(message.toString());
-                // TODO DWA Fix delete actuator and delete or update other values with this actuator in a FK
-                await prisma.actuator.delete({ where: { instanceId }, include: { ActuatorMetaData: true, ActuatorStatusData: true, _count: true } });
+                await prisma.actuatorStatusData.deleteMany({ where: { instanceId } });
+                await prisma.actuatorMetaData.deleteMany({ where: { instanceId } });
+                await prisma.actuator.delete({ where: { instanceId } }); 
             } catch (error) {
                 console.error(
                     'Data Service: Error processing incoming Delete Actuator Request Socket IO message: ',
