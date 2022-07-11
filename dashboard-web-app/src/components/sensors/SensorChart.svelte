@@ -1,118 +1,168 @@
 <script lang="ts">
 	import type { SensorMetaData, SensorTelemetryData } from '@prisma/client';
 
+	import { SENSOR_UNIT_REPRESENTATION_MAP } from '$root/utils/sensorUnitRepresentations';
 	import ApexChart from '$root/components/core/ApexChart.svelte';
 	import { LIGHT_MODE, theme } from '$root/stores/themeStore';
-	import { enumValueToString } from '$root/utils/enumUtil';
-	import LoadingSpinner from '../core/LoadingSpinner.svelte';
-
-	// TODO DWA Implement Sensor Data Chart!
+	import LoadingSpinner from '$root/components/core/LoadingSpinner.svelte';
+	import SubTitle from '../core/SubTitle.svelte';
 
 	const getOptions = (
 		themeToUse: string,
-		sensorMetaData: SensorMetaData | undefined,
+		isLiveData: boolean | undefined,
 		data: SensorTelemetryData[] | undefined
 	) => {
-		//data ? data.map((d) => d.value) : []
-
 		return {
 			theme: {
 				mode: themeToUse
 			},
-			title: {
-				text:
-					(sensorMetaData ? enumValueToString(sensorMetaData.measure) + ' ' : '') + 'Sensor Chart',
-				align: 'left'
-			},
 			chart: {
 				type: 'area',
-				stacked: false,
 				width: '100%',
 				background: 'rgba(0, 0, 0, 0)',
+				toolbar: {
+					show: !isLiveData
+				},
 				zoom: {
-					type: 'x',
-					enabled: true,
+					enabled: !isLiveData,
+					//type: 'xy'
 					autoScaleYaxis: true
 				},
-				toolbar: {
-					autoSelected: 'zoom'
+				animations: {
+					enabled: true,
+					easing: 'linear',
+					dynamicAnimation: {
+						speed: !isLiveData ? 500 : 3000 // needs to by in sync with sensor simulator interval
+					}
 				}
 			},
+			fill: {
+				colors: ['#00D1FF']
+			},
+			stroke: {
+				colors: ['#00D1FF']
+			},
+			series: [
+				{
+					name: 'Value',
+					data: data?.map((d) => [d.timestamp, d.value])
+				}
+			],
 			dataLabels: {
 				enabled: false
 			},
 			markers: {
 				size: 0
 			},
-			series: [
-				{
-					name: 'sensorValues',
-					data: [0, 0]
-				}
-			],
-			fill: {
-				type: 'gradient',
-				gradient: {
-					shadeIntensity: 1,
-					inverseColors: false,
-					opacityFrom: 0.5,
-					opacityTo: 0,
-					stops: [0, 90, 100]
-				}
-			},
 			yaxis: {
 				labels: {
 					formatter: function (val: number) {
-						return (val / 1000000).toFixed(0);
+						return val.toFixed(0);
 					}
 				},
 				title: {
-					text: 'Value'
+					text:
+						'Value in ' +
+						(data && data.length > 0 ? SENSOR_UNIT_REPRESENTATION_MAP.get(data[0].unit)! : '')
 				}
 			},
 			xaxis: {
-				type: 'datetime'
+				type: 'datetime',
+				title: {
+					text: 'Timestamp'
+				}
 			},
 			tooltip: {
 				theme: $theme,
 				shared: false,
 				y: {
 					formatter: function (val: number) {
-						return (val / 1000000).toFixed(0);
+						return val.toFixed(2);
 					}
 				}
 			}
 		};
 	};
 
-	let chart: { update(options: any): void; destroy(): void } | undefined;
+	let chart:
+		| { updateOptions(options: any): void; updateSeries(series: any): void; destroy(): void }
+		| undefined;
 
-	$: onParametersChange($theme, sensorMetaData, data);
+	$: onParametersChange($theme, isLiveData, sensorMetaData);
+
+	let previousMetaData: SensorMetaData | undefined = undefined;
 
 	const onParametersChange = (
 		theme: string | undefined,
-		sensorMetaData: SensorMetaData | undefined,
-		data: SensorTelemetryData[] | undefined
+		isLiveData: boolean | undefined,
+		sensorMetaData: SensorMetaData | undefined
 	) => {
-		if (!chart) {
+		let shouldUpdate = true;
+		if (!chart || !sensorMetaData) {
+			shouldUpdate = false;
+		} else if (
+			previousMetaData &&
+			sensorMetaData &&
+			previousMetaData.instanceId !== sensorMetaData?.instanceId
+		) {
+			shouldUpdate = true;
+		}
+
+		if (!shouldUpdate) {
 			return;
 		}
+
 		try {
-			chart!.update(getOptions(theme ?? LIGHT_MODE, sensorMetaData, data));
+			chart!.updateOptions(getOptions(theme ?? LIGHT_MODE, isLiveData, data));
 		} catch (error) {
 			console.warn('Could not update SensorChart: ', error);
 		}
 	};
 
+	$: onDataChange(data, sensorMetaData);
+
+	let previousData: SensorTelemetryData[] = [];
+
+	const onDataChange = (
+		data: SensorTelemetryData[] | undefined,
+		sensorMetaData: SensorMetaData | undefined
+	) => {
+		let shouldUpdate = true;
+		if (!chart || !data || !sensorMetaData) {
+			shouldUpdate = false;
+		} else if (
+			previousMetaData &&
+			sensorMetaData &&
+			previousMetaData.instanceId !== sensorMetaData?.instanceId
+		) {
+			shouldUpdate = true;
+		} else if (previousData.length === data.length) {
+			shouldUpdate = false;
+		}
+
+		if (!shouldUpdate) {
+			return;
+		}
+
+		previousData = data!;
+		previousMetaData = sensorMetaData;
+
+		chart!.updateSeries([
+			{
+				name: 'Value',
+				data: data?.map((d) => [d.timestamp, d.value])
+			}
+		]);
+	};
+
+	export let isLiveData: boolean | undefined;
 	export let sensorMetaData: SensorMetaData | undefined;
 	export let data: SensorTelemetryData[] | undefined;
 </script>
 
-{#if !data}
+<SubTitle text="Sensor Data Chart" />
+{#if !sensorMetaData || !data}
 	<LoadingSpinner />
 {:else}
-	<ApexChart
-		options={getOptions($theme ?? LIGHT_MODE, sensorMetaData, data)}
-		bind:chartRef={chart}
-	/>
+	<ApexChart options={getOptions($theme ?? LIGHT_MODE, isLiveData, data)} bind:chartRef={chart} />
 {/if}

@@ -1,6 +1,2 @@
 TODO
 	Dashboard Start Page: Show current events at all locations order by risk desc
-
-	Sensors
-		Data Chart
-	

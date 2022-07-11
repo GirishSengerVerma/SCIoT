@@ -84,7 +84,7 @@
 
 <Modal>
 	<div class="flex flex-col w-full items-center">
-		<SubTitle text="Create a new WeatherEvent" />
+		<SubTitle text="Create a new Weather Event" />
 		<div class="w-full flex flex-col mt-4 justify-between items-center">
 			<DropdownSelect
 				name="selectedWeatherEventLocation"

@@ -7,7 +7,7 @@
 	import ActionButton from '$root/components/core/ActionButton.svelte';
 	import TextInput from '$root/components/core/TextInput.svelte';
 	import SubTitle from '$root/components/core/SubTitle.svelte';
-	import LoadingSpinner from '../core/LoadingSpinner.svelte';
+	import LoadingSpinner from '$root/components/core/LoadingSpinner.svelte';
 	import {
 		actuatorMetaData,
 		actuators,

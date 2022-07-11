@@ -191,6 +191,7 @@
 			{:else if $selectedSensorInstanceId && sensorMetaDataAtLocation.has($selectedSensorInstanceId)}
 				<div class="w-11/12 max-w-screen-lg">
 					<SensorChart
+						{isLiveData}
 						sensorMetaData={sensorMetaDataAtLocation.get($selectedSensorInstanceId)}
 						data={isLiveData
 							? $liveSensorData.get($selectedSensorInstanceId) ?? []

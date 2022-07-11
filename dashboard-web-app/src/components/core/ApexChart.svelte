@@ -17,8 +17,11 @@
 		myChart.render();
 
 		chartRef = {
-			update(options) {
+			updateOptions(options) {
 				myChart.updateOptions(options);
+			},
+			updateSeries(series) {
+				myChart.updateSeries(series);
 			},
 			destroy() {
 				myChart.destroy();
