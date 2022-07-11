@@ -66,6 +66,9 @@ export const ICON_SENSORS_BY_NAME: Map<string, string> = new Map<string, string>
 	['SOUND', ICON_SENSORS_SOUND]
 ]);
 
+export const ICON_SENSORS_SIMULATED = 'sensors/simulated';
+export const ICON_SENSORS_MEASURE = 'sensors/measure';
+
 export const ICON_ACTUATORS_ALARM_LIGHT = 'actuators/alarm-light';
 export const ICON_ACTUATORS_ALARM_SOUND = 'actuators/alarm-sound';
 export const ICON_ACTUATORS_LOCKDOWN = 'actuators/lock';

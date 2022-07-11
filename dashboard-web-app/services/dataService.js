@@ -505,6 +505,8 @@ const weatherEventInstanceTopicPrefix = 'weatherevents/instance';
 const weatherEventRiskTopicPrefix = 'weatherevents/risk';
 const weatherEventActionTopicPrefix = 'weatherevents/action';
 
+const sensorAddedTopicPrefix = 'sensors/added';
+const sensorDeletedTopicPrefix = 'sensors/deleted';
 const sensorInstanceTopicPrefix = 'sensors/instance';
 const sensorTelemetryTopicPrefix = 'sensors/telemetry';
 const sensorMetadataTopicPrefix = 'sensors/metadata';
@@ -596,6 +598,8 @@ const SOCKET_RESPONSE_HISTORIC_WEATHER_EVENT_DATA_TOPIC = 'responseHistoricWeath
 const SOCKET_REQUEST_CHANGE_WEATHER_EVENT_RISK_LEVEL_TOPIC = 'requestChangeWeatherEventRiskLevel';
 const SOCKET_REQUEST_MANUALLY_TAKE_WEATHER_EVENT_ACTION_TOPIC = 'requestManuallyTakeWeatherEventAction';
 
+const SOCKET_REQUEST_CREATE_SENSOR_TOPIC = 'requestCreateSensor';
+const SOCKET_REQUEST_DELETE_SENSOR_TOPIC = 'requestDeleteSensor';
 const SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC = 'requestHistoricSensorData';
 const SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC = 'responseHistoricSensorData';
 
@@ -745,6 +749,37 @@ const initializeWebsocketServer = (io) => {
         }
 
         // Socket Message Listeners
+
+        socket.on(SOCKET_REQUEST_CREATE_SENSOR_TOPIC, async (message) => {
+            try {
+                const { instanceId, name, isPhysical, location, measure, simulationMode, simulationBehavior } = JSON.parse(message.toString());
+                mqttClient.publish(sensorAddedTopicPrefix, JSON.stringify({ instanceId, name, isPhysical, location, measure, simulationMode, simulationBehavior }));
+                mqttClient.publish(sensorInstanceTopicPrefix + '/' + location + '/' + measure, JSON.stringify({ instanceId, isPhysical }));
+                setTimeout(() => {
+                    mqttClient.publish(sensorMetadataTopicPrefix + '/' + location + '/' + measure, JSON.stringify({ instanceId, name, location, measure, simulationMode, simulationBehavior }));
+                }, 200);
+            } catch (error) {
+                console.error(
+                    'Data Service: Error processing incoming Create Actuator Request Socket IO message: ',
+                    error
+                );
+            }
+        });
+
+        socket.on(SOCKET_REQUEST_DELETE_SENSOR_TOPIC, async (message) => {
+            try {
+                const { instanceId } = JSON.parse(message.toString());
+                mqttClient.publish(sensorDeletedTopicPrefix, JSON.stringify({ instanceId }));
+                await prisma.sensorTelemetryData.deleteMany({ where: { instanceId } });
+                await prisma.sensorMetaData.deleteMany({ where: { instanceId } });
+                await prisma.sensor.delete({ where: { instanceId } }); 
+            } catch (error) {
+                console.error(
+                    'Data Service: Error processing incoming Delete Sensor Request Socket IO message: ',
+                    error
+                );
+            }
+        });
 
         socket.on(SOCKET_REQUEST_HISTORIC_SENSOR_DATA_TOPIC, (message) => {
             try {

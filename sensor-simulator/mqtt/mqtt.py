@@ -34,6 +34,8 @@ class MQTTClient:
             quit()
 
         self.client.loop_start()
+        self.client.subscribe('sensors/added')
+        self.client.subscribe('sensors/deleted')
         self.client.subscribe('sensors/metadata/+/+')
         self.listeners = []
 

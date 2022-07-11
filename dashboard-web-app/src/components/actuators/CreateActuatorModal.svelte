@@ -19,7 +19,6 @@
 	import DropdownSelect from '$root/components/core/DropdownSelect.svelte';
 	import ActionButton from '$root/components/core/ActionButton.svelte';
 	import TextInput from '$root/components/core/TextInput.svelte';
-	import { browser } from '$app/env';
 
 	let updating = false;
 
@@ -93,11 +92,6 @@
 		);
 
 		selectedLocation.set(enumValueToString(selectedActuatorLocation));
-		if (browser) {
-			document
-				.getElementsByName('selectedLocation')
-				.forEach((e: any) => (e.value = enumValueToString(selectedActuatorLocation)));
-		}
 
 		handleOnSave();
 
@@ -129,7 +123,7 @@
 				class="mb-4"
 			/>
 			<DropdownSelect
-				name="selectedPhysicalOrSimulated"
+				name="selectedActuatorPhysicalOrSimulated"
 				iconName={ICON_ACTUATORS_SIMULATED}
 				iconAlt="PhysicalOrSimulated"
 				initialValue={initialSelectedIsPhysical ? 'Physical' : 'Simulated'}

@@ -116,7 +116,7 @@ class SimulatedSensor(ABC):
     def __init__(self, instance_id: Optional[str], name: str, location: SensorLocation,
                  measure: SensorMeasure, unit: SensorUnit,
                  initial_mode: SensorSimulationMode, initial_behavior: SensorSimulationBehavior,
-                 time_step: float = 0.01):
+                 time_step: float = 0.1):
         self.instance_id = instance_id if instance_id else derive_instance_id(location, measure)
         self.name = name
         self.location = location

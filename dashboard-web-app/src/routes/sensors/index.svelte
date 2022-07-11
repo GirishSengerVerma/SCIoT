@@ -3,6 +3,7 @@
 	import { onDestroy, onMount } from 'svelte';
 
 	import { enumValueToString, stringToEnumValue } from '$root/utils/enumUtil';
+	import { locationIconMap } from '$root/utils/locationUtils';
 	import { DataPeriod } from '$root/types/dataPeriod';
 	import {
 		ICON_COMMON_LOCATION,
@@ -11,9 +12,12 @@
 		ICON_DATA_PERIOD_HISTORIC_DATA
 	} from '$root/constants/iconConstants';
 
+	import { isModalOpen } from '$root/stores/modalstore';
+
 	import { selectedLocation } from '$root/stores/locationStores';
 
 	import {
+		sensors,
 		sensorDataPeriod,
 		sensorMetaData,
 		selectedSensorInstanceId,
@@ -32,13 +36,14 @@
 		SOCKET_RESPONSE_HISTORIC_SENSOR_DATA_TOPIC
 	} from '$root/utils/socketio';
 	import LoadingSpinner from '$root/components/core/LoadingSpinner.svelte';
-	import { locationIconMap } from '$root/utils/locationUtils';
+	import DeleteSensor from '$root/components/sensors/DeleteSensor.svelte';
+	import CreateSensorModal from '$root/components/sensors/CreateSensorModal.svelte';
 
 	let initializingStores = true;
 	let fetchingData = false;
 
 	const selectedLocationOptions = Object.values(Location).map(enumValueToString);
-	const selectedLocationOptionsIcons = Object.values(Location).map(l => locationIconMap[l]);
+	const selectedLocationOptionsIcons = Object.values(Location).map((l) => locationIconMap[l]);
 
 	const sensorDataPeriodOptions = Object.values(DataPeriod).map(enumValueToString);
 
@@ -131,6 +136,12 @@
 			})
 		);
 	};
+
+	let selectLocationDropdown: DropdownSelect;
+
+	const handleOnCreateSensor = () => {
+		selectLocationDropdown.changeSelection($selectedLocation);
+	};
 </script>
 
 <svelte:head>
@@ -145,9 +156,10 @@
 				iconName={ICON_BUTTON_ADD}
 				iconAlt="Add"
 				label="Create Sensor"
-				onClick={() => alert('TODO DWA Implement')}
+				onClick={() => isModalOpen.set(true)}
 			/>
 			<DropdownSelect
+				bind:this={selectLocationDropdown}
 				name="selectedLocation"
 				iconName={ICON_COMMON_LOCATION}
 				iconAlt="SensorLocation"
@@ -176,15 +188,19 @@
 		>
 			{#if initializingStores || fetchingData}
 				<LoadingSpinner />
-			{:else if $selectedSensorInstanceId && sensorMetaDataAtLocation.has($selectedSensorInstanceId) && $liveSensorData.has($selectedSensorInstanceId)}
+			{:else if $selectedSensorInstanceId && sensorMetaDataAtLocation.has($selectedSensorInstanceId)}
 				<div class="w-11/12 max-w-screen-lg">
 					<SensorChart
 						sensorMetaData={sensorMetaDataAtLocation.get($selectedSensorInstanceId)}
 						data={isLiveData
-							? $liveSensorData.get($selectedSensorInstanceId)
+							? $liveSensorData.get($selectedSensorInstanceId) ?? []
 							: fetchingData
 							? undefined
 							: historicSensorTelemetryData.get($selectedSensorInstanceId)}
+					/>
+					<DeleteSensor
+						loading={initializingStores || fetchingData}
+						sensor={$sensors.get($selectedSensorInstanceId)}
 					/>
 				</div>
 			{/if}
@@ -212,3 +228,4 @@
 		</div>
 	</div>
 </MainContent>
+<CreateSensorModal handleOnSave={handleOnCreateSensor} />

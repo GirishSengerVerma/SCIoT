@@ -11,7 +11,9 @@ from matplotlib.animation import FuncAnimation
 import matplotlib
 
 from sensor.simulated_sensors import SimulatedSensor, SensorLocation, SENSOR_UNIT_REPRESENTATION_MAP, \
-    SENSOR_MEASURE_COLOR_MAP, SensorSimulationMode, SensorSimulationBehavior
+    SENSOR_MEASURE_COLOR_MAP, SensorSimulationMode, SensorSimulationBehavior, SensorMeasure, SimulatedTemperatureSensor, \
+    SimulatedWindSensor, SimulatedHumiditySensor, SimulatedPressureSensor, SimulatedVibrationSensor, SimulatedCOSensor, \
+    SimulatedCO2Sensor
 
 matplotlib.use("TkAgg")
 
@@ -34,29 +36,74 @@ class Simulator:
     def add_sensor(self, sensor: SimulatedSensor):
         self.sensors.append(sensor)
 
+    def remove_sensor_by_id(self, instance_id: str):
+        self.sensors = [sensor for sensor in self.sensors if sensor.instance_id != instance_id]
+
     def announce_sensors(self):
         for sensor in self.sensors:
             self.mqtt_client.client.publish(sensor.get_metadata_mqtt_topic_name(),
                                             sensor.get_metadata_mqtt_message())
 
     def on_mqtt_message(self, client, userdata, msg):
-        if not msg.topic.startswith('sensors/metadata/'):
-            return
-
         try:
-            mqtt_message = json.loads(msg.payload)
+            if msg.topic.startswith('sensors/added'):
+                mqtt_message = json.loads(msg.payload)
 
-            sensor = next(filter(lambda s: s.instance_id.lower() == mqtt_message['instanceId'].lower(), self.sensors))
+                is_physical = mqtt_message['isPhysical']
+                if is_physical:
+                    return
 
-            mode = next(filter(lambda m: m.name.lower() == mqtt_message['simulationMode']
-                               .lower(), SensorSimulationMode))
-            if sensor.mode != mode:
-                sensor.change_mode(mode)
+                instance_id = mqtt_message['instanceId']
+                name = mqtt_message['name']
+                location = SensorLocation[mqtt_message['location']]
+                simulation_mode = SensorSimulationMode[mqtt_message['simulationMode']]
+                simulation_behavior = SensorSimulationBehavior[mqtt_message['simulationBehavior']]
 
-            behavior = next(filter(lambda b: b.name.lower() == mqtt_message['simulationBehavior']
-                                   .lower(), SensorSimulationBehavior))
-            if sensor.behavior != behavior:
-                sensor.change_behavior(behavior)
+                measure = SensorMeasure[mqtt_message['measure']]
+                if measure is SensorMeasure.TEMPERATURE:
+                    self.add_sensor(SimulatedTemperatureSensor(name, location, simulation_mode,
+                                                               simulation_behavior, instance_id=instance_id))
+                elif measure is SensorMeasure.WIND_SPEED:
+                    self.add_sensor(SimulatedWindSensor(name, location, simulation_mode,
+                                                        simulation_behavior, instance_id=instance_id))
+                elif measure is SensorMeasure.HUMIDITY:
+                    self.add_sensor(SimulatedHumiditySensor(name, location, simulation_mode,
+                                                            simulation_behavior, instance_id=instance_id))
+                elif measure is SensorMeasure.PRESSURE:
+                    self.add_sensor(SimulatedPressureSensor(name, location, simulation_mode,
+                                                            simulation_behavior, instance_id=instance_id))
+                elif measure is SensorMeasure.VIBRATION:
+                    self.add_sensor(SimulatedVibrationSensor(name, location, simulation_mode,
+                                                             simulation_behavior, instance_id=instance_id))
+                elif measure is SensorMeasure.CO:
+                    self.add_sensor(SimulatedCOSensor(name, location, simulation_mode,
+                                                      simulation_behavior, instance_id=instance_id))
+                elif measure is SensorMeasure.CO2:
+                    self.add_sensor(SimulatedCO2Sensor(name, location, simulation_mode,
+                                                       simulation_behavior, instance_id=instance_id))
+                # TODO SESI Add Sound Sensor
+                # elif measure is SensorMeasure.SOUND:
+                #    self.add_sensor(SimulatedSoundSensor(name, location, simulation_mode,
+                #                               simulation_behavior, instance_id=instance_id))
+            elif msg.topic.startswith('sensors/deleted'):
+                mqtt_message = json.loads(msg.payload)
+                instance_id = mqtt_message['instanceId']
+                self.remove_sensor_by_id(instance_id)
+            elif msg.topic.startswith('sensors/metadata/'):
+                mqtt_message = json.loads(msg.payload)
+
+                sensor = next(
+                    filter(lambda s: s.instance_id.lower() == mqtt_message['instanceId'].lower(), self.sensors))
+
+                mode = next(filter(lambda m: m.name.lower() == mqtt_message['simulationMode']
+                                   .lower(), SensorSimulationMode))
+                if sensor.mode != mode:
+                    sensor.change_mode(mode)
+
+                behavior = next(filter(lambda b: b.name.lower() == mqtt_message['simulationBehavior']
+                                       .lower(), SensorSimulationBehavior))
+                if sensor.behavior != behavior:
+                    sensor.change_behavior(behavior)
         except Exception as e:
             print('Error while processing incoming MQTT message (', msg, ')', e)
 
