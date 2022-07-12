@@ -1325,9 +1325,7 @@ const initializeMQTTClient = async () => {
 
                 // TODO DWA Test and fix Weather Event Action Handlers
                 
-                if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_DEVICE_NOTIFICATION) {
-                    // TODO Implement!
-                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION || weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_REOPEN_LOCATION) {
+                if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION || weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_REOPEN_LOCATION) {
                     const enabled = weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION;
 
                     prisma.actuatorMetaData.findMany({ 
