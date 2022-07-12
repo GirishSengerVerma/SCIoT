@@ -1,18 +1,39 @@
 TODO Physical
 
-Physical Sensors should
-	annouce themselves using 
-		sensors/instance/<location>/<measure> and 
-		sensors/metadata/<location>/<measure> 
-	on startup or whenever needed
-	
-	in interval, send current value using 
-		sensors/telemetry/<location>/<measure>
 
-Physical Actuators should
-	annouce themselves using 
-		actuators/instance/<location>/<type> and 
-		actuators/metadata/<location>/<type>
-	on startup or whenever needed
-	
-	listen to incoming actuators/statusdata/<location>/<type> messages and update status respectively
+Sensors:
+	Announce on startup of script:
+		TOPIC sensors/metadata/<location>/<measure>
+		MESSAGE {
+			instanceId,
+			name,
+			location,
+			measure,
+		}
+
+	Periodically send:
+		TOPIC sensors/telemetry/<location>/<measure>
+		MESSAGE {
+			instanceId,
+			timestamp,
+			unit,
+			value
+		}
+
+Actuators:
+	Announce on startup of script:
+		TOPIC actuators/metadata/<location>/<type>
+		MESSAGE {
+			instanceId,
+			name,
+			location,
+			type,
+		}
+
+	Listen to status messages and update correspondingly:
+		TOPIC actuators/status/<location>/<type> 
+		MESSAGE {
+			instanceId,
+			timestamp,
+			enabled,
+		}
