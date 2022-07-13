@@ -8,25 +8,25 @@ TODO
 			Detect Weather Events of a certain type at a certain location and assign an initial risk level
 				
 				Water Level 
-					>= 60% < 70%		
+					>= 1 < 2		
 						Protection Wall Up
 							-> No Risk
 						Else
 							-> FLOOD 		LOW Risk
 					
-					>= 70% < 85%:
+					>= 2 < 3:
 						Protection Wall Up
 							-> FLOOD 		LOW Risk
 						Else
 							-> FLOOD 		MEDIUM Risk
 					
-					>= 85% < 95%
+					>= 3 < 4
 						Protection Wall Up
 							-> FLOOD 		MEDIUM Risk
 						Else
 							-> FLOOD 		HIGH Risk
 					
-					>= 95%
+					>= 4
 						Protection Wall Up
 							-> FLOOD 		HIGH Risk
 						Else
@@ -110,7 +110,7 @@ TODO
 						> 100 ppm < 200 ppm
 									-> BAD_AIR		LOW Risk
 						>= 300 ppm
-									-> WILF_FIRE	EXTREME Risk
+									-> WILF_FIRE	HIGH Risk
 				
 				Combine CO and CO2 Checks so that no Events are registered more than once
 	

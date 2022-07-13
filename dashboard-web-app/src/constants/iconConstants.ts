@@ -54,7 +54,6 @@ export const ICON_SENSORS_HUMIDITY = 'sensors/droplet';
 export const ICON_SENSORS_WIND_SPEED = 'sensors/wind';
 export const ICON_SENSORS_VIBRATION = 'sensors/activity';
 export const ICON_SENSORS_WATER_LEVEL = 'sensors/water-level';
-export const ICON_SENSORS_SOUND = 'sensors/mic';
 
 export const ICON_SENSORS_BY_NAME: Map<string, string> = new Map<string, string>([
 	['TEMPERATURE', ICON_SENSORS_TEMPERATURE],
@@ -65,7 +64,6 @@ export const ICON_SENSORS_BY_NAME: Map<string, string> = new Map<string, string>
 	['WIND_SPEED', ICON_SENSORS_WIND_SPEED],
 	['VIBRATION', ICON_SENSORS_VIBRATION],
 	['WATER_LEVEL', ICON_SENSORS_WATER_LEVEL],
-	['SOUND', ICON_SENSORS_SOUND]
 ]);
 
 export const ICON_SENSORS_SIMULATED = 'sensors/simulated';
