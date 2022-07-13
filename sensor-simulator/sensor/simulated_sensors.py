@@ -21,7 +21,6 @@ class SensorMeasure(Enum):
     VIBRATION = 5
     CO = 6
     CO2 = 7
-    SOUND = 8
 
 
 SENSOR_MEASURE_COLOR_MAP = {
@@ -32,7 +31,6 @@ SENSOR_MEASURE_COLOR_MAP = {
     SensorMeasure.VIBRATION: 'saddlebrown',
     SensorMeasure.CO2: 'grey',
     SensorMeasure.CO: 'black',
-    SensorMeasure.SOUND: 'green'
 }
 
 
@@ -515,6 +513,3 @@ class SimulatedCOSensor(SimulatedSensor):
                                              behavior=self.behavior)
         else:
             raise RuntimeError("Unexpected sensor mode: " + self.mode.name)
-
-# TODO SESI Consider implementing simulated sensors for
-#       SOUND

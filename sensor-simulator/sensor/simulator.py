@@ -81,10 +81,6 @@ class Simulator:
                 elif measure is SensorMeasure.CO2:
                     self.add_sensor(SimulatedCO2Sensor(name, location, simulation_mode,
                                                        simulation_behavior, instance_id=instance_id))
-                # TODO SESI Add Sound Sensor
-                # elif measure is SensorMeasure.SOUND:
-                #    self.add_sensor(SimulatedSoundSensor(name, location, simulation_mode,
-                #                               simulation_behavior, instance_id=instance_id))
             elif msg.topic.startswith('sensors/deleted'):
                 mqtt_message = json.loads(msg.payload)
                 instance_id = mqtt_message['instanceId']

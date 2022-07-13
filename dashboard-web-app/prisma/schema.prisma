@@ -34,9 +34,8 @@ enum SensorMeasure {
   VIBRATION
   CO
   CO2
-  SOUND
   WATER_LEVEL
-  RAIN
+  LIGHT
 }
 
 enum SensorSimulationMode {
