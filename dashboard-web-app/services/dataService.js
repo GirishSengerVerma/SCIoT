@@ -64,7 +64,7 @@ const initialSensorsDataSKP = [
             name: 'Wind Speed at Stuttgart Killesbergpark',
             location: Location.STUTTGART_KILLESBERG_PARK,
             measure: SensorMeasure.WIND_SPEED,
-            simulationMode: SensorSimulationMode.MEDIUM,
+            simulationMode: SensorSimulationMode.LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
         },
     },
@@ -106,7 +106,7 @@ const initialSensorsDataSKP = [
             name: 'Vibration at Stuttgart Killesbergpark',
             location: Location.STUTTGART_KILLESBERG_PARK,
             measure: SensorMeasure.VIBRATION,
-            simulationMode: SensorSimulationMode.LOW,
+            simulationMode: SensorSimulationMode.EXTREMELY_LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
         },
     },
@@ -221,7 +221,7 @@ const initialSensorsDataSVO = [
             name: 'CO2 at Stuttgart Vaihingen Office',
             location: Location.STUTTGART_VAIHINGEN_OFFICE,
             measure: SensorMeasure.CO2,
-            simulationMode: SensorSimulationMode.MEDIUM,
+            simulationMode: SensorSimulationMode.LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
         },
     },
@@ -266,7 +266,7 @@ const initialSensorsDataSMES = [
             name: 'Wind Speed at Stuttgart Max Eyth See',
             location: Location.STUTTGART_MAX_EYTH_SEE,
             measure: SensorMeasure.WIND_SPEED,
-            simulationMode: SensorSimulationMode.HIGH,
+            simulationMode: SensorSimulationMode.LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
         },
     },
@@ -308,7 +308,7 @@ const initialSensorsDataSMES = [
             name: 'Vibration at Stuttgart Max Eyth See',
             location: Location.STUTTGART_MAX_EYTH_SEE,
             measure: SensorMeasure.VIBRATION,
-            simulationMode: SensorSimulationMode.LOW,
+            simulationMode: SensorSimulationMode.EXTREMELY_LOW,
             simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
         },
     },
@@ -1558,23 +1558,23 @@ const startDetectWeatherEventsIntervalTask = async () => {
             const weatherEventRisksAtLocation = {};
 
             if(waterLevelSensorData) {
-                if(waterLevelSensorData.data >= 1 && waterLevelSensorData.data < 2) {
+                if(waterLevelSensorData.value >= 1 && waterLevelSensorData.value < 2) {
                     if (!protectionWallStatusData || !protectionWallStatusData.enabled) {
                         weatherEventRisksAtLocation[WeatherEventType.FLOOD] = WeatherEventRiskLevel.LOW;
                     }
-                } else if (waterLevelSensorData.data >= 2 && waterLevelSensorData.data < 3) {
+                } else if (waterLevelSensorData.value >= 2 && waterLevelSensorData.value < 3) {
                     if (protectionWallStatusData && protectionWallStatusData.enabled) {
                         weatherEventRisksAtLocation[WeatherEventType.FLOOD] = WeatherEventRiskLevel.LOW;
                     } else {
                         weatherEventRisksAtLocation[WeatherEventType.FLOOD] = WeatherEventRiskLevel.MEDIUM;
                     }
-                } else if (waterLevelSensorData.data >= 3 && waterLevelSensorData.data < 4) {
+                } else if (waterLevelSensorData.value >= 3 && waterLevelSensorData.value < 4) {
                     if (protectionWallStatusData && protectionWallStatusData.enabled) {
                         weatherEventRisksAtLocation[WeatherEventType.FLOOD] = WeatherEventRiskLevel.MEDIUM;
                     } else {
                         weatherEventRisksAtLocation[WeatherEventType.FLOOD] = WeatherEventRiskLevel.HIGH;
                     } 
-                } else if (waterLevelSensorData.data >= 4) {
+                } else if (waterLevelSensorData.value >= 4) {
                     if (protectionWallStatusData && protectionWallStatusData.enabled) {
                         weatherEventRisksAtLocation[WeatherEventType.FLOOD] = WeatherEventRiskLevel.HIGH;
                     } else {
@@ -1584,25 +1584,25 @@ const startDetectWeatherEventsIntervalTask = async () => {
             }
 
             if(temperatureSensorData) {
-                if (temperatureSensorData.data < 0 && !isOutside) {
+                if (temperatureSensorData.value <= 1) {
                     weatherEventRisksAtLocation[WeatherEventType.COLD] = WeatherEventRiskLevel.MEDIUM;
-                } else if (temperatureSensorData.data >= 0 && temperatureSensorData.data <= 5 && !isOutside) {
-                    weatherEventRisksAtLocation[WeatherEventType.COLD] = WeatherEventRiskLevel.LOW;
-                } else if (temperatureSensorData.data >= 37 && temperatureSensorData.data < 100) {
+                } else if (temperatureSensorData.value >= 30 && temperatureSensorData.value < 100) {
+                    weatherEventRisksAtLocation[WeatherEventType.HEAT] = WeatherEventRiskLevel.LOW;
+                } else if (temperatureSensorData.value >= 37 && temperatureSensorData.value <= 100) {
                     if(isOutside) {
-                        if(humiditySensorData && humiditySensorData.data < 30) {
+                        if(humiditySensorData && humiditySensorData.value < 30) {
                             weatherEventRisksAtLocation[WeatherEventType.WILD_FIRE] = WeatherEventRiskLevel.HIGH;
                         } else {
                             weatherEventRisksAtLocation[WeatherEventType.WILD_FIRE] = WeatherEventRiskLevel.MEDIUM;
                         }
                     } else {
-                        if(temperatureSensorData.data > 50) {
+                        if(temperatureSensorData.value > 50) {
                             weatherEventRisksAtLocation[WeatherEventType.HEAT] = WeatherEventRiskLevel.HIGH;
                         } else {
                             weatherEventRisksAtLocation[WeatherEventType.HEAT] = WeatherEventRiskLevel.MEDIUM;
                         }
                     }
-                } else if (temperatureSensorData.data >= 100) {
+                } else if (temperatureSensorData.value > 100) {
                     if(isOutside) {
                         weatherEventRisksAtLocation[WeatherEventType.WILD_FIRE] = WeatherEventRiskLevel.EXTREME;
                     } else {
@@ -1612,28 +1612,28 @@ const startDetectWeatherEventsIntervalTask = async () => {
             }
 
             if(windSpeedSensorData) {
-                if(windSpeedSensorData.data >= 12 && windSpeedSensorData.data < 74) {
-                    if(pressureSensorData && pressureSensorData.data < 990) {
-                        if(temperatureSensorData && temperatureSensorData.data < 1) {
+                if(windSpeedSensorData.value >= 12 && windSpeedSensorData.value < 74) {
+                    if(pressureSensorData && pressureSensorData.value < 990) {
+                        if(temperatureSensorData && temperatureSensorData.value <= 1) {
                             weatherEventRisksAtLocation[WeatherEventType.HAIL_STORM] = WeatherEventRiskLevel.HIGH;
-                        } else if(lightSensorData && lightSensorData.data > 70) {
+                        } else if(lightSensorData && lightSensorData.value > 70) {
                             weatherEventRisksAtLocation[WeatherEventType.THUNDER_STORM] = WeatherEventRiskLevel.HIGH;
                         } else {
                             weatherEventRisksAtLocation[WeatherEventType.STORM] = WeatherEventRiskLevel.HIGH;
                         }
                     } else {
-                        if(temperatureSensorData && temperatureSensorData.data < 1) {
+                        if(temperatureSensorData && temperatureSensorData.value <= 1) {
                             weatherEventRisksAtLocation[WeatherEventType.HAIL_STORM] = WeatherEventRiskLevel.MEDIUM;
-                        } else if(lightSensorData && lightSensorData.data > 70) {
+                        } else if(lightSensorData && lightSensorData.value > 70) {
                             weatherEventRisksAtLocation[WeatherEventType.THUNDER_STORM] = WeatherEventRiskLevel.MEDIUM;
                         } else {
                             weatherEventRisksAtLocation[WeatherEventType.STORM] = WeatherEventRiskLevel.MEDIUM;
                         }
                     }
-                } else if (windSpeedSensorData.data > 74) {
-                    if(temperatureSensorData && temperatureSensorData.data < 1) {
+                } else if (windSpeedSensorData.value >= 74) {
+                    if(temperatureSensorData && temperatureSensorData.value <= 1) {
                         weatherEventRisksAtLocation[WeatherEventType.HAIL_STORM] = WeatherEventRiskLevel.EXTREME;
-                    } else if(lightSensorData && lightSensorData.data > 70) {
+                    } else if(lightSensorData && lightSensorData.value > 70) {
                         weatherEventRisksAtLocation[WeatherEventType.THUNDER_STORM] = WeatherEventRiskLevel.EXTREME;
                     } else {
                         weatherEventRisksAtLocation[WeatherEventType.STORM] = WeatherEventRiskLevel.EXTREME;
@@ -1642,23 +1642,23 @@ const startDetectWeatherEventsIntervalTask = async () => {
             }
 
             if(vibrationSensorData) {
-                if(vibrationSensorData.data >= 2 && vibrationSensorData.data < 3) {
+                if(vibrationSensorData.value >= 2 && vibrationSensorData.value < 3) {
                     weatherEventRisksAtLocation[WeatherEventType.EARTH_QUAKE] = WeatherEventRiskLevel.LOW;
-                } else if(vibrationSensorData.data >= 3 && vibrationSensorData.data < 4) {
+                } else if(vibrationSensorData.value >= 3 && vibrationSensorData.value < 4) {
                     weatherEventRisksAtLocation[WeatherEventType.EARTH_QUAKE] = WeatherEventRiskLevel.MEDIUM;
-                } else if(vibrationSensorData.data >= 4 && vibrationSensorData.data < 5) {
+                } else if(vibrationSensorData.value >= 4 && vibrationSensorData.value < 5) {
                     weatherEventRisksAtLocation[WeatherEventType.EARTH_QUAKE] = WeatherEventRiskLevel.HIGH;
-                } else if(vibrationSensorData.data >= 5 && vibrationSensorData.data < 6) {
+                } else if(vibrationSensorData.value >= 5 && vibrationSensorData.value < 6) {
                     weatherEventRisksAtLocation[WeatherEventType.EARTH_QUAKE] = WeatherEventRiskLevel.EXTREME;
                 }
             }
 
             if(co2SensorData) {
-                if(co2SensorData.data >= 800 && co2SensorData.data < 1400) {
+                if(co2SensorData.value >= 800 && co2SensorData.value < 1400) {
                     updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.BAD_AIR, WeatherEventRiskLevel.MEDIUM);
-                } else if(co2SensorData.data >= 1400 && co2SensorData.data < 30000) {
+                } else if(co2SensorData.value >= 1400 && co2SensorData.value < 30000) {
                     updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.BAD_AIR, WeatherEventRiskLevel.HIGH);
-                } else if(co2SensorData.data >= 30000) {
+                } else if(co2SensorData.value >= 30000) {
                     if(isOutside) {
                         updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.WILD_FIRE, WeatherEventRiskLevel.EXTREME);
                     } else {
@@ -1669,17 +1669,17 @@ const startDetectWeatherEventsIntervalTask = async () => {
 
             if(coSensorData) {
                 if(isOutside) {
-                    if(coSensorData.data >= 100 && coSensorData.data < 200) {
+                    if(coSensorData.value >= 100 && coSensorData.value < 200) {
                         updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.BAD_AIR, WeatherEventRiskLevel.LOW);
                     } else if(coSensorData >= 300) {
                         updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.WILD_FIRE, WeatherEventRiskLevel.HIGH);
                     }
                 } else {
-                    if(coSensorData.data >= 10 && coSensorData.data < 100) {
+                    if(coSensorData.value >= 10 && coSensorData.value < 100) {
                         updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.BAD_AIR, WeatherEventRiskLevel.MEDIUM);
-                    } else if(coSensorData.data >= 100 && coSensorData.data < 300) {
+                    } else if(coSensorData.value >= 100 && coSensorData.value < 300) {
                         updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.BAD_AIR, WeatherEventRiskLevel.HIGH);
-                    } else if(coSensorData.data >= 300) {
+                    } else if(coSensorData.value >= 300) {
                         updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.BAD_AIR, WeatherEventRiskLevel.EXTREME);
                     }
                 }
@@ -1723,14 +1723,20 @@ const startDetectWeatherEventsIntervalTask = async () => {
 
                     const newRiskLevel = weatherEventRisksAtLocation[weatherEvent.type];
 
-                    console.log('- Updating weather event risk ', weatherEvent, newRiskLevel);
-
                     newWeatherEventTypesAtLocation = newWeatherEventTypesAtLocation.filter(t => t !== weatherEvent.type);
 
                     const currentRisk = await prisma.weatherEventRisk.findFirst({ 
                         where: { weatherEventId }, 
                         orderBy: [{ start: 'desc' }, { end: 'desc' }] 
                     });
+
+                    if(currentRisk.riskLevel === newRiskLevel) {
+                        console.log('- Not updating weather event because it stayed the same', weatherEvent, newRiskLevel);
+                        continue;
+                    }
+
+                    console.log('- Updating weather event risk ', weatherEvent, newRiskLevel);
+
                     mqttClient.publish(weatherEventRiskTopicPrefix + '/' + location, JSON.stringify({
                         ...currentRisk,
                         end: timestamp,
@@ -1761,7 +1767,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
         // TODO DWA Generate planner problem file, run it and process response
     };
       
-    setInterval(detectWeatherEvents, 3500);
+    setInterval(detectWeatherEvents, 5000);
 };
 
 const updateRiskIfHigher = (weatherEventRisks, weatherEventType, newRisk) => {
@@ -1799,7 +1805,7 @@ const getCurrentActuatorStatusDataAtLocation = async (actuatorStatusDataAtLocati
     const statusData = await prisma.actuatorStatusData.findFirst({ 
         where: { 
             actuator: {
-                ActuatorStatusData: {
+                ActuatorMetaData: {
                     some: {
                         location,
                         type
