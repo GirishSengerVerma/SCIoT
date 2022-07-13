@@ -1,10 +1,41 @@
 	
 	AI Planner:
+	
+		Examples:
+			https://github.com/jan-dolejsi/vscode-pddl-samples/
 			
+			https://github.com/SoarGroup/Domains-Planning-Domain-Definition-Language/tree/master/pddl
+				taxi.pddl
+				taxi1.pddl
+				
+				
 		Domain File: write by hand
+			
+			Types: 
+				Location
+				UnitType
+				WeatherEventType
+				WeatherEventRisk
+			
+			Actions:
+				refillFuelAndEquipment
+				
+				move
 		
 		
-		Task File: generate from SQL
+		Task File: generate from within JavaScript
+		
+			Reward at Authorities Hub for
+					filling fuel & equipment
+				
+				Even Higher Reward at Locations with Weather Events:
+					Higher Weather Event Risk -> Higher Reward
+					
+					Reward depending on combination of Weather Event Type and Unit Type
+				
+				Reward for performing adequate actions at Locations with Weather Events
+				
+	
 		
 	
 		How it works:
