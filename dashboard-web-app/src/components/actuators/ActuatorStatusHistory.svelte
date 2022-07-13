@@ -20,19 +20,29 @@
 	<SubTitle text="Actuator Status History" />
 	<div class="w-full border border-accentLight dark:border-accentDark rounded-lg my-2">
 		<table class="w-full text-xs lg:text-sm text-left">
-			<thead class="flex w-full overflow-scroll uppercase text-center border-b border-accentLight dark:border-accentDark">
+			<thead
+				class="flex w-full overflow-auto uppercase text-center border-b border-accentLight dark:border-accentDark"
+			>
 				<tr class="flex w-full items-center">
 					<th scope="col" class="w-1/3 lg:px-6 py-1 lg:py-3">Date and Time</th>
 					<th scope="col" class="w-1/3 lg:px-6 py-1 lg:py-3">Status</th>
 					<th scope="col" class="w-1/3 lg:px-6 py-1 lg:py-3">Caused by</th>
 				</tr>
 			</thead>
-			<tbody class="flex flex-col items-center justify-between overflow-scroll w-full max-h-[200px]">
+			<tbody class="flex flex-col items-center justify-between overflow-auto w-full max-h-[200px]">
 				{#if !loading && actuatorHistoricStatusData}
 					{#each actuatorHistoricStatusData as statusData, i}
-						<tr class={"flex w-full text-center" + ((i < actuatorHistoricStatusData.length - 1) ? " border-b border-accentLight dark:border-accentDark" : "")}>
+						<tr
+							class={'flex w-full text-center' +
+								(i < actuatorHistoricStatusData.length - 1
+									? ' border-b border-accentLight dark:border-accentDark'
+									: '')}
+						>
 							<td class="w-1/3 py-4 px-2 font-semibold"
-								>{dayjs(statusData.timestamp).format('DD.MM.YYYY HH:mm:ss')} ({format(statusData.timestamp, 'en_US')})</td
+								>{dayjs(statusData.timestamp).format('DD.MM.YYYY HH:mm:ss')} ({format(
+									statusData.timestamp,
+									'en_US'
+								)})</td
 							>
 							<td class="flex w-1/3 justify-center items-center"
 								><div

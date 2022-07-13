@@ -6,7 +6,7 @@
 </script>
 
 <main
-	class="h-full min-h-screen w-screen flex flex-col lg:flex-row p-4 lg:p-8 bg-white text-black dark:bg-black dark:text-white"
+	class="h-full min-h-screen w-full flex flex-col lg:flex-row p-4 lg:p-8 bg-white text-black dark:bg-black dark:text-white"
 >
 	<NavigationBar route={$page.routeId ?? ''} />
 	<slot />

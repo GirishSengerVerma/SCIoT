@@ -207,7 +207,7 @@
 				/>
 			{/if}
 		</div>
-		<div class="flex flex-col min-w-[210px]">
+		<div class="flex flex-col min-w-[210px] lg:max-h-[75vh] lg:overflow-auto xl:max-w-lg">
 			<SubTitle text="Current Weather Events" clazz="mt-3 md:mt-0" />
 			<div
 				class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-5 justify-between items-start h-fit"
