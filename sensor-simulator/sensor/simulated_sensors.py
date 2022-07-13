@@ -199,25 +199,26 @@ class SimulatedTemperatureSensor(SimulatedSensor):
 
     @SimulatedSensor.update_current_value_after_sensing
     def sense(self) -> float:
-        if self.mode is SensorSimulationMode.EXTREMELY_LOW:  # indicates snow/ ice
+        if self.mode is SensorSimulationMode.EXTREMELY_LOW:  # indicates s
+            # now/ ice
             return generate_new_sensor_value(time=self.time,
-                                             min_value=-5.0, max_value=3.0,
-                                             mean=1.0, sd=2.0,
+                                             min_value=-5.0, max_value=1.0,
+                                             mean=-2.0, sd=2.0,
                                              behavior=self.behavior)
         elif self.mode is SensorSimulationMode.LOW:
             return generate_new_sensor_value(time=self.time,
-                                             min_value=4.0, max_value=11.0,
+                                             min_value=3.0, max_value=11.0,
                                              mean=6.0, sd=3.0,
                                              behavior=self.behavior)
         elif self.mode is SensorSimulationMode.MEDIUM:
             return generate_new_sensor_value(time=self.time,
-                                             min_value=12.0, max_value=24.0,
+                                             min_value=12.0, max_value=26.0,
                                              mean=15.0, sd=3.0,
                                              behavior=self.behavior)
         elif self.mode is SensorSimulationMode.HIGH:
             return generate_new_sensor_value(time=self.time,
-                                             min_value=25.0, max_value=37.0,
-                                             mean=30.0, sd=3.0,
+                                             min_value=30.0, max_value=100.0,
+                                             mean=33.5, sd=3.0,
                                              behavior=self.behavior)
         elif self.mode is SensorSimulationMode.EXTREMELY_HIGH:  # indicates wild fire
             return generate_new_sensor_value(time=self.time,
