@@ -3,6 +3,7 @@
 	
 		Examples:
 			https://github.com/jan-dolejsi/vscode-pddl-samples/
+				Airport
 			
 			https://github.com/SoarGroup/Domains-Planning-Domain-Definition-Language/tree/master/pddl
 				taxi.pddl
@@ -47,8 +48,6 @@
 					Based on number of units positioned:
 						ALERT_LOCALS_BY_LIGHT
 						ALERT_LOCALS_BY_SOUND
-						ALERT_LOCALS_BY_DEVICE_NOTIFICATION
-						ALERT_AUTHORITIES_BY_DEVICE_NOTIFICATION
 						COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL
 						COUNTER_MEASURE_DRIVE_DOWN_WATER_PROTECTION_WALL
 						COUNTER_MEASURE_LOCK_DOWN_LOCATION

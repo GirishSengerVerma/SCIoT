@@ -15,4 +15,5 @@
 
     ;un-comment the following line if metric is needed
     ;(:metric minimize (???))
+    ; TODO Goal: minimize sum of all current risks (most important) and maximize sum of current fuel and equipment levels (less important)  (see e.g. https://planning.wiki/ref/pddl21)
 )
