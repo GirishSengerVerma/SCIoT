@@ -1,15 +1,15 @@
 ; PDDL Domain Description. 
 ;   The goal is to enable actuators for lowering the risk of a weather event at certain locations and to
 ;   move authorities units between different locations to tackle weather events there in the most efficient way.
-;   If there are no events anymore at a location, units should move back to the hub to re-fuel and re-equip.
+;   If there are no events anymore at a location, units should move back to the hub (e.g. to re-fuel and re-equip).
 
 (define (domain weather-events-action-planning)
 
     ; TODO remove requirements that are not needed
-    (:requirements :strips :fluents :durative-actions :timed-initial-literals :typing :conditional-effects :negative-preconditions :duration-inequalities :equality :disjunctive-preconditions)
+    (:requirements :strips :fluents :typing :conditional-effects :negative-preconditions :equality :disjunctive-preconditions)
 
     (:types
-        location unit fuel equipment weathereventtype weathereventrisk - object
+        location unit weathereventtype - object
     )
 
     ; un-comment following line if constants are needed
@@ -39,12 +39,6 @@
 
     (:functions
         (current-risk ?w - weathereventtype ?l - location)
-        (current-fuel-level ?u - unit)
-        (max-fuel-level ?u - unit)
-        (fuel-needed-for-move ?l1 - location ?l2 - location)
-        (current-equipment-level ?u - unit)
-        (max-equipment-level ?u - unit)
-        (equipment-needed-for-action ?w - weathereventtype ?r - weathereventrisk)
     )
 
     (:action alarm-locals-by-light
@@ -93,7 +87,7 @@
     (:action lock-down-location
         :parameters (?l - location ?w - weathereventtype)
         :precondition (and
-            (can-lock-down-at ?l ?l)
+            (can-lock-down-at ?l)
             (not (lockdown-enabled-at ?l))
             (is-weatherevent-at ?w ?l)
             (>= (current-risk ?w ?l) 4) ; only at extreme risk
@@ -105,11 +99,11 @@
     )
 
     (:action move-to-event-location
-        :parameters (?unit - unit ?from - location ?to - location ?fuellevel - fuel, ?eventtype - weathereventtype)
+        :parameters (?unit - unit ?from - location ?to - location ?eventtype - weathereventtype)
         :precondition (and
             (is-unit-at ?unit ?from)
             (is-weatherevent-at ?eventtype ?to)
-            (>= (current-fuel-level ?unit) (fuel-needed-for-move ?from ?to))
+            (not (is-unit-operating ?unit))
             (or
                 (and
                     (is-police-car ?unit)
@@ -128,9 +122,6 @@
         :effect (and
             (not (is-unit-at ?unit ?from))
             (is-unit-at ?unit ?to)
-            (decrease
-                (current-fuel-level ?unit)
-                (fuel-needed-for-move ?from ?to))
         )
     )
 
@@ -220,37 +211,6 @@
         :effect (and
             (not (is-unit-at ?unit ?from))
             (is-unit-at ?unit ?to)
-            (decrease
-                (current-fuel-level ?unit)
-                (fuel-needed-for-move ?from ?to))
-        )
-    )
-
-    (:action re-fuel
-        :parameters (?unit - unit ?location - location)
-        :precondition (and
-            (is-unit-at ?unit ?location)
-            (is-hub ?location)
-            (not (= (current-fuel-level ?unit) (max-fuel-level ?unit)))
-        )
-        :effect (and
-            (assign
-                (current-fuel-level ?unit)
-                (max-fuel-level ?unit))
-        )
-    )
-
-    (:action re-equip
-        :parameters (?unit - unit ?location - location)
-        :precondition (and
-            (is-unit-at ?unit ?location)
-            (is-hub ?location)
-            (not (= (current-equipment-level ?unit) (max-equipment-level ?unit)))
-        )
-        :effect (and
-            (assign
-                (current-equipment-level ?unit)
-                (max-equipment-level ?unit))
         )
     )
 )

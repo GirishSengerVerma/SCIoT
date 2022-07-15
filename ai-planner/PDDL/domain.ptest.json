@@ -1,0 +1,9 @@
+{
+  "defaultDomain": "domain.pddl",
+  "defaultOptions": "",
+  "cases": [
+    {
+      "problem": "problem_example_1.pddl"
+    }
+  ]
+}

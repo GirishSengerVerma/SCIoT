@@ -1,6 +1,48 @@
 	
 	AI Planner:
 	
+		METRIC-FF Windows Port Works with PDDL2+1!!
+			https://github.com/Vidminas/metric-ff-crossplatform
+			
+			folder metric-ff-crossplatform
+			
+			but: preferences not supported as this is a PDDL 3 feature
+	
+	
+	
+		//Choose from:
+		//	ENHSP
+		//	POPF
+		//	SMTPLAN+
+		//	Dino
+		//	JavaFF (Problem when running with numeric-fluents and universal-.. requirement)
+		//	
+		//	or other from https://nms.kcl.ac.uk/planning/software/lprpg.html
+	
+	
+		Units an anderen Locations als Hub initial nicht vollen tank geben sodass diese nach Hause fahren nach fertigem Einsatz
+
+			 (and
+						(exists
+							(?u - unit)
+							(and
+								(is-unit-operating ?u)
+								(is-unit-at ?u smes)
+							))
+						(exists
+							(?u - unit)
+							(and
+								(is-unit-operating ?u)
+								(is-unit-at ?u svo)
+							))
+					)
+
+			(forall
+						(?u - unit)
+						(preference RefuelAndReequipAtHub
+							(sometime
+							(is-unit-at ?u hub))))
+	
 		Examples:
 			https://github.com/jan-dolejsi/vscode-pddl-samples/
 				Airport
