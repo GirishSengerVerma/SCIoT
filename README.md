@@ -16,5 +16,9 @@ To run the final application system, perform the following steps:
 3. Navigate to the `dashboard-web-app` directory and follow the steps described
 in the `README.md` file there to setup and start the Dashboard Web App (DWA).
 
-4. Navigate to the `sensor-simulator` directory and follow the steps described
+4. Navigate to the `authorities-bot` directory and follow the steps described
+in the `README.md` file there to setup and start the Authorities Units Notification
+and Response Bot.
+
+5. Navigate to the `sensor-simulator` directory and follow the steps described
 in the `README.md` file there to setup and start the Sensor Simulator program.
