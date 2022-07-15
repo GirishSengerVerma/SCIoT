@@ -43,28 +43,23 @@
 	$: initialSelectedMoveToLocationOption = selectedMoveToLocationOptions[0];
 	$: selectedMoveToLocation = Object.values(Location).filter((l) => l !== unitStatus?.location)[0];
 
-	$: currentWeatherEventsAtLocation =
+	$: currentWeatherEvents =
 		new Map(
 			[...$weatherEvents]
-				.filter(([_, v]) => !v.end && v.location === unitStatus!.location)
+				.filter(([_, v]) => !v.end)
 				.sort((a, b) => dayjs(b[1].start).diff(dayjs(a[1].start)))
 		) ?? new Map();
 
 	$: selectedWeatherEventOptions = ['None'].concat(
-		[...currentWeatherEventsAtLocation.keys()].map((id) =>
-			formatWeatherEvent(currentWeatherEventsAtLocation.get(id)!, true, false)
+		[...currentWeatherEvents.keys()].map((id) =>
+			formatWeatherEvent(currentWeatherEvents.get(id)!, true, false)
 		)
 	);
 
 	$: initialSelectedWeatherEventOption =
-		$selectedWeatherEventId === '-1' ||
-		!currentWeatherEventsAtLocation.has(Number($selectedWeatherEventId))
+		$selectedWeatherEventId === '-1' || !currentWeatherEvents.has(Number($selectedWeatherEventId))
 			? 'None'
-			: formatWeatherEvent(
-					currentWeatherEventsAtLocation.get(Number($selectedWeatherEventId))!,
-					true,
-					false
-			  );
+			: formatWeatherEvent(currentWeatherEvents.get(Number($selectedWeatherEventId))!, true, false);
 
 	let updating = false;
 
@@ -79,7 +74,7 @@
 				moveUnitsToLocation: selectedMoveToLocation,
 				weatherEventId:
 					selectedWeatherEventId === '-1' ||
-					!currentWeatherEventsAtLocation.has(Number(selectedWeatherEventId))
+					!currentWeatherEvents.has(Number(selectedWeatherEventId))
 						? undefined
 						: Number(selectedWeatherEventId)
 			})
@@ -105,9 +100,8 @@
 		} else {
 			selectedWeatherEventId.set(
 				'' +
-					[...currentWeatherEventsAtLocation.keys()].find(
-						(id) =>
-							formatWeatherEvent(currentWeatherEventsAtLocation.get(id)!, true, false) === option
+					[...currentWeatherEvents.keys()].find(
+						(id) => formatWeatherEvent(currentWeatherEvents.get(id)!, true, false) === option
 					) ?? '-1'
 			);
 		}
