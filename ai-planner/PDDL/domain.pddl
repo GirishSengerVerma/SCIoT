@@ -6,7 +6,7 @@
 (define (domain weather-events-action-planning)
 
     ; TODO remove requirements that are not needed
-    (:requirements :strips :fluents :typing :conditional-effects :negative-preconditions :equality :disjunctive-preconditions)
+    (:requirements :strips :typing :equality :negative-preconditions)
 
     (:types
         location unit weathereventtype - object
@@ -27,18 +27,16 @@
         (lockdown-enabled-at ?l - location)
         (is-weatherevent-at ?w - weathereventtype ?l - location)
         (is-unit-operating ?u - unit)
+        (is-being-operated-at ?l - location)
+        (is-police-at ?l - location)
+        (is-fire-truck-at ?l - location)
+        (is-ambulance-at ?l - location)
         (is-unit-at ?u - unit ?l - location)
         (is-related-to-water ?w - weathereventtype)
         (is-police-car ?u - unit)
         (is-fire-truck ?u - unit)
         (is-ambulance ?u - unit)
-        (needs-police-car-in-case-of ?w - weathereventtype ?l - location)
-        (needs-fire-truck-in-case-of ?w - weathereventtype ?l - location)
-        (needs-ambulance-in-case-of ?w - weathereventtype ?l - location)
-    )
-
-    (:functions
-        (current-risk ?w - weathereventtype ?l - location)
+        (unit-performed-action ?u - unit)
     )
 
     (:action alarm-locals-by-light
@@ -47,11 +45,9 @@
             (has-alarm-light-at ?l)
             (not (alarm-light-enabled-at ?l))
             (is-weatherevent-at ?w ?l)
-            (>= (current-risk ?w ?l) 2) ; only at medium risk plus
         )
         :effect (and
             (alarm-light-enabled-at ?l)
-            (decrease (current-risk ?w ?l) 0.5)
         )
     )
 
@@ -61,11 +57,9 @@
             (has-alarm-sound-at ?l)
             (not (alarm-sound-enabled-at ?l))
             (is-weatherevent-at ?w ?l)
-            (>= (current-risk ?w ?l) 2) ; only at medium risk plus
         )
         :effect (and
             (alarm-light-enabled-at ?l)
-            (decrease (current-risk ?w ?l) 0.5)
         )
     )
 
@@ -76,11 +70,9 @@
             (not (water-protection-wall-enabled-at ?l))
             (is-weatherevent-at ?w ?l)
             (is-related-to-water ?w)
-            (>= (current-risk ?w ?l) 2) ; only at medium risk plus
         )
         :effect (and
             (water-protection-wall-enabled-at ?l)
-            (decrease (current-risk ?w ?l) 0.5)
         )
     )
 
@@ -90,11 +82,9 @@
             (can-lock-down-at ?l)
             (not (lockdown-enabled-at ?l))
             (is-weatherevent-at ?w ?l)
-            (>= (current-risk ?w ?l) 4) ; only at extreme risk
         )
         :effect (and
             (lockdown-enabled-at ?l)
-            (decrease (current-risk ?w ?l) 0.5)
         )
     )
 
@@ -104,20 +94,6 @@
             (is-unit-at ?unit ?from)
             (is-weatherevent-at ?eventtype ?to)
             (not (is-unit-operating ?unit))
-            (or
-                (and
-                    (is-police-car ?unit)
-                    (needs-police-car-in-case-of ?eventtype ?to)
-                )
-                (and
-                    (is-fire-truck ?unit)
-                    (needs-fire-truck-in-case-of ?eventtype ?to)
-                )
-                (and
-                    (is-ambulance ?unit)
-                    (needs-ambulance-in-case-of ?eventtype ?to)
-                )
-            )
         )
         :effect (and
             (not (is-unit-at ?unit ?from))
@@ -130,16 +106,15 @@
         :precondition (and
             (is-unit-at ?unit ?location)
             (is-police-car ?unit)
+            (not (unit-performed-action ?unit))
             (not (is-unit-operating ?unit))
             (is-weatherevent-at ?eventtype ?location)
-            (needs-police-car-in-case-of ?eventtype ?location)
-            (>= (current-risk ?eventtype ?location) 1)
         )
         :effect (and
             (is-unit-operating ?unit)
-            (decrease
-                (current-risk ?eventtype ?location)
-                (* (current-risk ?eventtype ?location) 0.5))
+            (unit-performed-action ?unit)
+            (is-being-operated-at ?location)
+            (is-police-at ?location)
         )
     )
 
@@ -149,15 +124,14 @@
             (is-unit-at ?unit ?location)
             (is-fire-truck ?unit)
             (not (is-unit-operating ?unit))
+            (not (unit-performed-action ?unit))
             (is-weatherevent-at ?eventtype ?location)
-            (needs-fire-truck-in-case-of ?eventtype ?location)
-            (>= (current-risk ?eventtype ?location) 1)
         )
         :effect (and
             (is-unit-operating ?unit)
-            (decrease
-                (current-risk ?eventtype ?location)
-                (* (current-risk ?eventtype ?location) 0.5))
+            (unit-performed-action ?unit)
+            (is-being-operated-at ?location)
+            (is-fire-truck-at ?location)
         )
     )
 
@@ -167,50 +141,41 @@
             (is-unit-at ?unit ?location)
             (is-ambulance ?unit)
             (not (is-unit-operating ?unit))
+            (not (unit-performed-action ?unit))
             (is-weatherevent-at ?eventtype ?location)
-            (needs-ambulance-in-case-of ?eventtype ?location)
-            (>= (current-risk ?eventtype ?location) 1)
         )
         :effect (and
             (is-unit-operating ?unit)
-            (decrease
-                (current-risk ?eventtype ?location)
-                (* (current-risk ?eventtype ?location) 0.5))
+            (unit-performed-action ?unit)
+            (is-being-operated-at ?location)
+            (is-ambulance-at ?location)
         )
     )
 
     (:action return-to-hub
         :parameters (?unit - unit ?from - location ?to - location)
         :precondition (and
+            (is-unit-at ?unit ?from)
             (not (is-hub ?from))
             (is-hub ?to)
             (not (is-unit-operating ?unit))
-            (not (exists
-                    (?w - weathereventtype)
-                    (and
-                        (is-weatherevent-at ?w ?from)
-                        (>= (current-risk ?w ?from) 1)
-                        (or
-                            (and
-                                (is-police-car ?unit)
-                                (needs-police-car-in-case-of ?w ?from)
-                            )
-                            (and
-                                (is-fire-truck ?unit)
-                                (needs-fire-truck-in-case-of ?w ?from)
-                            )
-                            (and
-                                (is-ambulance ?unit)
-                                (needs-ambulance-in-case-of ?w ?from)
-                            )
-                        )
-                    )
-                )
-            )
         )
         :effect (and
             (not (is-unit-at ?unit ?from))
             (is-unit-at ?unit ?to)
         )
     )
+
+    (:action refuel-and-reequip-at-hub
+        :parameters (?u - unit ?l - location)
+        :precondition (and
+            (is-unit-at ?u ?l)
+            (is-hub ?l)
+            (not (unit-performed-action ?u))
+        )
+        :effect (and
+            (unit-performed-action ?u)
+        )
+    )
+
 )

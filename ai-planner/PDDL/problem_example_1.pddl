@@ -34,29 +34,11 @@
         ; SKP: Enabled Actuators
         (alarm-light-enabled-at skp)
 
-        ; SKP: Weather Event Needs By Type
-        (needs-fire-truck-in-case-of storm skp)
-        (needs-fire-truck-in-case-of hailstorm skp)
-        (needs-fire-truck-in-case-of thunderstorm skp)
-        (needs-fire-truck-in-case-of flood skp)
-        (needs-fire-truck-in-case-of cold skp)
-        (needs-fire-truck-in-case-of heat skp)
-        (needs-fire-truck-in-case-of wildfire skp)
-        (needs-police-car-in-case-of wildfire skp) ; Police needs to investigate cause of fire
-        (needs-fire-truck-in-case-of earthquake skp)
-        ; TODO
-
         ; SVO: Actuators
         (has-alarm-light-at svo)
         (can-lock-down-at svo)
 
         ; SVO: Enabled Actuators
-
-        ; SVO: Weather Event Needs By Type
-        (needs-police-car-in-case-of badair svo)
-        (needs-fire-truck-in-case-of badair svo)
-        (needs-ambulance-in-case-of badair svo)
-        ; TODO
 
         ; SMES: Actuators
         (has-alarm-light-at smes)
@@ -65,45 +47,40 @@
 
         ; SMES: Enabled Actuators
 
-        ; SMES: Weather Event Needs By Type
-        ; TODO
-
         ; Weather Events: Properties
         (is-related-to-water flood)
 
         ; Weather Events: Current Events & Risks
-        (is-weatherevent-at wildfire smes)
-        (= (current-risk wildfire smes) 4); = EXTREME
+        (is-weatherevent-at wildfire skp)
         (is-weatherevent-at badair svo)
-        (= (current-risk badair svo) 3); = HIGH
     )
 
     (:goal
         (and
-            (exists
-                (?u - unit)
-                (and
-                    (is-unit-operating ?u)
-                    (is-unit-at ?u smes)
-                ))
-            (exists
-                (?u - unit)
-                (and
-                    (is-unit-operating ?u)
-                    (is-unit-at ?u svo)
-                ))
+            (unit-performed-action pc1)
+            (unit-performed-action pc2)
+            (unit-performed-action ft1)
+            (unit-performed-action ft2)
+            (unit-performed-action a1)
+            (unit-performed-action a2)
+
+            (is-being-operated-at skp)
+            (is-fire-truck-at skp)
+            (is-police-at skp)
+
+            (is-being-operated-at svo)
+            (is-fire-truck-at svo)
+            (is-police-at svo)
+            (is-ambulance-at svo)
         )
     )
 
-    (:metric minimize
-        (+
-            (* 10 (+
-                    (current-risk wildfire smes)
-                    (current-risk badair svo)
-                ))
-            (is-violated refuelAndReequipAtHub)
-        )
-    )
+    ;(:metric minimize
+    ;    (+
+    ;        (current-risk wildfire smes)
+    ;        (current-risk badair svo)
+    ;    )
+    ;)
 
     ;un-comment the following line if metric is needed
     ;(:metric minimize (???))
