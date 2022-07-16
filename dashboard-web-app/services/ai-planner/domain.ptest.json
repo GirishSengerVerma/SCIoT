@@ -4,6 +4,12 @@
   "cases": [
     {
       "problem": "problem_example_1.pddl"
+    },
+    {
+      "problem": "problem_example_2.pddl"
+    },
+    {
+      "problem": "problem_example_3.pddl"
     }
   ]
 }

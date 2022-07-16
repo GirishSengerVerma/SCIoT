@@ -17,75 +17,19 @@
 
     (:predicates
         (is-hub ?l - location)
-        (has-alarm-light-at ?l - location)
-        (has-alarm-sound-at ?l - location)
-        (has-water-protection-wall-at ?l - location)
-        (can-lock-down-at ?l - location)
-        (alarm-light-enabled-at ?l - location)
-        (alarm-sound-enabled-at ?l - location)
-        (water-protection-wall-enabled-at ?l - location)
-        (lockdown-enabled-at ?l - location)
         (is-weatherevent-at ?w - weathereventtype ?l - location)
+        (needs-police-at ?l - location)
+        (needs-fire-truck-at ?l - location)
+        (needs-ambulance-at ?l - location)
         (is-unit-operating ?u - unit)
-        (is-being-operated-at ?l - location)
-        (is-police-at ?l - location)
-        (is-fire-truck-at ?l - location)
-        (is-ambulance-at ?l - location)
+        (is-police-operating-at ?l - location)
+        (is-fire-truck-operating-at ?l - location)
+        (is-ambulance-operating-at ?l - location)
         (is-unit-at ?u - unit ?l - location)
-        (is-related-to-water ?w - weathereventtype)
         (is-police-car ?u - unit)
         (is-fire-truck ?u - unit)
         (is-ambulance ?u - unit)
         (unit-performed-action ?u - unit)
-    )
-
-    (:action alarm-locals-by-light
-        :parameters (?l - location ?w - weathereventtype)
-        :precondition (and
-            (has-alarm-light-at ?l)
-            (not (alarm-light-enabled-at ?l))
-            (is-weatherevent-at ?w ?l)
-        )
-        :effect (and
-            (alarm-light-enabled-at ?l)
-        )
-    )
-
-    (:action alarm-locals-by-sound
-        :parameters (?l - location ?w - weathereventtype)
-        :precondition (and
-            (has-alarm-sound-at ?l)
-            (not (alarm-sound-enabled-at ?l))
-            (is-weatherevent-at ?w ?l)
-        )
-        :effect (and
-            (alarm-light-enabled-at ?l)
-        )
-    )
-
-    (:action drive-up-water-protection-wall
-        :parameters (?l - location ?w - weathereventtype)
-        :precondition (and
-            (has-water-protection-wall-at ?l)
-            (not (water-protection-wall-enabled-at ?l))
-            (is-weatherevent-at ?w ?l)
-            (is-related-to-water ?w)
-        )
-        :effect (and
-            (water-protection-wall-enabled-at ?l)
-        )
-    )
-
-    (:action lock-down-location
-        :parameters (?l - location ?w - weathereventtype)
-        :precondition (and
-            (can-lock-down-at ?l)
-            (not (lockdown-enabled-at ?l))
-            (is-weatherevent-at ?w ?l)
-        )
-        :effect (and
-            (lockdown-enabled-at ?l)
-        )
     )
 
     (:action move-to-event-location
@@ -109,12 +53,12 @@
             (not (unit-performed-action ?unit))
             (not (is-unit-operating ?unit))
             (is-weatherevent-at ?eventtype ?location)
+            (needs-police-at ?location)
         )
         :effect (and
             (is-unit-operating ?unit)
             (unit-performed-action ?unit)
-            (is-being-operated-at ?location)
-            (is-police-at ?location)
+            (is-police-operating-at ?location)
         )
     )
 
@@ -126,12 +70,12 @@
             (not (is-unit-operating ?unit))
             (not (unit-performed-action ?unit))
             (is-weatherevent-at ?eventtype ?location)
+            (needs-fire-truck-at ?location)
         )
         :effect (and
             (is-unit-operating ?unit)
             (unit-performed-action ?unit)
-            (is-being-operated-at ?location)
-            (is-fire-truck-at ?location)
+            (is-fire-truck-operating-at ?location)
         )
     )
 
@@ -143,12 +87,12 @@
             (not (is-unit-operating ?unit))
             (not (unit-performed-action ?unit))
             (is-weatherevent-at ?eventtype ?location)
+            (needs-ambulance-at ?location)
         )
         :effect (and
             (is-unit-operating ?unit)
             (unit-performed-action ?unit)
-            (is-being-operated-at ?location)
-            (is-ambulance-at ?location)
+            (is-ambulance-operating-at ?location)
         )
     )
 

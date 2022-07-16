@@ -1,17 +1,17 @@
-1. Make sure, you have a working Docker installation on your machine.
+# SCIoT SS22 Group 30 DWA (AI Planner)
 
-2. In a terminal, run the following commands to install and run `planutils`:
-```
-docker pull aiplanning/planutils
+## Solver
 
-docker run -it --privileged -p 5000:8080 -v <Path_To_PDDL_Domain_And_Problem_Folder_On_Your_Machine>:/app aiplanning/planutils
-```
+The PDDL solver we used is the publicly available online planning service provided at [PDDL Solver](http://solver.planning.domains/). Note that the planner does not support more complex PDDL features from PDDL 2 upwards (e.g. numeric fluents, metrics, preferences).
 
-3. Inside the CLI of the new Docker container, run the following commands to setup a SMTPLAN+ server:
-```
-planutils install smtplan
-pip install flask
-planutils server --host 0.0.0.0
-```
+## PDDL Files
 
+The `domain.pddl` and `problem_template.pddl` files for our AI planner are located inside `../dashboard-web-app/services/ai-planner` as the AI planner is invoked by the DWA backend.
 
+## Development and Testing
+
+First, add the following extension to your VS Code:
+
+- [PDDL Extension](https://marketplace.visualstudio.com/items?itemName=jan-dolejsi.pddl)
+
+Then open the directory `../dashboard-web-app/services/ai-planner` in VS Code. If you are prompted to install a validator, accept installing the `VAL` validator. After that, make sure that in the testing tab the domain and example problem files are recognized correctly. You can then edit the domain file or create new example problem files with the help of the excellent IDE support from the PDDL extension. You can then directly run the tests from inside this Testing tab which will use the online PDDL solver service for executing.
