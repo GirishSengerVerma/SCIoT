@@ -244,6 +244,20 @@ const initialSensorsDataSVO = [
 const initialSensorsDataSMES = [
     {
         sensor: {
+            instanceId: 'SMES_WATER_LEVEL_S',
+            isPhysical: true,
+        },
+        metadata: {
+            instanceId: 'SMES_WATER_LEVEL_S',
+            name: 'Water Level at Stuttgart Max Eyth See',
+            location: Location.STUTTGART_MAX_EYTH_SEE,
+            measure: SensorMeasure.WATER_LEVEL,
+            simulationMode: SensorSimulationMode.LOW,
+            simulationBehavior: SensorSimulationBehavior.NORMAL_DISTRIBUTED,
+        },
+    },
+    {
+        sensor: {
             instanceId: 'SMES_TEMPERATURE_S',
             isPhysical: false,
         },
