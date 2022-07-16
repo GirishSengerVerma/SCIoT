@@ -25,6 +25,7 @@ export const initializeDataService = async (server) => {
     initializeMQTTClient(io);
     initializeWebsocketServer(io);
     startDetectWeatherEventsIntervalTask();
+    startAuthoritiesUnitAIPlannerIntervalTask();
 }
 
 const initialSensorsDataSKP = [
@@ -1958,12 +1959,17 @@ const startDetectWeatherEventsIntervalTask = async () => {
             actuatorStatusData[location] = actuatorStatusDataAtLocation;
             weatherEventRisks[location] = weatherEventRisksAtLocation;
         }
-
-        // TODO DWA Read current unit status for all locations
-        // TODO DWA Generate planner problem file, run it and process response
     };
       
-    setInterval(detectWeatherEvents, 5000);
+    setInterval(detectWeatherEvents, 5000); // every ~ 5 seconds
+};
+
+const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
+    const runAIPlanner = () => {
+        // TODO DWA Read current data, generate PDDL problem file, send domain and problem file to online solver service, parse result, execute plan
+    };
+
+    setInterval(runAIPlanner, 32000); // every ~ 32 seconds
 };
 
 const updateRiskIfHigher = (weatherEventRisks, weatherEventType, newRisk) => {

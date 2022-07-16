@@ -1,11 +1,9 @@
 ; PDDL Domain Description. 
-;   The goal is to enable actuators for lowering the risk of a weather event at certain locations and to
-;   move authorities units between different locations to tackle weather events there in the most efficient way.
+;   The goal is to move authorities units between different locations to tackle weather events there efficiently.
 ;   If there are no events anymore at a location, units should move back to the hub (e.g. to re-fuel and re-equip).
 
 (define (domain weather-events-action-planning)
 
-    ; TODO remove requirements that are not needed
     (:requirements :strips :typing :equality :negative-preconditions)
 
     (:types
