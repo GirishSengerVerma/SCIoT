@@ -1035,6 +1035,8 @@ const initializeWebsocketServer = (io) => {
                     ...weatherEvent,
                     end: timestamp,
                 }));
+
+                // TODO DWA Also update Actuator Status automatically?
             } catch (error) {
                 console.error(
                     'Data Service: Error processing incoming End Weather Event Request Socket IO message: ',
@@ -1129,6 +1131,8 @@ const initializeWebsocketServer = (io) => {
                     weatherEventId,
                     riskLevel,
                 }));
+
+                 // TODO DWA Also update Actuator Status automatically?
             } catch (error) {
                 console.error(
                     'Data Service: Error processing incoming Change Weather Event Risk Request Socket IO message: ',
@@ -1331,8 +1335,53 @@ const initializeMQTTClient = async () => {
                 prisma.weatherEvent.upsert({ create: weatherEvent, update: { end: weatherEvent.end }, where: { location_type_start: { location: weatherEvent.location, type: weatherEvent.type, start: weatherEvent.start ?? timestamp } } })
                 .then(async (data) =>  {
                     currentWebsocketConnections.forEach(socket => socket.emit(weatherEventInstanceTopicPrefix, JSON.stringify(data)));
+
+                    const weatherEventId = data.id;
+                    const weatherEventType = data.type;
+                    const location = data.location;
+
                     if('initialRiskLevel' in messageJSON && messageJSON['initialRiskLevel']) {
-                        mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEvent['location'], JSON.stringify({ weatherEventId: data.id, riskLevel: messageJSON['initialRiskLevel'] }));
+                        const initialRiskLevel = messageJSON['initialRiskLevel'];
+
+                        mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEvent['location'], JSON.stringify({ weatherEventId, riskLevel: initialRiskLevel }));
+                        
+                        if(initialRiskLevel === WeatherEventRiskLevel.HIGH || initialRiskLevel === WeatherEventRiskLevel.EXTREME) {
+                            console.log('Enabling Alarm Light at', location, 'due to creation of ', weatherEvent);
+                            mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                type: WeatherEventActionType.ALERT_LOCALS_BY_LIGHT,
+                                location,
+                                wasManuallyTaken: false,
+                                weatherEventId,
+                            }));
+
+                            console.log('Enabling Alarm Sound at', location, 'due to creation of ', weatherEvent);
+                            mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                type: WeatherEventActionType.ALERT_LOCALS_BY_SOUND,
+                                location,
+                                wasManuallyTaken: false,
+                                weatherEventId,
+                            }));
+                            
+                            if(weatherEventType === WeatherEventType.FLOOD) {
+                                console.log('Driving up Water Protection Wall at', location, 'due to creation of', weatherEvent);
+                                mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                    type: WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL,
+                                    location,
+                                    wasManuallyTaken: false,
+                                    weatherEventId,
+                                }));
+                            }
+
+                            if(initialRiskLevel === WeatherEventRiskLevel.EXTREME) {
+                                console.log('Enabling Lockdown at', location, 'due to creation of ', weatherEvent);
+                                mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                    type: WeatherEventActionType.LOCKDOWN,
+                                    location,
+                                    wasManuallyTaken: false,
+                                    weatherEventId,
+                                }));
+                            }
+                        }
                     }
                 })
                 .catch(error => console.error('Data Service: Error persisting Weather Event Instance JSON data using Prisma: ', error));
@@ -1548,7 +1597,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
         for(let location of Object.values(Location)) {
             const isOutside = location !== Location.STUTTGART_VAIHINGEN_OFFICE;
 
-            console.log('Detecting Weather Events at', location, isOutside ? '(outside)' : '(inside)');
+            //console.log('Detecting Weather Events at', location, isOutside ? '(outside)' : '(inside)');
 
             const sensorTelemetryDataAtLocation = {};
             
@@ -1565,9 +1614,9 @@ const startDetectWeatherEventsIntervalTask = async () => {
             const actuatorStatusDataAtLocation = {};
 
             const protectionWallStatusData = await getCurrentActuatorStatusDataAtLocation(actuatorStatusDataAtLocation, location, ActuatorType.WATER_PROTECTION_WALL);
-            await getCurrentActuatorStatusDataAtLocation(actuatorStatusDataAtLocation, location, ActuatorType.ALARM_LIGHT);
-            await getCurrentActuatorStatusDataAtLocation(actuatorStatusDataAtLocation, location, ActuatorType.ALARM_SOUND);
-            await getCurrentActuatorStatusDataAtLocation(actuatorStatusDataAtLocation, location, ActuatorType.LOCKDOWN);
+            const alarmLightStatusData = await getCurrentActuatorStatusDataAtLocation(actuatorStatusDataAtLocation, location, ActuatorType.ALARM_LIGHT);
+            const alarmSoundStatusData = await getCurrentActuatorStatusDataAtLocation(actuatorStatusDataAtLocation, location, ActuatorType.ALARM_SOUND);
+            const lockdownStatusData = await getCurrentActuatorStatusDataAtLocation(actuatorStatusDataAtLocation, location, ActuatorType.LOCKDOWN);
 
             const weatherEventRisksAtLocation = {};
 
@@ -1732,6 +1781,55 @@ const startDetectWeatherEventsIntervalTask = async () => {
                         ...weatherEvent,
                         end: timestamp,
                     }));
+
+                    // if there is no high or extreme risk event at this location anymore, disable alarm light and sound again
+                    if(!Object.values(weatherEventRisksAtLocation).some(r => r === WeatherEventRiskLevel.HIGH || r === WeatherEventRiskLevel.EXTREME)) {
+                        if(alarmLightStatusData && alarmLightStatusData.enabled) {
+                            console.log('Disabling Alarm Light again at', location, 'due to end of', weatherEvent);
+                            mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                type: WeatherEventActionType.STOP_ALERT_LOCALS_BY_LIGHT,
+                                location,
+                                wasManuallyTaken: false,
+                                weatherEventId,
+                            }));
+                        }
+                        if(alarmSoundStatusData && alarmSoundStatusData.enabled) {
+                            console.log('Disabling Alarm Sound again at', location, 'due to end of', weatherEvent);
+                            mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                type: WeatherEventActionType.STOP_ALERT_LOCALS_BY_SOUND,
+                                location,
+                                wasManuallyTaken: false,
+                                weatherEventId,
+                            }));
+                        }
+                    }
+
+                    // if there is no extreme risk event at this location anymore, disable lockdown again
+                    if(!Object.values(weatherEventRisksAtLocation).some(r =>r === WeatherEventRiskLevel.EXTREME) && lockdownStatusData && lockdownStatusData.enabled) {
+                        console.log('Disabling Lockdown again at', location, 'due to end of', weatherEvent);
+                        mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                            type: WeatherEventActionType.COUNTER_MEASURE_REOPEN_LOCATION,
+                            location,
+                            wasManuallyTaken: false,
+                            weatherEventId,
+                        }));
+                    }
+
+                    // if there is no more >= high risk for flood at location and protection wall is up, drive it down again
+                    if(weatherEvent.type === WeatherEventType.FLOOD 
+                        && protectionWallStatusData && protectionWallStatusData.enabled
+                        && (!weatherEventRisksAtLocation[WeatherEventType.FLOOD] 
+                            || weatherEventRisksAtLocation[WeatherEventType.FLOOD] === WeatherEventRiskLevel.LOW 
+                            || weatherEventRisksAtLocation[WeatherEventType.FLOOD] == WeatherEventRiskLevel.MEDIUM)) {
+                        console.log('Driving down Water Protection Wall again at', location, 'due to end of', weatherEvent);
+                        mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                            type: WeatherEventActionType.COUNTER_MEASURE_DRIVE_DOWN_WATER_PROTECTION_WALL,
+                            location,
+                            wasManuallyTaken: false,
+                            weatherEventId,
+                        }));
+                    }
+
                 } else {
                     // Update existing weather event that still exists by updating current risk and creating new risk
 
@@ -1745,7 +1843,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
                     });
 
                     if(currentRisk.riskLevel === newRiskLevel) {
-                        console.log('- Not updating weather event because it stayed the same', weatherEvent, newRiskLevel);
+                        //console.log('- Not updating weather event because it stayed the same', weatherEvent, newRiskLevel);
                         continue;
                     }
 
@@ -1760,6 +1858,92 @@ const startDetectWeatherEventsIntervalTask = async () => {
                         weatherEventId,
                         riskLevel: newRiskLevel,
                     }));
+
+                    if(newRiskLevel === WeatherEventRiskLevel.HIGH || newRiskLevel === WeatherEventRiskLevel.EXTREME) {
+                        if(alarmLightStatusData && !alarmLightStatusData.enabled) {
+                            console.log('Enabling Alarm Light at', location, 'due to update of', weatherEvent);
+                            mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                type: WeatherEventActionType.ALERT_LOCALS_BY_LIGHT,
+                                location,
+                                wasManuallyTaken: false,
+                                weatherEventId,
+                            }));
+                        }
+                        if(alarmSoundStatusData && !alarmSoundStatusData.enabled) {
+                            console.log('Enabling Alarm Sound at', location, 'due to update of', weatherEvent);
+                            mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                type: WeatherEventActionType.ALERT_LOCALS_BY_SOUND,
+                                location,
+                                wasManuallyTaken: false,
+                                weatherEventId,
+                            }));
+                        }
+                        if(weatherEvent.type === WeatherEventType.FLOOD && protectionWallStatusData && !protectionWallStatusData.enabled) {
+                            console.log('Driving up Water Protection Wall at', location, 'due to update of', weatherEvent);
+                            mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                type: WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL,
+                                location,
+                                wasManuallyTaken: false,
+                                weatherEventId,
+                            }));
+                        }
+                        if(newRiskLevel === WeatherEventRiskLevel.EXTREME && lockdownStatusData && !lockdownStatusData.enabled) {
+                            console.log('Enabling Lockdown at', location, 'due to update of', weatherEvent);
+                            mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                type: WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION,
+                                location,
+                                wasManuallyTaken: false,
+                                weatherEventId,
+                            }));
+                        }
+                    } else {
+                        if(!Object.values(weatherEventRisksAtLocation).some(r => r === WeatherEventRiskLevel.HIGH || r === WeatherEventRiskLevel.EXTREME)) {
+                            if(alarmLightStatusData && alarmLightStatusData.enabled) {
+                                console.log('Disabling Alarm Light again at', location, 'due to update of', weatherEvent);
+                                mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                    type: WeatherEventActionType.STOP_ALERT_LOCALS_BY_LIGHT,
+                                    location,
+                                    wasManuallyTaken: false,
+                                    weatherEventId,
+                                }));
+                            }
+                            if(alarmSoundStatusData && alarmSoundStatusData.enabled) {
+                                console.log('Disabling Alarm Sound again at', location, 'due to update of', weatherEvent);
+                                mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                    type: WeatherEventActionType.STOP_ALERT_LOCALS_BY_SOUND,
+                                    location,
+                                    wasManuallyTaken: false,
+                                    weatherEventId,
+                                }));
+                            }
+                        }
+
+                        // if there is no more extreme risk and lockdown is enabled, reopen location
+                        if(!Object.values(weatherEventRisksAtLocation).some(r =>r === WeatherEventRiskLevel.EXTREME) && lockdownStatusData && lockdownStatusData.enabled) {
+                            console.log('Disabling Lockdown again at', location, 'due to update of', weatherEvent);
+                            mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                type: WeatherEventActionType.COUNTER_MEASURE_REOPEN_LOCATION,
+                                location,
+                                wasManuallyTaken: false,
+                                weatherEventId,
+                            }));
+                        }
+    
+                        // if there is no more >= high risk for flood at location and protection wall is up, drive it down again
+                        if(weatherEvent.type === WeatherEventType.FLOOD 
+                            && protectionWallStatusData && protectionWallStatusData.enabled
+                            && (!weatherEventRisksAtLocation[WeatherEventType.FLOOD] 
+                                || weatherEventRisksAtLocation[WeatherEventType.FLOOD] === WeatherEventRiskLevel.LOW 
+                                || weatherEventRisksAtLocation[WeatherEventType.FLOOD] == WeatherEventRiskLevel.MEDIUM)) {
+                            console.log('Driving down Water Protection Wall again at', location, 'due to update of', weatherEvent);
+                            mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                type: WeatherEventActionType.COUNTER_MEASURE_DRIVE_DOWN_WATER_PROTECTION_WALL,
+                                location,
+                                wasManuallyTaken: false,
+                                weatherEventId,
+                            }));
+                        }
+                    }
                 }
             }
 
@@ -1769,8 +1953,6 @@ const startDetectWeatherEventsIntervalTask = async () => {
                 console.log('- Creating weather event of type', type, 'with risk', initialRiskLevel);
                 mqttClient.publish(weatherEventInstanceTopicPrefix + '/' + location, JSON.stringify({ location, type, initialRiskLevel }));
             }
-
-            console.log();
 
             sensorTelemetryData[location] = sensorTelemetryDataAtLocation;
             actuatorStatusData[location] = actuatorStatusDataAtLocation;
