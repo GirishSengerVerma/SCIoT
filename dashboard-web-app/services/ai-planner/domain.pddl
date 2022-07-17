@@ -16,11 +16,11 @@
     (:predicates
         (is-hub ?l - location)
         (is-weatherevent-at ?w - weathereventtype ?l - location)
-        (needs-police-at ?l - location)
+        (needs-police-car-at ?l - location)
         (needs-fire-truck-at ?l - location)
         (needs-ambulance-at ?l - location)
         (is-unit-operating ?u - unit)
-        (is-police-operating-at ?l - location)
+        (is-police-car-operating-at ?l - location)
         (is-fire-truck-operating-at ?l - location)
         (is-ambulance-operating-at ?l - location)
         (is-unit-at ?u - unit ?l - location)
@@ -51,12 +51,12 @@
             (not (unit-performed-action ?unit))
             (not (is-unit-operating ?unit))
             (is-weatherevent-at ?eventtype ?location)
-            (needs-police-at ?location)
+            (needs-police-car-at ?location)
         )
         :effect (and
             (is-unit-operating ?unit)
             (unit-performed-action ?unit)
-            (is-police-operating-at ?location)
+            (is-police-car-operating-at ?location)
         )
     )
 

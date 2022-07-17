@@ -7,7 +7,8 @@ import utc from "dayjs/plugin/utc.js";
 
 dayjs.extend(utc)
 
-import { assert, time } from 'console';
+import { assert } from 'console';
+import { readFileSync, writeFile } from 'fs';
 
 let mqttClient;
 
@@ -1964,9 +1965,135 @@ const startDetectWeatherEventsIntervalTask = async () => {
     setInterval(detectWeatherEvents, 5000); // every ~ 5 seconds
 };
 
+const pddlDomainFileContent = readFileSync("./services/ai-planner/domain.pddl").toString();
+const pddlProblemTemplateFileContent = readFileSync("./services/ai-planner/problem_template.pddl").toString();
+
 const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
-    const runAIPlanner = () => {
-        // TODO DWA Read current data, generate PDDL problem file, send domain and problem file to online solver service, parse result, execute plan
+    const runAIPlanner = async () => {
+        const timestamp = dayjs().toISOString();
+
+        const generateProblemFileContent = async () => {
+            // Locations with Predicates
+            const locations = Object.values(Location).map(l => l.toLowerCase()).join(" ");
+            const hub = "\n        (is-hub " + Location.AUTHORITIES_HUB.toLowerCase() + ")";
+
+            // Units with Predicates
+
+            const unitsAtLocations = await getCurrentUnitStatusData();
+
+            let units = "";
+            let unitTypes = "";
+            let unitPositions = "";
+            
+            let goalUnitsPerformedActions = "";
+
+            for(const unitType of Object.values(UnitType)) {
+                let unitId = 1;
+                
+                let unitTypeName = unitType.toLowerCase();
+
+                for(const location of Object.values(Location)) {
+                    for(let i = 0; i < unitsAtLocations[unitType][location]; i++) {
+                        const unitName = unitType.toLowerCase() + "-" + unitId;
+                        units += (units.length > 0 ? " " : "") + unitName;
+                        unitTypes += "\n        (is-" + unitTypeName.replace("_", "-") + " " + unitName + ")";
+                        unitPositions += "\n        (is-unit-at " + unitName + " " + location.toLowerCase() + ")";
+                        goalUnitsPerformedActions += "\n            (unit-performed-action " + unitName + ")";
+                        unitId++;
+                    }
+                }
+            }
+
+            // Weather Events with Predicates
+
+            const weatherEventTypes = Object.values(WeatherEventType).map(w => w.toLowerCase()).join(" ");
+            let weatherEvents = "";
+            let goalUnitsAtLocations = "";
+
+            for(const location of Object.values(Location)) {
+                weatherEvents += "\n\n        ;    - at " + location.toLowerCase();
+                goalUnitsAtLocations += "\n\n            ;    - at " + location.toLowerCase();
+
+                let needsUnitsOfTypesAtLocation = new Set();
+
+                const weatherEventWithCurrentRisksAtLocationData = await prisma.weatherEvent.findMany({
+                    where: {
+                        location,
+                        end: null
+                    },
+                    orderBy: {
+                        start: 'desc'
+                    },
+                    include: {
+                        WeatherEventRisk: {
+                            orderBy: {
+                                start: 'desc'
+                            },
+                            take: 1,
+                        }
+                    }
+                });
+
+                for(let weatherEventData of weatherEventWithCurrentRisksAtLocationData) {
+                    const weatherEventType = weatherEventData.type;
+                    const currentRiskLevel = weatherEventData['WeatherEventRisk'][0].riskLevel;
+
+                    weatherEvents += "\n        (is-weather-event-at " + weatherEventType.toLowerCase() + " " + location.toLowerCase() + ")";
+
+                    if(currentRiskLevel !== WeatherEventRiskLevel.HIGH && currentRiskLevel !== WeatherEventRiskLevel.EXTREME) {
+                        continue;
+                    }
+
+                    if(weatherEventType === WeatherEventType.BAD_AIR 
+                        || weatherEventType === WeatherEventType.FLOOD) {
+                        needsUnitsOfTypesAtLocation.add(UnitType.POLICE_CAR.toLowerCase());
+                        needsUnitsOfTypesAtLocation.add(UnitType.FIRE_TRUCK.toLowerCase());
+                        needsUnitsOfTypesAtLocation.add(UnitType.AMBULANCE.toLowerCase());
+                    } else if(weatherEventType === WeatherEventType.COLD 
+                                || weatherEventType === WeatherEventType.HEAT) {
+                        needsUnitsOfTypesAtLocation.add(UnitType.POLICE_CAR.toLowerCase());
+                        needsUnitsOfTypesAtLocation.add(UnitType.AMBULANCE.toLowerCase());
+                    } else if(weatherEventType === WeatherEventType.EARTH_QUAKE 
+                                || weatherEventType === WeatherEventType.HAIL_STORM 
+                                || weatherEventType === WeatherEventType.STORM
+                                || weatherEventType === WeatherEventType.THUNDER_STORM
+                                || weatherEventType === WeatherEventType.WILD_FIRE) {
+                        needsUnitsOfTypesAtLocation.add(UnitType.POLICE_CAR.toLowerCase());
+                        needsUnitsOfTypesAtLocation.add(UnitType.FIRE_TRUCK.toLowerCase());
+                    }
+                }
+
+                for(let unitType of [...needsUnitsOfTypesAtLocation].sort()) {
+                    weatherEvents += "\n        (needs-" + unitType.replace("_", "-") + "-at " + location.toLowerCase() + ")";
+                    goalUnitsAtLocations += "\n            (is-" + unitType.replace("_", "-") + "-operating-at " + location.toLowerCase() + ")";
+                } 
+            }
+
+            return pddlProblemTemplateFileContent
+                .replace("{{units}}", units)
+                .replace("{{locations}}", locations)
+                .replace("{{weatherEventTypes}}", weatherEventTypes)
+                .replace("{{hub}}", hub)
+                .replace("{{unitTypes}}", unitTypes)
+                .replace("{{unitPositions}}", unitPositions)
+                .replace("{{weatherEvents}}", weatherEvents)
+                .replace("{{goalUnitsPerformedActions}}", goalUnitsPerformedActions)
+                .replace("{{goalUnitsAtLocations}}", goalUnitsAtLocations);
+        };
+
+        const pddlProblemFileContent = await generateProblemFileContent();
+        const pddlProblemFileName = './services/ai-planner/generated/problem_' + timestamp.replaceAll(':', '-') + '.pddl';
+        writeFile(pddlProblemFileName, pddlProblemFileContent, (err) => {
+            if(err) {
+                console.error('Error saving generated PDDL problem file as ' + pddlProblemFileName, err)
+            } else {
+              console.log('AI Planner: Generated current problem file. Saved as', pddlProblemFileName);
+            }
+        });
+        
+        console.log('Executing online PDDL solver on domain and current problem file..');
+
+        // TODO DWA send domain and problem file to online solver service, parse result, execute plan
     };
 
     setInterval(runAIPlanner, 32000); // every ~ 32 seconds
@@ -1981,6 +2108,40 @@ const updateRiskIfHigher = (weatherEventRisks, weatherEventType, newRisk) => {
     if(shouldUpdate) {
         weatherEventRisks[weatherEventType] = newRisk;
     }
+};
+
+const getCurrentUnitStatusData = async () => {
+    const locationAndUnitTypesProcessed = new Set([]);
+
+    const data = await prisma.unitStatus.findMany({
+        orderBy: [
+            {
+                location: 'desc', 
+            },
+            {
+                unitType: 'desc',
+            },
+            {
+                timestamp: 'desc',
+            }
+        ],
+    });
+    
+    const unitsAtLocations = {};
+
+    data.forEach((unitStatus) => {
+        if(locationAndUnitTypesProcessed.has(unitStatus.location + '_' + unitStatus.unitType)) { // only choose most recent entries for each pair
+            return;
+        }
+        locationAndUnitTypesProcessed.add(unitStatus.location + '_' + unitStatus.unitType);
+        
+        if(!unitsAtLocations[unitStatus.unitType]) {
+            unitsAtLocations[unitStatus.unitType] = {};
+        }
+        unitsAtLocations[unitStatus.unitType][unitStatus.location] = unitStatus.amount;
+    });
+
+    return unitsAtLocations;
 };
 
 const getCurrentSensorTelemetryDataAtLocation = async (sensorTelemetryDataAtLocation, location, measure) => {

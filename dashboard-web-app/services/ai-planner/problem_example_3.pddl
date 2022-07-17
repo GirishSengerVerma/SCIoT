@@ -23,7 +23,7 @@
         ; Weather Event at SKP
         (is-weatherevent-at wildfire skp)
         (needs-fire-truck-at skp)
-        (needs-police-at skp)
+        (needs-police-car-at skp)
     )
 
     (:goal
@@ -35,7 +35,7 @@
 
             ; Due to high risk for wild fire at SKP: need for fire truck and police
             (is-fire-truck-operating-at skp)
-            (is-police-operating-at skp)
+            (is-police-car-operating-at skp)
         )
     )
 )

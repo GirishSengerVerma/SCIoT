@@ -3,24 +3,24 @@
     (:objects
         {{locations}} - location
         {{units}} - unit
-        {{weathereventtypes} - weathereventtype
+        {{weatherEventTypes}} - weathereventtype
     )
 
     (:init
-        ; Units: Types  {{unittypes}]
+        ; Hub {{hub}}
 
-        ; Units: Positioning  {{unitlocations}}
+        ; Units: Types  {{unitTypes}}
 
-        ; Hub  {{hub}}
+        ; Units: Positioning  {{unitPositions}}
 
-        ; Weather Events  {{weatherevents}}
+        ; Weather Events  {{weatherEvents}}
     )
 
     (:goal
         (and
-            ; All Units have to either perform actions at a Weather Event location or refuel and reequip at Hub {{goal_unitsperformedactions}
+            ; All Units have to either perform actions at a Weather Event location or refuel and reequip at Hub {{goalUnitsPerformedActions}}
 
-            ; Needs for Units due to current Weather Events {{goal_unitsatlocations}}
+            ; Needs for Units due to current Weather Events {{goalUnitsAtLocations}}
         )
     )
 )

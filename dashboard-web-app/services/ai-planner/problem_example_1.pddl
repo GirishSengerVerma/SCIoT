@@ -35,13 +35,13 @@
         ; Weather Events at SKP
         (is-weatherevent-at wildfire skp)
         (needs-fire-truck-at skp)
-        (needs-police-at skp)
+        (needs-police-car-at skp)
 
         ; Weather Events at SVO
         (is-weatherevent-at badair svo)
         (needs-fire-truck-at svo)
         (needs-ambulance-at svo)
-        (needs-police-at svo)
+        (needs-police-car-at svo)
     )
 
     (:goal
@@ -59,11 +59,11 @@
 
             ; Due to high risk for wild fire at SKP: need for fire truck and police
             (is-fire-truck-operating-at skp)
-            (is-police-operating-at skp)
+            (is-police-car-operating-at skp)
 
             ; Due to high risk for bad air at SVO: need for fire truck, police and ambulance there
             (is-fire-truck-operating-at svo)
-            (is-police-operating-at svo)
+            (is-police-car-operating-at svo)
             (is-ambulance-operating-at svo)
         )
     )
