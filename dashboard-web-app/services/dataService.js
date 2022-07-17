@@ -9,6 +9,7 @@ dayjs.extend(utc)
 
 import { assert } from 'console';
 import { readFileSync, writeFile } from 'fs';
+import { exec } from 'child_process';
 
 let mqttClient;
 
@@ -1965,7 +1966,8 @@ const startDetectWeatherEventsIntervalTask = async () => {
     setInterval(detectWeatherEvents, 5000); // every ~ 5 seconds
 };
 
-const pddlDomainFileContent = readFileSync("./services/ai-planner/domain.pddl").toString();
+const pddlSolverFileName = "../ai-planner/enhsp20-0.9.4/enhsp.jar";
+const pddlDomainFileName = "./services/ai-planner/domain.pddl";
 const pddlProblemTemplateFileContent = readFileSync("./services/ai-planner/problem_template.pddl").toString();
 
 const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
@@ -2108,17 +2110,31 @@ const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
 
         const pddlProblemFileContent = await generateProblemFileContent();
         const pddlProblemFileName = './services/ai-planner/generated/problem_' + timestamp.replaceAll(':', '-') + '.pddl';
+
         writeFile(pddlProblemFileName, pddlProblemFileContent, (err) => {
             if (err) {
                 console.error('Error saving generated PDDL problem file as ' + pddlProblemFileName, err)
             } else {
                 console.log('AI Planner: Generated current problem file. Saved as', pddlProblemFileName);
+
+                console.log('AI Planner: Executing ENHSP PDDL solver on domain and current problem file..');
+
+                exec('java -jar ' + pddlSolverFileName + ' -o ' + pddlDomainFileName + ' -f ' + pddlProblemFileName, function (err, stdout, stderr) {
+                    if (err) {
+                        console.log('AI Planner: Error executing ENHSP PDDL solver:', err);
+                        return;
+                    }
+
+                    if (stdout.includes('Found Plan:')) {
+                        const plan = stdout.split('Found Plan:')[1].split('Plan-Length:')[0].trim();
+                        console.log('AI Planner: Found plan:\n', plan);
+                        // TODO DWA Parse plan if exists and execute 
+                    } else {
+                        console.log('AI Planner: No plan was found.');
+                    }
+                });
             }
         });
-
-        console.log('Executing online PDDL solver on domain and current problem file..');
-
-        // TODO DWA send domain and problem file to online solver service, parse result, execute plan
     };
 
     setInterval(runAIPlanner, 32000); // every ~ 32 seconds
