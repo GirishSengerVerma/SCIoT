@@ -12,7 +12,10 @@
       "problem": "problem_example_3.pddl"
     },
     {
-      "problem": "./generated/problem_2022-07-17T14-54-07.167Z.pddl"
+      "problem": "problem_example_4.pddl"
+    },
+    {
+      "problem": "./generated/problem_2022-07-17T21-02-53.347Z.pddl" 
     }
   ]
 }

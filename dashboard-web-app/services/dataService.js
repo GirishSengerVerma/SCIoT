@@ -718,7 +718,7 @@ const initializeWebsocketServer = (io) => {
             prisma.weatherEvent.findMany({
                 orderBy: [
                     {
-                        location: 'desc', 
+                        location: 'desc',
                     },
                     {
                         type: 'desc',
@@ -746,13 +746,13 @@ const initializeWebsocketServer = (io) => {
                             },
                         ],
                     });
-                    if(mostRecentWeatherEventRisk) {
+                    if (mostRecentWeatherEventRisk) {
                         socket.emit(weatherEventRiskTopicPrefix, JSON.stringify(mostRecentWeatherEventRisk));
                     }
                 });
             });
         }
-        
+
         // Send current Authorities Unit Status
         {
             const locationAndUnitTypesProcessed = new Set([]);
@@ -760,7 +760,7 @@ const initializeWebsocketServer = (io) => {
             prisma.unitStatus.findMany({
                 orderBy: [
                     {
-                        location: 'desc', 
+                        location: 'desc',
                     },
                     {
                         unitType: 'desc',
@@ -771,7 +771,7 @@ const initializeWebsocketServer = (io) => {
                 ],
             }).then(unitStatusData => {
                 unitStatusData.forEach((unitStatus) => {
-                    if(locationAndUnitTypesProcessed.has(unitStatus.location + '_' + unitStatus.unitType)) { // only choose most recent entries for each pair
+                    if (locationAndUnitTypesProcessed.has(unitStatus.location + '_' + unitStatus.unitType)) { // only choose most recent entries for each pair
                         return;
                     }
                     locationAndUnitTypesProcessed.add(unitStatus.location + '_' + unitStatus.unitType);
@@ -804,7 +804,7 @@ const initializeWebsocketServer = (io) => {
                 mqttClient.publish(sensorDeletedTopicPrefix, JSON.stringify({ instanceId }));
                 await prisma.sensorTelemetryData.deleteMany({ where: { instanceId } });
                 await prisma.sensorMetaData.deleteMany({ where: { instanceId } });
-                await prisma.sensor.delete({ where: { instanceId } }); 
+                await prisma.sensor.delete({ where: { instanceId } });
             } catch (error) {
                 console.error(
                     'Data Service: Error processing incoming Delete Sensor Request Socket IO message: ',
@@ -889,7 +889,7 @@ const initializeWebsocketServer = (io) => {
 
         socket.on(SOCKET_REQUEST_CREATE_ACTUATOR_TOPIC, async (message) => {
             try {
-                const {instanceId, name, isPhysical, location, type} = JSON.parse(message.toString());
+                const { instanceId, name, isPhysical, location, type } = JSON.parse(message.toString());
                 mqttClient.publish(actuatorInstanceTopicPrefix + '/' + location + '/' + type, JSON.stringify({ instanceId, isPhysical }));
                 setTimeout(() => {
                     mqttClient.publish(actuatorsMetadataTopicPrefix + '/' + location + '/' + type, JSON.stringify({ instanceId, name, location, type }));
@@ -908,7 +908,7 @@ const initializeWebsocketServer = (io) => {
                 const { instanceId } = JSON.parse(message.toString());
                 await prisma.actuatorStatusData.deleteMany({ where: { instanceId } });
                 await prisma.actuatorMetaData.deleteMany({ where: { instanceId } });
-                await prisma.actuator.delete({ where: { instanceId } }); 
+                await prisma.actuator.delete({ where: { instanceId } });
             } catch (error) {
                 console.error(
                     'Data Service: Error processing incoming Delete Actuator Request Socket IO message: ',
@@ -957,30 +957,30 @@ const initializeWebsocketServer = (io) => {
                 const location = messageJSON['location'];
                 const type = messageJSON['type'];
 
-                if('weatherEventId' in messageJSON && messageJSON['weatherEventId']) {
+                if ('weatherEventId' in messageJSON && messageJSON['weatherEventId']) {
                     const weatherEventId = messageJSON['weatherEventId'];
 
                     let selectedWeatherEventActionType;
-                    if(type === ActuatorType.ALARM_LIGHT) {
-                        if(enabled) {
+                    if (type === ActuatorType.ALARM_LIGHT) {
+                        if (enabled) {
                             selectedWeatherEventActionType = WeatherEventActionType.ALERT_LOCALS_BY_LIGHT;
                         } else {
                             selectedWeatherEventActionType = WeatherEventActionType.STOP_ALERT_LOCALS_BY_LIGHT;
                         }
-                    } else if(type === ActuatorType.ALARM_SOUND) {
-                        if(enabled) {
+                    } else if (type === ActuatorType.ALARM_SOUND) {
+                        if (enabled) {
                             selectedWeatherEventActionType = WeatherEventActionType.ALERT_LOCALS_BY_SOUND;
                         } else {
                             selectedWeatherEventActionType = WeatherEventActionType.STOP_ALERT_LOCALS_BY_SOUND;
                         }
-                    } else if(type === ActuatorType.LOCKDOWN) {
-                        if(enabled) {
+                    } else if (type === ActuatorType.LOCKDOWN) {
+                        if (enabled) {
                             selectedWeatherEventActionType = WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION;
                         } else {
                             selectedWeatherEventActionType = WeatherEventActionType.COUNTER_MEASURE_REOPEN_LOCATION;
                         }
-                    } else if(type === ActuatorType.WATER_PROTECTION_WALL) {
-                        if(enabled) {
+                    } else if (type === ActuatorType.WATER_PROTECTION_WALL) {
+                        if (enabled) {
                             selectedWeatherEventActionType = WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL;
                         } else {
                             selectedWeatherEventActionType = WeatherEventActionType.COUNTER_MEASURE_DRIVE_DOWN_WATER_PROTECTION_WALL;
@@ -1024,9 +1024,9 @@ const initializeWebsocketServer = (io) => {
 
                 const weatherEvent = await prisma.weatherEvent.findUnique({ where: { id } });
 
-                const currentRisk = await prisma.weatherEventRisk.findFirst({ 
-                    where: { weatherEventId: id }, 
-                    orderBy: [{ start: 'desc' }, { end: 'desc' }] 
+                const currentRisk = await prisma.weatherEventRisk.findFirst({
+                    where: { weatherEventId: id },
+                    orderBy: [{ start: 'desc' }, { end: 'desc' }]
                 });
                 mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEvent.location, JSON.stringify({
                     ...currentRisk,
@@ -1050,8 +1050,8 @@ const initializeWebsocketServer = (io) => {
         socket.on(SOCKET_REQUEST_DELETE_WEATHER_EVENT_TOPIC, async (message) => {
             try {
                 const { id } = JSON.parse(message.toString());
-                await prisma.actuatorStatusData.updateMany({ where: { lastChangedBy: { weatherEventId: id } }, data: { weatherEventActionId: null }});
-                await prisma.unitStatus.updateMany({ where: { changedBy: { weatherEventId: id } }, data: { weatherEventActionId: null }});
+                await prisma.actuatorStatusData.updateMany({ where: { lastChangedBy: { weatherEventId: id } }, data: { weatherEventActionId: null } });
+                await prisma.unitStatus.updateMany({ where: { changedBy: { weatherEventId: id } }, data: { weatherEventActionId: null } });
                 await prisma.weatherEventRisk.deleteMany({ where: { weatherEventId: id } });
                 await prisma.weatherEventAction.deleteMany({ where: { weatherEventId: id } });
                 await prisma.weatherEvent.delete({ where: { id } });
@@ -1068,7 +1068,7 @@ const initializeWebsocketServer = (io) => {
                 const messageJSON = JSON.parse(message.toString());
 
                 const selectedWeatherEventId = messageJSON['selectedWeatherEventId'];
-                if(selectedWeatherEventId == null || selectedWeatherEventId < 0 || !(await prisma.weatherEvent.findFirst({ where: { id: selectedWeatherEventId } }))) {
+                if (selectedWeatherEventId == null || selectedWeatherEventId < 0 || !(await prisma.weatherEvent.findFirst({ where: { id: selectedWeatherEventId } }))) {
                     socket.emit(SOCKET_RESPONSE_HISTORIC_WEATHER_EVENT_DATA_TOPIC, JSON.stringify({ risks: [], actions: [] }));
                     return;
                 }
@@ -1120,21 +1120,21 @@ const initializeWebsocketServer = (io) => {
 
                 const timestamp = dayjs().toISOString();
 
-                const currentRisk = await prisma.weatherEventRisk.findFirst({ 
-                    where: { weatherEventId }, 
-                    orderBy: [{ start: 'desc' }, { end: 'desc' }] 
+                const currentRisk = await prisma.weatherEventRisk.findFirst({
+                    where: { weatherEventId },
+                    orderBy: [{ start: 'desc' }, { end: 'desc' }]
                 });
                 mqttClient.publish(weatherEventRiskTopicPrefix + '/' + location, JSON.stringify({
                     ...currentRisk,
                     end: timestamp,
                 }));
-                
+
                 mqttClient.publish(weatherEventRiskTopicPrefix + '/' + location, JSON.stringify({
                     weatherEventId,
                     riskLevel,
                 }));
 
-                 // TODO DWA Also update Actuator Status automatically?
+                // TODO DWA Also update Actuator Status automatically?
             } catch (error) {
                 console.error(
                     'Data Service: Error processing incoming Change Weather Event Risk Request Socket IO message: ',
@@ -1146,9 +1146,9 @@ const initializeWebsocketServer = (io) => {
         const manuallyTakeWeatherEventAction = async (message) => {
             try {
                 const messageJSON = JSON.parse(message.toString());
-                
+
                 const location = messageJSON['location'];
-                
+
                 mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
                     ...messageJSON,
                     wasManuallyTaken: true,
@@ -1174,7 +1174,7 @@ const initializeWebsocketServer = (io) => {
 
                 let historicSelectedAuthoritiesLocationAndUnitTypeData = await prisma.unitStatus.findMany({
                     where: {
-                        location, 
+                        location,
                         unitType
                     },
                     orderBy: {
@@ -1207,19 +1207,19 @@ const initializeWebsocketServer = (io) => {
                 const moveUnitsToLocation = messageJSON['moveUnitsToLocation'];
                 const moveUnitsType = messageJSON['moveUnitsType'];
 
-                if('weatherEventId' in messageJSON && messageJSON['weatherEventId']) {
+                if ('weatherEventId' in messageJSON && messageJSON['weatherEventId']) {
                     const weatherEventId = messageJSON['weatherEventId'];
                     const type = WeatherEventActionType.COUNTER_MEASURE_MOVE_UNITS_RESPONSE;
                     manuallyTakeWeatherEventAction(JSON.stringify({ type, location: moveUnitsFromLocation, weatherEventId, moveUnitsAmount, moveUnitsFromLocation, moveUnitsToLocation, moveUnitsType }));
                 } else {
-                    const { amount: currentUnitsAmountAtFromLocation } = await prisma.unitStatus.findFirst({ 
-                        where: { location: moveUnitsFromLocation, unitType: moveUnitsType }, 
-                        orderBy: { 'timestamp': 'desc' } 
+                    const { amount: currentUnitsAmountAtFromLocation } = await prisma.unitStatus.findFirst({
+                        where: { location: moveUnitsFromLocation, unitType: moveUnitsType },
+                        orderBy: { 'timestamp': 'desc' }
                     });
 
-                    const { amount: currentUnitsAmountAtToLocation } = await prisma.unitStatus.findFirst({ 
-                        where: { location: moveUnitsToLocation, unitType: moveUnitsType }, 
-                        orderBy: { 'timestamp': 'desc' } 
+                    const { amount: currentUnitsAmountAtToLocation } = await prisma.unitStatus.findFirst({
+                        where: { location: moveUnitsToLocation, unitType: moveUnitsType },
+                        orderBy: { 'timestamp': 'desc' }
                     });
 
                     mqttClient.publish(authoritiesUnitStatusTopicPrefix + '/' + moveUnitsFromLocation + '/' + moveUnitsType, JSON.stringify({
@@ -1266,7 +1266,7 @@ const initializeMQTTClient = async () => {
 
     mqttClient.on('connect', () => {
         console.log('Data Service: MQTT Client: Connected.');
-        
+
         mqttClient.subscribe(sensorInstanceTopicPrefix + '/+/+', { qos: 0 });
         mqttClient.subscribe(sensorTelemetryTopicPrefix + '/+/+', { qos: 0 });
         mqttClient.subscribe(sensorMetadataTopicPrefix + '/+/+', { qos: 0 });
@@ -1280,7 +1280,7 @@ const initializeMQTTClient = async () => {
         mqttClient.subscribe(weatherEventInstanceTopicPrefix + '/+', { qos: 0 });
         mqttClient.subscribe(weatherEventActionTopicPrefix + '/+', { qos: 0 });
         mqttClient.subscribe(weatherEventRiskTopicPrefix + '/+', { qos: 0 });
-        
+
         mqttClient.on('offline', () => {
             mqttClient.end(true, () => {
                 initializeMQTTClient();
@@ -1294,7 +1294,7 @@ const initializeMQTTClient = async () => {
 
             const timestamp = dayjs().toISOString();
 
-             if (topic.startsWith(sensorInstanceTopicPrefix)) {
+            if (topic.startsWith(sensorInstanceTopicPrefix)) {
                 prisma.sensor.upsert({ create: messageJSON, where: { instanceId: messageJSON.instanceId }, update: { isPhysical: messageJSON.isPhysical } })
                     .then(data => currentWebsocketConnections.forEach(socket => socket.emit(sensorInstanceTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Sensor Instance JSON data using Prisma: ', error));
@@ -1306,11 +1306,11 @@ const initializeMQTTClient = async () => {
                 prisma.sensorMetaData.create({ data: messageJSON })
                     .then(data => currentWebsocketConnections.forEach(socket => socket.emit(sensorMetadataTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Sensor MetaData JSON data using Prisma: ', error));
-            }else if (topic.startsWith(actuatorInstanceTopicPrefix)) {
-                prisma.actuator.upsert({ 
-                    create: messageJSON, 
-                    where: { 
-                        instanceId: messageJSON.instanceId 
+            } else if (topic.startsWith(actuatorInstanceTopicPrefix)) {
+                prisma.actuator.upsert({
+                    create: messageJSON,
+                    where: {
+                        instanceId: messageJSON.instanceId
                     },
                     update: { isPhysical: messageJSON.isPhysical }
                 })
@@ -1324,74 +1324,74 @@ const initializeMQTTClient = async () => {
                 prisma.actuatorMetaData.create({ data: messageJSON })
                     .then(data => currentWebsocketConnections.forEach(socket => socket.emit(actuatorsMetadataTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Actuator MetaData JSON data using Prisma: ', error));
-            } else if ( topic.startsWith(authoritiesUnitStatusTopicPrefix)) {
+            } else if (topic.startsWith(authoritiesUnitStatusTopicPrefix)) {
                 prisma.unitStatus.create({ data: messageJSON })
                     .then(data => currentWebsocketConnections.forEach(socket => socket.emit(authoritiesUnitStatusTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting new Unit Status JSON data using Prisma: ', error));
             } else if (topic.startsWith(weatherEventInstanceTopicPrefix)) {
-                var weatherEvent = {...messageJSON};
-                if('initialRiskLevel' in weatherEvent) {
+                var weatherEvent = { ...messageJSON };
+                if ('initialRiskLevel' in weatherEvent) {
                     delete weatherEvent.initialRiskLevel;
                 }
 
                 prisma.weatherEvent.upsert({ create: weatherEvent, update: { end: weatherEvent.end }, where: { location_type_start: { location: weatherEvent.location, type: weatherEvent.type, start: weatherEvent.start ?? timestamp } } })
-                .then(async (data) =>  {
-                    currentWebsocketConnections.forEach(socket => socket.emit(weatherEventInstanceTopicPrefix, JSON.stringify(data)));
+                    .then(async (data) => {
+                        currentWebsocketConnections.forEach(socket => socket.emit(weatherEventInstanceTopicPrefix, JSON.stringify(data)));
 
-                    const weatherEventId = data.id;
-                    const weatherEventType = data.type;
-                    const location = data.location;
+                        const weatherEventId = data.id;
+                        const weatherEventType = data.type;
+                        const location = data.location;
 
-                    if('initialRiskLevel' in messageJSON && messageJSON['initialRiskLevel']) {
-                        const initialRiskLevel = messageJSON['initialRiskLevel'];
+                        if ('initialRiskLevel' in messageJSON && messageJSON['initialRiskLevel']) {
+                            const initialRiskLevel = messageJSON['initialRiskLevel'];
 
-                        mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEvent['location'], JSON.stringify({ weatherEventId, riskLevel: initialRiskLevel }));
-                        
-                        if(initialRiskLevel === WeatherEventRiskLevel.HIGH || initialRiskLevel === WeatherEventRiskLevel.EXTREME) {
-                            console.log('Enabling Alarm Light at', location, 'due to creation of ', weatherEvent);
-                            mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
-                                type: WeatherEventActionType.ALERT_LOCALS_BY_LIGHT,
-                                location,
-                                wasManuallyTaken: false,
-                                weatherEventId,
-                            }));
+                            mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEvent['location'], JSON.stringify({ weatherEventId, riskLevel: initialRiskLevel }));
 
-                            console.log('Enabling Alarm Sound at', location, 'due to creation of ', weatherEvent);
-                            mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
-                                type: WeatherEventActionType.ALERT_LOCALS_BY_SOUND,
-                                location,
-                                wasManuallyTaken: false,
-                                weatherEventId,
-                            }));
-                            
-                            if(weatherEventType === WeatherEventType.FLOOD) {
-                                console.log('Driving up Water Protection Wall at', location, 'due to creation of', weatherEvent);
+                            if (initialRiskLevel === WeatherEventRiskLevel.HIGH || initialRiskLevel === WeatherEventRiskLevel.EXTREME) {
+                                console.log('Enabling Alarm Light at', location, 'due to creation of ', weatherEvent);
                                 mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
-                                    type: WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL,
+                                    type: WeatherEventActionType.ALERT_LOCALS_BY_LIGHT,
                                     location,
                                     wasManuallyTaken: false,
                                     weatherEventId,
                                 }));
-                            }
 
-                            if(initialRiskLevel === WeatherEventRiskLevel.EXTREME) {
-                                console.log('Enabling Lockdown at', location, 'due to creation of ', weatherEvent);
+                                console.log('Enabling Alarm Sound at', location, 'due to creation of ', weatherEvent);
                                 mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
-                                    type: WeatherEventActionType.LOCKDOWN,
+                                    type: WeatherEventActionType.ALERT_LOCALS_BY_SOUND,
                                     location,
                                     wasManuallyTaken: false,
                                     weatherEventId,
                                 }));
+
+                                if (weatherEventType === WeatherEventType.FLOOD) {
+                                    console.log('Driving up Water Protection Wall at', location, 'due to creation of', weatherEvent);
+                                    mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                        type: WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL,
+                                        location,
+                                        wasManuallyTaken: false,
+                                        weatherEventId,
+                                    }));
+                                }
+
+                                if (initialRiskLevel === WeatherEventRiskLevel.EXTREME) {
+                                    console.log('Enabling Lockdown at', location, 'due to creation of ', weatherEvent);
+                                    mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
+                                        type: WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION,
+                                        location,
+                                        wasManuallyTaken: false,
+                                        weatherEventId,
+                                    }));
+                                }
                             }
                         }
-                    }
-                })
-                .catch(error => console.error('Data Service: Error persisting Weather Event Instance JSON data using Prisma: ', error));
+                    })
+                    .catch(error => console.error('Data Service: Error persisting Weather Event Instance JSON data using Prisma: ', error));
             } else if (topic.startsWith(weatherEventRiskTopicPrefix)) {
                 prisma.weatherEventRisk.upsert({ create: messageJSON, update: { end: messageJSON.end }, where: { weatherEventId_start: { weatherEventId: messageJSON.weatherEventId, start: messageJSON.start || timestamp } } })
                     .then(data => currentWebsocketConnections.forEach(socket => socket.emit(weatherEventRiskTopicPrefix, JSON.stringify(data))))
                     .catch(error => console.error('Data Service: Error persisting Weather Event Risk JSON data using Prisma: ', error));
-            } else if(topic.startsWith(weatherEventActionTopicPrefix)) {
+            } else if (topic.startsWith(weatherEventActionTopicPrefix)) {
                 const weatherEventAction = messageJSON;
 
                 const { id: weatherEventActionId } = await prisma.weatherEventAction.create({ data: weatherEventAction })
@@ -1401,11 +1401,11 @@ const initializeMQTTClient = async () => {
                     })
                     .catch(error => console.error('Data Service: Error persisting Weather Event Action JSON data using Prisma: ', error));
 
-                if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION || weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_REOPEN_LOCATION) {
+                if (weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION || weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_REOPEN_LOCATION) {
                     const enabled = weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION;
 
-                    prisma.actuatorMetaData.findMany({ 
-                        select: { instanceId: true }, 
+                    prisma.actuatorMetaData.findMany({
+                        select: { instanceId: true },
                         where: {
                             location: weatherEventAction.location,
                             type: ActuatorType.LOCKDOWN,
@@ -1421,11 +1421,11 @@ const initializeMQTTClient = async () => {
                         });
                         newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location + '/' + ActuatorType.LOCKDOWN, JSON.stringify(newActuatorStatus))); // will be persisted and sent via websosket when received in listener above
                     });
-                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL || weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_DOWN_WATER_PROTECTION_WALL) {
+                } else if (weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL || weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_DOWN_WATER_PROTECTION_WALL) {
                     const enabled = weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL;
 
-                    prisma.actuatorMetaData.findMany({ 
-                        select: { instanceId: true }, 
+                    prisma.actuatorMetaData.findMany({
+                        select: { instanceId: true },
                         where: {
                             location: weatherEventAction.location,
                             type: ActuatorType.WATER_PROTECTION_WALL,
@@ -1441,10 +1441,10 @@ const initializeMQTTClient = async () => {
                         });
                         newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location + '/' + ActuatorType.WATER_PROTECTION_WALL, JSON.stringify(newActuatorStatus)));   // will be persisted and sent via websosket when received in listener above
                     });
-                } else if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_LIGHT || weatherEventAction.type === WeatherEventActionType.STOP_ALERT_LOCALS_BY_LIGHT) {
+                } else if (weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_LIGHT || weatherEventAction.type === WeatherEventActionType.STOP_ALERT_LOCALS_BY_LIGHT) {
                     const enabled = weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_LIGHT;
-                    prisma.actuatorMetaData.findMany({ 
-                        select: { instanceId: true }, 
+                    prisma.actuatorMetaData.findMany({
+                        select: { instanceId: true },
                         where: {
                             location: weatherEventAction.location,
                             type: ActuatorType.ALARM_LIGHT,
@@ -1460,10 +1460,10 @@ const initializeMQTTClient = async () => {
                         });
                         newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location + '/' + ActuatorType.ALARM_LIGHT, JSON.stringify(newActuatorStatus)));   // will be persisted and sent via websosket when received in listener above
                     });
-                } else if(weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_SOUND || weatherEventAction.type === WeatherEventActionType.STOP_ALERT_LOCALS_BY_SOUND) {
+                } else if (weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_SOUND || weatherEventAction.type === WeatherEventActionType.STOP_ALERT_LOCALS_BY_SOUND) {
                     const enabled = weatherEventAction.type === WeatherEventActionType.ALERT_LOCALS_BY_SOUND;
-                    prisma.actuatorMetaData.findMany({ 
-                        select: { instanceId: true }, 
+                    prisma.actuatorMetaData.findMany({
+                        select: { instanceId: true },
                         where: {
                             location: weatherEventAction.location,
                             type: ActuatorType.ALARM_SOUND,
@@ -1479,9 +1479,9 @@ const initializeMQTTClient = async () => {
                         });
                         newActuatorStatusData.forEach(newActuatorStatus => mqttClient.publish(actuatorStatusDataTopicPrefix + '/' + weatherEventAction.location + '/' + ActuatorType.ALARM_SOUND, JSON.stringify(newActuatorStatus)));   // will be persisted and sent via websosket when received in listener above
                     });
-                } else if(weatherEventAction.type === WeatherEventActionType.PLANNING_INCREASE_RISK_LEVEL) {
-                    const currentWeatherEventRisk = await prisma.weatherEventRisk.findFirst({ 
-                        where: { 
+                } else if (weatherEventAction.type === WeatherEventActionType.PLANNING_INCREASE_RISK_LEVEL) {
+                    const currentWeatherEventRisk = await prisma.weatherEventRisk.findFirst({
+                        where: {
                             weatherEventId: weatherEventAction.weatherEventId,
                         },
                         orderBy: {
@@ -1490,14 +1490,14 @@ const initializeMQTTClient = async () => {
                     });
 
                     let newWeatherEventRiskLevel = undefined;
-                    if(currentWeatherEventRisk) {
-                        if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.LOW) {
+                    if (currentWeatherEventRisk) {
+                        if (currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.LOW) {
                             newWeatherEventRiskLevel = WeatherEventRiskLevel.MEDIUM;
-                        } else if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.MEDIUM) {
+                        } else if (currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.MEDIUM) {
                             newWeatherEventRiskLevel = WeatherEventRiskLevel.HIGH;
-                        } else if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.HIGH) {
+                        } else if (currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.HIGH) {
                             newWeatherEventRiskLevel = WeatherEventRiskLevel.EXTREME;
-                        } else if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.EXTREME) {
+                        } else if (currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.EXTREME) {
                             newWeatherEventRiskLevel = WeatherEventRiskLevel.EXTREME;
                         }
                     } else {
@@ -1511,11 +1511,11 @@ const initializeMQTTClient = async () => {
 
                     const updatedCurrentWeatherEventRisk = await prisma.weatherEventRisk.update({ where: { id: currentWeatherEventRisk.id }, data: { end: timestamp } });
                     currentWebsocketConnections.forEach(socket => socket.emit(weatherEventRiskTopicPrefix, JSON.stringify(updatedCurrentWeatherEventRisk)));
-                    
+
                     mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEventAction.location, JSON.stringify(newWeatherEventRisk));  // will be persisted and sent via websosket when received in listener above
-                } else if(weatherEventAction.type === WeatherEventActionType.PLANNING_DECREASE_RISK_LEVEL) {
-                    const currentWeatherEventRisk = await prisma.weatherEventRisk.findFirst({ 
-                        where: { 
+                } else if (weatherEventAction.type === WeatherEventActionType.PLANNING_DECREASE_RISK_LEVEL) {
+                    const currentWeatherEventRisk = await prisma.weatherEventRisk.findFirst({
+                        where: {
                             weatherEventId: weatherEventAction.weatherEventId,
                         },
                         orderBy: [
@@ -1532,17 +1532,17 @@ const initializeMQTTClient = async () => {
                     currentWebsocketConnections.forEach(socket => socket.emit(weatherEventRiskTopicPrefix, JSON.stringify(updatedCurrentWeatherEventRisk)));
 
                     let newWeatherEventRiskLevel = undefined;
-                    if(currentWeatherEventRisk) {
-                        if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.LOW) {
+                    if (currentWeatherEventRisk) {
+                        if (currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.LOW) {
                             const weatherEvent = await prisma.weatherEvent.findFirst({ where: { id: currentWeatherEventRisk.weatherEventId } });
                             const newWeatherEvent = { ...weatherEvent, end: timestamp };
                             mqttClient.publish(weatherEventInstanceTopicPrefix + '/' + weatherEventAction.location, JSON.stringify(newWeatherEvent));  // will be persisted and sent via websosket when received in listener above
                             return;
-                        } else if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.MEDIUM) {
+                        } else if (currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.MEDIUM) {
                             newWeatherEventRiskLevel = WeatherEventRiskLevel.LOW;
-                        } else if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.HIGH) {
+                        } else if (currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.HIGH) {
                             newWeatherEventRiskLevel = WeatherEventRiskLevel.MEDIUM;
-                        } else if(currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.EXTREME) {
+                        } else if (currentWeatherEventRisk.riskLevel === WeatherEventRiskLevel.EXTREME) {
                             newWeatherEventRiskLevel = WeatherEventRiskLevel.HIGH;
                         }
                     } else {
@@ -1555,18 +1555,18 @@ const initializeMQTTClient = async () => {
                     };
 
                     mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEventAction.location, JSON.stringify(newWeatherEventRisk));  // will be persisted and sent via websosket when received in listener above
-                } else if(weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_MOVE_UNITS_RESPONSE) {
-                    const { amount: moveUnitsFromLocationOldUnitsAmount } = await prisma.unitStatus.findFirst({ 
-                        select: { amount: true }, 
-                        where: { unitType: weatherEventAction.moveUnitsType, location: weatherEventAction.moveUnitsFromLocation }, 
-                        orderBy: { timestamp: 'desc' } 
+                } else if (weatherEventAction.type === WeatherEventActionType.COUNTER_MEASURE_MOVE_UNITS_RESPONSE) {
+                    const { amount: moveUnitsFromLocationOldUnitsAmount } = await prisma.unitStatus.findFirst({
+                        select: { amount: true },
+                        where: { unitType: weatherEventAction.moveUnitsType, location: weatherEventAction.moveUnitsFromLocation },
+                        orderBy: { timestamp: 'desc' }
                     });
-                    const { amount: moveUnitsToLocationOldUnitsAmount } = await prisma.unitStatus.findFirst({ 
-                        select: { amount: true }, 
-                        where: { unitType: weatherEventAction.moveUnitsType, location: weatherEventAction.moveUnitsToLocation }, 
-                        orderBy: { timestamp: 'desc' } 
+                    const { amount: moveUnitsToLocationOldUnitsAmount } = await prisma.unitStatus.findFirst({
+                        select: { amount: true },
+                        where: { unitType: weatherEventAction.moveUnitsType, location: weatherEventAction.moveUnitsToLocation },
+                        orderBy: { timestamp: 'desc' }
                     });
-                    
+
                     const newMoveFromLocationUnitStatusData = {
                         unitType: weatherEventAction.moveUnitsType,
                         location: weatherEventAction.moveUnitsFromLocation,
@@ -1583,7 +1583,7 @@ const initializeMQTTClient = async () => {
                     mqttClient.publish(authoritiesUnitStatusTopicPrefix + '/' + weatherEventAction.moveUnitsFromLocation + '/' + weatherEventAction.moveUnitsType, JSON.stringify(newMoveFromLocationUnitStatusData));  // will be persisted and sent via websosket when received in listener above
                     mqttClient.publish(authoritiesUnitStatusTopicPrefix + '/' + weatherEventAction.moveUnitsToLocation + '/' + weatherEventAction.moveUnitsType, JSON.stringify(newMoveToLocationUnitStatusData));  // will be persisted and sent via websosket when received in listener above
                 }
-            }  
+            }
         } catch (error) {
             console.error('Data Service: Error processing incoming MQTT message: ', error);
         }
@@ -1596,18 +1596,18 @@ const startDetectWeatherEventsIntervalTask = async () => {
         const actuatorStatusData = {};
         const weatherEventRisks = {};
 
-        for(let location of Object.values(Location)) {
+        for (let location of Object.values(Location)) {
             const isOutside = location !== Location.STUTTGART_VAIHINGEN_OFFICE;
 
             //console.log('Detecting Weather Events at', location, isOutside ? '(outside)' : '(inside)');
 
             const sensorTelemetryDataAtLocation = {};
-            
+
             const temperatureSensorData = await getCurrentSensorTelemetryDataAtLocation(sensorTelemetryDataAtLocation, location, SensorMeasure.TEMPERATURE);
             const coSensorData = await getCurrentSensorTelemetryDataAtLocation(sensorTelemetryDataAtLocation, location, SensorMeasure.CO);
             const co2SensorData = await getCurrentSensorTelemetryDataAtLocation(sensorTelemetryDataAtLocation, location, SensorMeasure.CO2);
             const humiditySensorData = await getCurrentSensorTelemetryDataAtLocation(sensorTelemetryDataAtLocation, location, SensorMeasure.HUMIDITY);
-            const pressureSensorData = await getCurrentSensorTelemetryDataAtLocation(sensorTelemetryDataAtLocation, location, SensorMeasure.PRESSURE); 
+            const pressureSensorData = await getCurrentSensorTelemetryDataAtLocation(sensorTelemetryDataAtLocation, location, SensorMeasure.PRESSURE);
             const vibrationSensorData = await getCurrentSensorTelemetryDataAtLocation(sensorTelemetryDataAtLocation, location, SensorMeasure.VIBRATION);
             const waterLevelSensorData = await getCurrentSensorTelemetryDataAtLocation(sensorTelemetryDataAtLocation, location, SensorMeasure.WATER_LEVEL);
             const windSpeedSensorData = await getCurrentSensorTelemetryDataAtLocation(sensorTelemetryDataAtLocation, location, SensorMeasure.WIND_SPEED);
@@ -1622,8 +1622,8 @@ const startDetectWeatherEventsIntervalTask = async () => {
 
             const weatherEventRisksAtLocation = {};
 
-            if(waterLevelSensorData) {
-                if(waterLevelSensorData.value >= 1 && waterLevelSensorData.value < 2) {
+            if (waterLevelSensorData) {
+                if (waterLevelSensorData.value >= 1 && waterLevelSensorData.value < 2) {
                     if (!protectionWallStatusData || !protectionWallStatusData.enabled) {
                         weatherEventRisksAtLocation[WeatherEventType.FLOOD] = WeatherEventRiskLevel.LOW;
                     }
@@ -1638,37 +1638,37 @@ const startDetectWeatherEventsIntervalTask = async () => {
                         weatherEventRisksAtLocation[WeatherEventType.FLOOD] = WeatherEventRiskLevel.MEDIUM;
                     } else {
                         weatherEventRisksAtLocation[WeatherEventType.FLOOD] = WeatherEventRiskLevel.HIGH;
-                    } 
+                    }
                 } else if (waterLevelSensorData.value >= 4) {
                     if (protectionWallStatusData && protectionWallStatusData.enabled) {
                         weatherEventRisksAtLocation[WeatherEventType.FLOOD] = WeatherEventRiskLevel.HIGH;
                     } else {
                         weatherEventRisksAtLocation[WeatherEventType.FLOOD] = WeatherEventRiskLevel.EXTREME;
-                    } 
+                    }
                 }
             }
 
-            if(temperatureSensorData) {
+            if (temperatureSensorData) {
                 if (temperatureSensorData.value <= 1) {
                     weatherEventRisksAtLocation[WeatherEventType.COLD] = WeatherEventRiskLevel.MEDIUM;
                 } else if (temperatureSensorData.value >= 30 && temperatureSensorData.value < 100) {
                     weatherEventRisksAtLocation[WeatherEventType.HEAT] = WeatherEventRiskLevel.LOW;
                 } else if (temperatureSensorData.value >= 37 && temperatureSensorData.value <= 100) {
-                    if(isOutside) {
-                        if(humiditySensorData && humiditySensorData.value < 30) {
+                    if (isOutside) {
+                        if (humiditySensorData && humiditySensorData.value < 30) {
                             weatherEventRisksAtLocation[WeatherEventType.WILD_FIRE] = WeatherEventRiskLevel.HIGH;
                         } else {
                             weatherEventRisksAtLocation[WeatherEventType.WILD_FIRE] = WeatherEventRiskLevel.MEDIUM;
                         }
                     } else {
-                        if(temperatureSensorData.value > 50) {
+                        if (temperatureSensorData.value > 50) {
                             weatherEventRisksAtLocation[WeatherEventType.HEAT] = WeatherEventRiskLevel.HIGH;
                         } else {
                             weatherEventRisksAtLocation[WeatherEventType.HEAT] = WeatherEventRiskLevel.MEDIUM;
                         }
                     }
                 } else if (temperatureSensorData.value > 100) {
-                    if(isOutside) {
+                    if (isOutside) {
                         weatherEventRisksAtLocation[WeatherEventType.WILD_FIRE] = WeatherEventRiskLevel.EXTREME;
                     } else {
                         weatherEventRisksAtLocation[WeatherEventType.HEAT] = WeatherEventRiskLevel.EXTREME;
@@ -1676,29 +1676,29 @@ const startDetectWeatherEventsIntervalTask = async () => {
                 }
             }
 
-            if(windSpeedSensorData) {
-                if(windSpeedSensorData.value >= 12 && windSpeedSensorData.value < 74) {
-                    if(pressureSensorData && pressureSensorData.value < 990) {
-                        if(temperatureSensorData && temperatureSensorData.value <= 1) {
+            if (windSpeedSensorData) {
+                if (windSpeedSensorData.value >= 12 && windSpeedSensorData.value < 74) {
+                    if (pressureSensorData && pressureSensorData.value < 990) {
+                        if (temperatureSensorData && temperatureSensorData.value <= 1) {
                             weatherEventRisksAtLocation[WeatherEventType.HAIL_STORM] = WeatherEventRiskLevel.HIGH;
-                        } else if(lightSensorData && lightSensorData.value > 70) {
+                        } else if (lightSensorData && lightSensorData.value > 70) {
                             weatherEventRisksAtLocation[WeatherEventType.THUNDER_STORM] = WeatherEventRiskLevel.HIGH;
                         } else {
                             weatherEventRisksAtLocation[WeatherEventType.STORM] = WeatherEventRiskLevel.HIGH;
                         }
                     } else {
-                        if(temperatureSensorData && temperatureSensorData.value <= 1) {
+                        if (temperatureSensorData && temperatureSensorData.value <= 1) {
                             weatherEventRisksAtLocation[WeatherEventType.HAIL_STORM] = WeatherEventRiskLevel.MEDIUM;
-                        } else if(lightSensorData && lightSensorData.value > 70) {
+                        } else if (lightSensorData && lightSensorData.value > 70) {
                             weatherEventRisksAtLocation[WeatherEventType.THUNDER_STORM] = WeatherEventRiskLevel.MEDIUM;
                         } else {
                             weatherEventRisksAtLocation[WeatherEventType.STORM] = WeatherEventRiskLevel.MEDIUM;
                         }
                     }
                 } else if (windSpeedSensorData.value >= 74) {
-                    if(temperatureSensorData && temperatureSensorData.value <= 1) {
+                    if (temperatureSensorData && temperatureSensorData.value <= 1) {
                         weatherEventRisksAtLocation[WeatherEventType.HAIL_STORM] = WeatherEventRiskLevel.EXTREME;
-                    } else if(lightSensorData && lightSensorData.value > 70) {
+                    } else if (lightSensorData && lightSensorData.value > 70) {
                         weatherEventRisksAtLocation[WeatherEventType.THUNDER_STORM] = WeatherEventRiskLevel.EXTREME;
                     } else {
                         weatherEventRisksAtLocation[WeatherEventType.STORM] = WeatherEventRiskLevel.EXTREME;
@@ -1706,25 +1706,25 @@ const startDetectWeatherEventsIntervalTask = async () => {
                 }
             }
 
-            if(vibrationSensorData) {
-                if(vibrationSensorData.value >= 2 && vibrationSensorData.value < 3) {
+            if (vibrationSensorData) {
+                if (vibrationSensorData.value >= 2 && vibrationSensorData.value < 3) {
                     weatherEventRisksAtLocation[WeatherEventType.EARTH_QUAKE] = WeatherEventRiskLevel.LOW;
-                } else if(vibrationSensorData.value >= 3 && vibrationSensorData.value < 4) {
+                } else if (vibrationSensorData.value >= 3 && vibrationSensorData.value < 4) {
                     weatherEventRisksAtLocation[WeatherEventType.EARTH_QUAKE] = WeatherEventRiskLevel.MEDIUM;
-                } else if(vibrationSensorData.value >= 4 && vibrationSensorData.value < 5) {
+                } else if (vibrationSensorData.value >= 4 && vibrationSensorData.value < 5) {
                     weatherEventRisksAtLocation[WeatherEventType.EARTH_QUAKE] = WeatherEventRiskLevel.HIGH;
-                } else if(vibrationSensorData.value >= 5 && vibrationSensorData.value < 6) {
+                } else if (vibrationSensorData.value >= 5 && vibrationSensorData.value < 6) {
                     weatherEventRisksAtLocation[WeatherEventType.EARTH_QUAKE] = WeatherEventRiskLevel.EXTREME;
                 }
             }
 
-            if(co2SensorData) {
-                if(co2SensorData.value >= 800 && co2SensorData.value < 1400) {
+            if (co2SensorData) {
+                if (co2SensorData.value >= 800 && co2SensorData.value < 1400) {
                     updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.BAD_AIR, WeatherEventRiskLevel.MEDIUM);
-                } else if(co2SensorData.value >= 1400 && co2SensorData.value < 30000) {
+                } else if (co2SensorData.value >= 1400 && co2SensorData.value < 30000) {
                     updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.BAD_AIR, WeatherEventRiskLevel.HIGH);
-                } else if(co2SensorData.value >= 30000) {
-                    if(isOutside) {
+                } else if (co2SensorData.value >= 30000) {
+                    if (isOutside) {
                         updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.WILD_FIRE, WeatherEventRiskLevel.EXTREME);
                     } else {
                         updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.BAD_AIR, WeatherEventRiskLevel.EXTREME);
@@ -1732,19 +1732,19 @@ const startDetectWeatherEventsIntervalTask = async () => {
                 }
             }
 
-            if(coSensorData) {
-                if(isOutside) {
-                    if(coSensorData.value >= 100 && coSensorData.value < 200) {
+            if (coSensorData) {
+                if (isOutside) {
+                    if (coSensorData.value >= 100 && coSensorData.value < 200) {
                         updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.BAD_AIR, WeatherEventRiskLevel.LOW);
-                    } else if(coSensorData >= 300) {
+                    } else if (coSensorData >= 300) {
                         updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.WILD_FIRE, WeatherEventRiskLevel.HIGH);
                     }
                 } else {
-                    if(coSensorData.value >= 10 && coSensorData.value < 100) {
+                    if (coSensorData.value >= 10 && coSensorData.value < 100) {
                         updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.BAD_AIR, WeatherEventRiskLevel.MEDIUM);
-                    } else if(coSensorData.value >= 100 && coSensorData.value < 300) {
+                    } else if (coSensorData.value >= 100 && coSensorData.value < 300) {
                         updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.BAD_AIR, WeatherEventRiskLevel.HIGH);
-                    } else if(coSensorData.value >= 300) {
+                    } else if (coSensorData.value >= 300) {
                         updateRiskIfHigher(weatherEventRisksAtLocation, WeatherEventType.BAD_AIR, WeatherEventRiskLevel.EXTREME);
                     }
                 }
@@ -1760,33 +1760,33 @@ const startDetectWeatherEventsIntervalTask = async () => {
                     location,
                     end: null,
                 }
-             });
+            });
 
-             for(let weatherEvent of currentWeatherEventsAtLocation) {
+            for (let weatherEvent of currentWeatherEventsAtLocation) {
                 const weatherEventId = weatherEvent.id;
-                
-                if(!weatherEventTypesAtLocation.includes(weatherEvent.type)) {
+
+                if (!weatherEventTypesAtLocation.includes(weatherEvent.type)) {
                     // End current weather event that does not exist anymore
 
                     console.log('- Ending weather event', weatherEvent);
 
-                    const currentRisk = await prisma.weatherEventRisk.findFirst({ 
-                        where: { weatherEventId }, 
-                        orderBy: [{ start: 'desc' }, { end: 'desc' }] 
+                    const currentRisk = await prisma.weatherEventRisk.findFirst({
+                        where: { weatherEventId },
+                        orderBy: [{ start: 'desc' }, { end: 'desc' }]
                     });
                     mqttClient.publish(weatherEventRiskTopicPrefix + '/' + weatherEvent.location, JSON.stringify({
                         ...currentRisk,
                         end: timestamp,
                     }));
-    
+
                     mqttClient.publish(weatherEventInstanceTopicPrefix + '/' + weatherEvent.location, JSON.stringify({
                         ...weatherEvent,
                         end: timestamp,
                     }));
 
                     // if there is no high or extreme risk event at this location anymore, disable alarm light and sound again
-                    if(!Object.values(weatherEventRisksAtLocation).some(r => r === WeatherEventRiskLevel.HIGH || r === WeatherEventRiskLevel.EXTREME)) {
-                        if(alarmLightStatusData && alarmLightStatusData.enabled) {
+                    if (!Object.values(weatherEventRisksAtLocation).some(r => r === WeatherEventRiskLevel.HIGH || r === WeatherEventRiskLevel.EXTREME)) {
+                        if (alarmLightStatusData && alarmLightStatusData.enabled) {
                             console.log('Disabling Alarm Light again at', location, 'due to end of', weatherEvent);
                             mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
                                 type: WeatherEventActionType.STOP_ALERT_LOCALS_BY_LIGHT,
@@ -1795,7 +1795,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
                                 weatherEventId,
                             }));
                         }
-                        if(alarmSoundStatusData && alarmSoundStatusData.enabled) {
+                        if (alarmSoundStatusData && alarmSoundStatusData.enabled) {
                             console.log('Disabling Alarm Sound again at', location, 'due to end of', weatherEvent);
                             mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
                                 type: WeatherEventActionType.STOP_ALERT_LOCALS_BY_SOUND,
@@ -1807,7 +1807,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
                     }
 
                     // if there is no extreme risk event at this location anymore, disable lockdown again
-                    if(!Object.values(weatherEventRisksAtLocation).some(r =>r === WeatherEventRiskLevel.EXTREME) && lockdownStatusData && lockdownStatusData.enabled) {
+                    if (!Object.values(weatherEventRisksAtLocation).some(r => r === WeatherEventRiskLevel.EXTREME) && lockdownStatusData && lockdownStatusData.enabled) {
                         console.log('Disabling Lockdown again at', location, 'due to end of', weatherEvent);
                         mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
                             type: WeatherEventActionType.COUNTER_MEASURE_REOPEN_LOCATION,
@@ -1818,10 +1818,10 @@ const startDetectWeatherEventsIntervalTask = async () => {
                     }
 
                     // if there is no more >= high risk for flood at location and protection wall is up, drive it down again
-                    if(weatherEvent.type === WeatherEventType.FLOOD 
+                    if (weatherEvent.type === WeatherEventType.FLOOD
                         && protectionWallStatusData && protectionWallStatusData.enabled
-                        && (!weatherEventRisksAtLocation[WeatherEventType.FLOOD] 
-                            || weatherEventRisksAtLocation[WeatherEventType.FLOOD] === WeatherEventRiskLevel.LOW 
+                        && (!weatherEventRisksAtLocation[WeatherEventType.FLOOD]
+                            || weatherEventRisksAtLocation[WeatherEventType.FLOOD] === WeatherEventRiskLevel.LOW
                             || weatherEventRisksAtLocation[WeatherEventType.FLOOD] == WeatherEventRiskLevel.MEDIUM)) {
                         console.log('Driving down Water Protection Wall again at', location, 'due to end of', weatherEvent);
                         mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
@@ -1839,12 +1839,12 @@ const startDetectWeatherEventsIntervalTask = async () => {
 
                     newWeatherEventTypesAtLocation = newWeatherEventTypesAtLocation.filter(t => t !== weatherEvent.type);
 
-                    const currentRisk = await prisma.weatherEventRisk.findFirst({ 
-                        where: { weatherEventId }, 
-                        orderBy: [{ start: 'desc' }, { end: 'desc' }] 
+                    const currentRisk = await prisma.weatherEventRisk.findFirst({
+                        where: { weatherEventId },
+                        orderBy: [{ start: 'desc' }, { end: 'desc' }]
                     });
 
-                    if(currentRisk.riskLevel === newRiskLevel) {
+                    if (currentRisk.riskLevel === newRiskLevel) {
                         //console.log('- Not updating weather event because it stayed the same', weatherEvent, newRiskLevel);
                         continue;
                     }
@@ -1855,14 +1855,14 @@ const startDetectWeatherEventsIntervalTask = async () => {
                         ...currentRisk,
                         end: timestamp,
                     }));
-                    
+
                     mqttClient.publish(weatherEventRiskTopicPrefix + '/' + location, JSON.stringify({
                         weatherEventId,
                         riskLevel: newRiskLevel,
                     }));
 
-                    if(newRiskLevel === WeatherEventRiskLevel.HIGH || newRiskLevel === WeatherEventRiskLevel.EXTREME) {
-                        if(alarmLightStatusData && !alarmLightStatusData.enabled) {
+                    if (newRiskLevel === WeatherEventRiskLevel.HIGH || newRiskLevel === WeatherEventRiskLevel.EXTREME) {
+                        if (alarmLightStatusData && !alarmLightStatusData.enabled) {
                             console.log('Enabling Alarm Light at', location, 'due to update of', weatherEvent);
                             mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
                                 type: WeatherEventActionType.ALERT_LOCALS_BY_LIGHT,
@@ -1871,7 +1871,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
                                 weatherEventId,
                             }));
                         }
-                        if(alarmSoundStatusData && !alarmSoundStatusData.enabled) {
+                        if (alarmSoundStatusData && !alarmSoundStatusData.enabled) {
                             console.log('Enabling Alarm Sound at', location, 'due to update of', weatherEvent);
                             mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
                                 type: WeatherEventActionType.ALERT_LOCALS_BY_SOUND,
@@ -1880,7 +1880,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
                                 weatherEventId,
                             }));
                         }
-                        if(weatherEvent.type === WeatherEventType.FLOOD && protectionWallStatusData && !protectionWallStatusData.enabled) {
+                        if (weatherEvent.type === WeatherEventType.FLOOD && protectionWallStatusData && !protectionWallStatusData.enabled) {
                             console.log('Driving up Water Protection Wall at', location, 'due to update of', weatherEvent);
                             mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
                                 type: WeatherEventActionType.COUNTER_MEASURE_DRIVE_UP_WATER_PROTECTION_WALL,
@@ -1889,7 +1889,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
                                 weatherEventId,
                             }));
                         }
-                        if(newRiskLevel === WeatherEventRiskLevel.EXTREME && lockdownStatusData && !lockdownStatusData.enabled) {
+                        if (newRiskLevel === WeatherEventRiskLevel.EXTREME && lockdownStatusData && !lockdownStatusData.enabled) {
                             console.log('Enabling Lockdown at', location, 'due to update of', weatherEvent);
                             mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
                                 type: WeatherEventActionType.COUNTER_MEASURE_LOCK_DOWN_LOCATION,
@@ -1899,8 +1899,8 @@ const startDetectWeatherEventsIntervalTask = async () => {
                             }));
                         }
                     } else {
-                        if(!Object.values(weatherEventRisksAtLocation).some(r => r === WeatherEventRiskLevel.HIGH || r === WeatherEventRiskLevel.EXTREME)) {
-                            if(alarmLightStatusData && alarmLightStatusData.enabled) {
+                        if (!Object.values(weatherEventRisksAtLocation).some(r => r === WeatherEventRiskLevel.HIGH || r === WeatherEventRiskLevel.EXTREME)) {
+                            if (alarmLightStatusData && alarmLightStatusData.enabled) {
                                 console.log('Disabling Alarm Light again at', location, 'due to update of', weatherEvent);
                                 mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
                                     type: WeatherEventActionType.STOP_ALERT_LOCALS_BY_LIGHT,
@@ -1909,7 +1909,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
                                     weatherEventId,
                                 }));
                             }
-                            if(alarmSoundStatusData && alarmSoundStatusData.enabled) {
+                            if (alarmSoundStatusData && alarmSoundStatusData.enabled) {
                                 console.log('Disabling Alarm Sound again at', location, 'due to update of', weatherEvent);
                                 mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
                                     type: WeatherEventActionType.STOP_ALERT_LOCALS_BY_SOUND,
@@ -1921,7 +1921,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
                         }
 
                         // if there is no more extreme risk and lockdown is enabled, reopen location
-                        if(!Object.values(weatherEventRisksAtLocation).some(r =>r === WeatherEventRiskLevel.EXTREME) && lockdownStatusData && lockdownStatusData.enabled) {
+                        if (!Object.values(weatherEventRisksAtLocation).some(r => r === WeatherEventRiskLevel.EXTREME) && lockdownStatusData && lockdownStatusData.enabled) {
                             console.log('Disabling Lockdown again at', location, 'due to update of', weatherEvent);
                             mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
                                 type: WeatherEventActionType.COUNTER_MEASURE_REOPEN_LOCATION,
@@ -1930,12 +1930,12 @@ const startDetectWeatherEventsIntervalTask = async () => {
                                 weatherEventId,
                             }));
                         }
-    
+
                         // if there is no more >= high risk for flood at location and protection wall is up, drive it down again
-                        if(weatherEvent.type === WeatherEventType.FLOOD 
+                        if (weatherEvent.type === WeatherEventType.FLOOD
                             && protectionWallStatusData && protectionWallStatusData.enabled
-                            && (!weatherEventRisksAtLocation[WeatherEventType.FLOOD] 
-                                || weatherEventRisksAtLocation[WeatherEventType.FLOOD] === WeatherEventRiskLevel.LOW 
+                            && (!weatherEventRisksAtLocation[WeatherEventType.FLOOD]
+                                || weatherEventRisksAtLocation[WeatherEventType.FLOOD] === WeatherEventRiskLevel.LOW
                                 || weatherEventRisksAtLocation[WeatherEventType.FLOOD] == WeatherEventRiskLevel.MEDIUM)) {
                             console.log('Driving down Water Protection Wall again at', location, 'due to update of', weatherEvent);
                             mqttClient.publish(weatherEventActionTopicPrefix + '/' + location, JSON.stringify({
@@ -1961,7 +1961,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
             weatherEventRisks[location] = weatherEventRisksAtLocation;
         }
     };
-      
+
     setInterval(detectWeatherEvents, 5000); // every ~ 5 seconds
 };
 
@@ -1984,35 +1984,44 @@ const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
             let units = "";
             let unitTypes = "";
             let unitPositions = "";
-            
+
             let goalUnitsPerformedActions = "";
 
-            for(const unitType of Object.values(UnitType)) {
+            let unitsAtHub = 0;
+
+            for (const unitType of Object.values(UnitType)) {
                 let unitId = 1;
-                
+
                 let unitTypeName = unitType.toLowerCase();
 
-                for(const location of Object.values(Location)) {
-                    for(let i = 0; i < unitsAtLocations[unitType][location]; i++) {
+                for (const location of Object.values(Location)) {
+                    for (let i = 0; i < unitsAtLocations[unitType][location]; i++) {
                         const unitName = unitType.toLowerCase() + "-" + unitId;
                         units += (units.length > 0 ? " " : "") + unitName;
                         unitTypes += "\n        (is-" + unitTypeName.replace("_", "-") + " " + unitName + ")";
                         unitPositions += "\n        (is-unit-at " + unitName + " " + location.toLowerCase() + ")";
                         goalUnitsPerformedActions += "\n            (unit-performed-action " + unitName + ")";
                         unitId++;
+
+                        if (location === Location.AUTHORITIES_HUB) {
+                            unitsAtHub++;
+                        }
                     }
                 }
             }
+
+            unitPositions += "\n        (= (units-at-hub) " + unitsAtHub + ")";
 
             // Weather Events with Predicates
 
             const weatherEventTypes = Object.values(WeatherEventType).map(w => w.toLowerCase()).join(" ");
             let weatherEvents = "";
-            let goalUnitsAtLocations = "";
 
-            for(const location of Object.values(Location)) {
+            let metricToMinimize = "";
+            let weatherEventsAmount = 0;
+
+            for (const location of Object.values(Location)) {
                 weatherEvents += "\n\n        ;    - at " + location.toLowerCase();
-                goalUnitsAtLocations += "\n\n            ;    - at " + location.toLowerCase();
 
                 let needsUnitsOfTypesAtLocation = new Set();
 
@@ -2034,39 +2043,55 @@ const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
                     }
                 });
 
-                for(let weatherEventData of weatherEventWithCurrentRisksAtLocationData) {
+                for (let weatherEventData of weatherEventWithCurrentRisksAtLocationData) {
                     const weatherEventType = weatherEventData.type;
+
                     const currentRiskLevel = weatherEventData['WeatherEventRisk'][0].riskLevel;
+                    const currentRiskLevelNumeric = convertRiskLevelToNumber(currentRiskLevel);
 
                     weatherEvents += "\n        (is-weather-event-at " + weatherEventType.toLowerCase() + " " + location.toLowerCase() + ")";
+                    weatherEvents += "\n        (= (current-risk " + weatherEventType.toLowerCase() + " " + location.toLowerCase() + ") " + currentRiskLevelNumeric + ")";
 
-                    if(currentRiskLevel !== WeatherEventRiskLevel.HIGH && currentRiskLevel !== WeatherEventRiskLevel.EXTREME) {
+                    if (weatherEventsAmount === 0) {
+                        metricToMinimize = "\n        (current-risk " + weatherEventType.toLowerCase() + " " + location.toLowerCase() + ")";
+                    } else {
+                        metricToMinimize = "\n        (+ " + metricToMinimize + " (current-risk " + weatherEventType.toLowerCase() + " " + location.toLowerCase() + ") )";
+                    }
+                    weatherEventsAmount++;
+
+                    if (currentRiskLevel !== WeatherEventRiskLevel.HIGH && currentRiskLevel !== WeatherEventRiskLevel.EXTREME) {
                         continue;
                     }
 
-                    if(weatherEventType === WeatherEventType.BAD_AIR 
+                    if (weatherEventType === WeatherEventType.BAD_AIR
                         || weatherEventType === WeatherEventType.FLOOD) {
                         needsUnitsOfTypesAtLocation.add(UnitType.POLICE_CAR.toLowerCase());
                         needsUnitsOfTypesAtLocation.add(UnitType.FIRE_TRUCK.toLowerCase());
                         needsUnitsOfTypesAtLocation.add(UnitType.AMBULANCE.toLowerCase());
-                    } else if(weatherEventType === WeatherEventType.COLD 
-                                || weatherEventType === WeatherEventType.HEAT) {
+                    } else if (weatherEventType === WeatherEventType.COLD
+                        || weatherEventType === WeatherEventType.HEAT) {
                         needsUnitsOfTypesAtLocation.add(UnitType.POLICE_CAR.toLowerCase());
                         needsUnitsOfTypesAtLocation.add(UnitType.AMBULANCE.toLowerCase());
-                    } else if(weatherEventType === WeatherEventType.EARTH_QUAKE 
-                                || weatherEventType === WeatherEventType.HAIL_STORM 
-                                || weatherEventType === WeatherEventType.STORM
-                                || weatherEventType === WeatherEventType.THUNDER_STORM
-                                || weatherEventType === WeatherEventType.WILD_FIRE) {
+                    } else if (weatherEventType === WeatherEventType.EARTH_QUAKE
+                        || weatherEventType === WeatherEventType.HAIL_STORM
+                        || weatherEventType === WeatherEventType.STORM
+                        || weatherEventType === WeatherEventType.THUNDER_STORM
+                        || weatherEventType === WeatherEventType.WILD_FIRE) {
                         needsUnitsOfTypesAtLocation.add(UnitType.POLICE_CAR.toLowerCase());
                         needsUnitsOfTypesAtLocation.add(UnitType.FIRE_TRUCK.toLowerCase());
                     }
                 }
 
-                for(let unitType of [...needsUnitsOfTypesAtLocation].sort()) {
+                for (let unitType of [...needsUnitsOfTypesAtLocation].sort()) {
                     weatherEvents += "\n        (needs-" + unitType.replace("_", "-") + "-at " + location.toLowerCase() + ")";
-                    goalUnitsAtLocations += "\n            (is-" + unitType.replace("_", "-") + "-operating-at " + location.toLowerCase() + ")";
-                } 
+                }
+            }
+
+            // Metric to minimize
+            if (weatherEventsAmount === 0) {
+                metricToMinimize = "\n        (units-at-hub)";
+            } else {
+                metricToMinimize = "\n        (+ " + metricToMinimize + " (units-at-hub)\n        )";
             }
 
             return pddlProblemTemplateFileContent
@@ -2078,19 +2103,19 @@ const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
                 .replace("{{unitPositions}}", unitPositions)
                 .replace("{{weatherEvents}}", weatherEvents)
                 .replace("{{goalUnitsPerformedActions}}", goalUnitsPerformedActions)
-                .replace("{{goalUnitsAtLocations}}", goalUnitsAtLocations);
+                .replace("{{metricToMinimize}}", metricToMinimize);
         };
 
         const pddlProblemFileContent = await generateProblemFileContent();
         const pddlProblemFileName = './services/ai-planner/generated/problem_' + timestamp.replaceAll(':', '-') + '.pddl';
         writeFile(pddlProblemFileName, pddlProblemFileContent, (err) => {
-            if(err) {
+            if (err) {
                 console.error('Error saving generated PDDL problem file as ' + pddlProblemFileName, err)
             } else {
-              console.log('AI Planner: Generated current problem file. Saved as', pddlProblemFileName);
+                console.log('AI Planner: Generated current problem file. Saved as', pddlProblemFileName);
             }
         });
-        
+
         console.log('Executing online PDDL solver on domain and current problem file..');
 
         // TODO DWA send domain and problem file to online solver service, parse result, execute plan
@@ -2099,13 +2124,27 @@ const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
     setInterval(runAIPlanner, 32000); // every ~ 32 seconds
 };
 
+const convertRiskLevelToNumber = (riskLevel) => {
+    if (riskLevel === WeatherEventRiskLevel.LOW) {
+        return 1;
+    } else if (riskLevel === WeatherEventRiskLevel.MEDIUM) {
+        return 2;
+    } else if (riskLevel === WeatherEventRiskLevel.HIGH) {
+        return 3;
+    } else if (riskLevel === WeatherEventRiskLevel.EXTREME) {
+        return 4;
+    } else {
+        return 0;
+    }
+}
+
 const updateRiskIfHigher = (weatherEventRisks, weatherEventType, newRisk) => {
     let shouldUpdate = (!weatherEventRisks[weatherEventType])
-    || (weatherEventRisks[weatherEventType] === WeatherEventRiskLevel.LOW && newRisk !== WeatherEventRiskLevel.LOW) 
-    || (weatherEventRisks[weatherEventType] === WeatherEventRiskLevel.MEDIUM && newRisk !== WeatherEventRiskLevel.LOW && newRisk !== WeatherEventRiskLevel.MEDIUM)
-    || (weatherEventRisks[weatherEventType] === WeatherEventRiskLevel.HIGH && newRisk === WeatherEventRiskLevel.EXTREME);
-    
-    if(shouldUpdate) {
+        || (weatherEventRisks[weatherEventType] === WeatherEventRiskLevel.LOW && newRisk !== WeatherEventRiskLevel.LOW)
+        || (weatherEventRisks[weatherEventType] === WeatherEventRiskLevel.MEDIUM && newRisk !== WeatherEventRiskLevel.LOW && newRisk !== WeatherEventRiskLevel.MEDIUM)
+        || (weatherEventRisks[weatherEventType] === WeatherEventRiskLevel.HIGH && newRisk === WeatherEventRiskLevel.EXTREME);
+
+    if (shouldUpdate) {
         weatherEventRisks[weatherEventType] = newRisk;
     }
 };
@@ -2116,7 +2155,7 @@ const getCurrentUnitStatusData = async () => {
     const data = await prisma.unitStatus.findMany({
         orderBy: [
             {
-                location: 'desc', 
+                location: 'desc',
             },
             {
                 unitType: 'desc',
@@ -2126,16 +2165,16 @@ const getCurrentUnitStatusData = async () => {
             }
         ],
     });
-    
+
     const unitsAtLocations = {};
 
     data.forEach((unitStatus) => {
-        if(locationAndUnitTypesProcessed.has(unitStatus.location + '_' + unitStatus.unitType)) { // only choose most recent entries for each pair
+        if (locationAndUnitTypesProcessed.has(unitStatus.location + '_' + unitStatus.unitType)) { // only choose most recent entries for each pair
             return;
         }
         locationAndUnitTypesProcessed.add(unitStatus.location + '_' + unitStatus.unitType);
-        
-        if(!unitsAtLocations[unitStatus.unitType]) {
+
+        if (!unitsAtLocations[unitStatus.unitType]) {
             unitsAtLocations[unitStatus.unitType] = {};
         }
         unitsAtLocations[unitStatus.unitType][unitStatus.location] = unitStatus.amount;
@@ -2145,14 +2184,14 @@ const getCurrentUnitStatusData = async () => {
 };
 
 const getCurrentSensorTelemetryDataAtLocation = async (sensorTelemetryDataAtLocation, location, measure) => {
-    const telemetryData = await prisma.sensorTelemetryData.findFirst({ 
-        where: { 
+    const telemetryData = await prisma.sensorTelemetryData.findFirst({
+        where: {
             sensor: {
                 SensorMetaData: {
                     some: {
                         location,
                         measure
-                    } 
+                    }
                 }
             }
         },
@@ -2165,14 +2204,14 @@ const getCurrentSensorTelemetryDataAtLocation = async (sensorTelemetryDataAtLoca
 }
 
 const getCurrentActuatorStatusDataAtLocation = async (actuatorStatusDataAtLocation, location, type) => {
-    const statusData = await prisma.actuatorStatusData.findFirst({ 
-        where: { 
+    const statusData = await prisma.actuatorStatusData.findFirst({
+        where: {
             actuator: {
                 ActuatorMetaData: {
                     some: {
                         location,
                         type
-                    } 
+                    }
                 }
             }
         },

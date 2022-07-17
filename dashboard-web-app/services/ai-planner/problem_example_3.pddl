@@ -19,9 +19,11 @@
         (is-unit-at pc1 skp)
         (is-unit-at ft1 skp)
         (is-unit-at a1 skp)
+        (= (units-at-hub) 0)
 
         ; Weather Event at SKP
-        (is-weatherevent-at wildfire skp)
+        (is-weather-event-at wildfire skp)
+        (= (current-risk wildfire skp) 3)
         (needs-fire-truck-at skp)
         (needs-police-car-at skp)
     )
@@ -32,10 +34,13 @@
             (unit-performed-action pc1)
             (unit-performed-action ft1)
             (unit-performed-action a1)
+        )
+    )
 
-            ; Due to high risk for wild fire at SKP: need for fire truck and police
-            (is-fire-truck-operating-at skp)
-            (is-police-car-operating-at skp)
+    (:metric minimize
+        (+
+            (current-risk wildfire skp)
+            (units-at-hub)
         )
     )
 )

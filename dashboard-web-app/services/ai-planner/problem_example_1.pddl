@@ -31,14 +31,17 @@
         (is-unit-at a1 smes)
         (is-unit-at a2 hub)
         (is-unit-at a3 hub)
+        (= (units-at-hub) 6)
 
         ; Weather Events at SKP
-        (is-weatherevent-at wildfire skp)
+        (is-weather-event-at wildfire skp)
+        (= (current-risk wildfire skp) 3)
         (needs-fire-truck-at skp)
         (needs-police-car-at skp)
 
         ; Weather Events at SVO
-        (is-weatherevent-at badair svo)
+        (is-weather-event-at badair svo)
+        (= (current-risk badair svo) 2)
         (needs-fire-truck-at svo)
         (needs-ambulance-at svo)
         (needs-police-car-at svo)
@@ -56,15 +59,16 @@
             (unit-performed-action a1)
             (unit-performed-action a2)
             (unit-performed-action a3)
+        )
+    )
 
-            ; Due to high risk for wild fire at SKP: need for fire truck and police
-            (is-fire-truck-operating-at skp)
-            (is-police-car-operating-at skp)
-
-            ; Due to high risk for bad air at SVO: need for fire truck, police and ambulance there
-            (is-fire-truck-operating-at svo)
-            (is-police-car-operating-at svo)
-            (is-ambulance-operating-at svo)
+    (:metric minimize
+        (+
+            (+
+                (current-risk wildfire skp)
+                (current-risk badair svo)
+            )
+            (units-at-hub)
         )
     )
 )
