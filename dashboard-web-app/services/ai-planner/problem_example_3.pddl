@@ -39,7 +39,7 @@
 
     (:metric minimize
         (+
-            (current-risk wildfire skp)
+            (* 3 (current-risk wildfire skp))
             (units-at-hub)
         )
     )

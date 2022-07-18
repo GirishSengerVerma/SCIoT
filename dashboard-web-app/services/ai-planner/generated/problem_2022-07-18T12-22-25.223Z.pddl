@@ -66,8 +66,8 @@
     )
 
     (:metric minimize 
-        (+ 
-        (current-risk bad_air stuttgart_vaihingen_office) (units-at-hub)
+        (+ (* 9 
+        (current-risk bad_air stuttgart_vaihingen_office) ) (units-at-hub)
         )
     )
 )

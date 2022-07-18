@@ -63,7 +63,6 @@
             (not (is-unit-operating ?unit))
             (is-weather-event-at ?eventtype ?location)
             (needs-police-car-at ?location)
-            (>= (current-risk ?eventtype ?location) 1)
         )
         :effect (and
             (is-unit-operating ?unit)
@@ -84,7 +83,6 @@
             (not (unit-performed-action ?unit))
             (is-weather-event-at ?eventtype ?location)
             (needs-fire-truck-at ?location)
-            (>= (current-risk ?eventtype ?location) 1)
         )
         :effect (and
             (is-unit-operating ?unit)
@@ -105,7 +103,6 @@
             (not (unit-performed-action ?unit))
             (is-weather-event-at ?eventtype ?location)
             (needs-ambulance-at ?location)
-            (>= (current-risk ?eventtype ?location) 1)
         )
         :effect (and
             (is-unit-operating ?unit)
@@ -125,6 +122,30 @@
             (is-hub ?to)
             (not (is-unit-operating ?unit))
             (not (unit-moved ?unit))
+            (or
+                (not (is-police-car ?unit))
+                (not (exists
+                        (?l - location ?w - weathereventtype)
+                        (needs-police-car-at ?l)
+                    )
+                )
+            )
+            (or
+                (not (is-ambulance ?unit))
+                (not (exists
+                        (?l - location ?w - weathereventtype)
+                        (needs-ambulance-at ?l)
+                    )
+                )
+            )
+            (or
+                (not (is-fire-truck ?unit))
+                (not (exists
+                        (?l - location ?w - weathereventtype)
+                        (needs-fire-truck-at ?l)
+                    )
+                )
+            )
         )
         :effect (and
             (not (is-unit-at ?unit ?from))
@@ -144,11 +165,7 @@
                 (not (is-police-car ?unit))
                 (not (exists
                         (?l - location ?w - weathereventtype)
-                        (and
-                            (is-weather-event-at ?w ?l)
-                            (>= 1 (current-risk ?w ?l))
-                            (needs-police-car-at ?l)
-                        )
+                        (needs-police-car-at ?l)
                     )
                 )
             )
@@ -156,11 +173,7 @@
                 (not (is-ambulance ?unit))
                 (not (exists
                         (?l - location ?w - weathereventtype)
-                        (and
-                            (is-weather-event-at ?w ?l)
-                            (>= 1 (current-risk ?w ?l))
-                            (needs-ambulance-at ?l)
-                        )
+                        (needs-ambulance-at ?l)
                     )
                 )
             )
@@ -168,11 +181,7 @@
                 (not (is-fire-truck ?unit))
                 (not (exists
                         (?l - location ?w - weathereventtype)
-                        (and
-                            (is-weather-event-at ?w ?l)
-                            (>= 1 (current-risk ?w ?l))
-                            (needs-fire-truck-at ?l)
-                        )
+                        (needs-fire-truck-at ?l)
                     )
                 )
             )

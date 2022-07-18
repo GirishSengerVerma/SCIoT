@@ -2,7 +2,7 @@
     (:domain weather-events-action-planning)
     (:objects
         skp svo smes hub - location
-        pc1 pc2 pc3 ft1 ft2 ft3 a1 a2 a3 - unit
+        pc1 pc2 ft1 ft2 a1 a2 - unit
         storm hailstorm thunderstorm flood cold heat wildfire earthquake badair - weathereventtype
     )
 
@@ -13,38 +13,24 @@
         ; Units: Types
         (is-police-car pc1)
         (is-police-car pc2)
-        (is-police-car pc3)
         (is-fire-truck ft1)
         (is-fire-truck ft2)
-        (is-fire-truck ft3)
         (is-ambulance a1)
         (is-ambulance a2)
-        (is-ambulance a3)
 
         ; Units: Positioning
         (is-unit-at pc1 smes)
-        (is-unit-at pc2 hub)
-        (is-unit-at pc3 hub)
-        (is-unit-at ft1 smes)
-        (is-unit-at ft2 hub)
-        (is-unit-at ft3 hub)
-        (is-unit-at a1 smes)
+        (is-unit-at pc2 smes)
+        (is-unit-at ft1 hub)
+        (is-unit-at ft2 svo)
+        (is-unit-at a1 svo)
         (is-unit-at a2 hub)
-        (is-unit-at a3 hub)
-        (= (units-at-hub) 6)
+        (= (units-at-hub) 2)
 
         ; Weather Events at SKP
-        (is-weather-event-at wildfire skp)
-        (= (current-risk wildfire skp) 3)
+        (is-weather-event-at storm skp)
+        (= (current-risk storm skp) 5)
         (needs-fire-truck-at skp)
-        (needs-police-car-at skp)
-
-        ; Weather Events at SVO
-        (is-weather-event-at badair svo)
-        (= (current-risk badair svo) 2)
-        (needs-fire-truck-at svo)
-        (needs-ambulance-at svo)
-        (needs-police-car-at svo)
     )
 
     (:goal
@@ -52,23 +38,17 @@
             ; All units have to either perform actions at a weather event location or refuel and reequip at hub
             (unit-performed-action pc1)
             (unit-performed-action pc2)
-            (unit-performed-action pc3)
             (unit-performed-action ft1)
             (unit-performed-action ft2)
-            (unit-performed-action ft3)
             (unit-performed-action a1)
             (unit-performed-action a2)
-            (unit-performed-action a3)
         )
     )
 
     (:metric minimize
         (+
-            (* 9
-                (+
-                    (current-risk wildfire skp)
-                    (current-risk badair svo)
-                )
+            (* 6
+                (current-risk wildfire skp)
             )
             (units-at-hub)
         )

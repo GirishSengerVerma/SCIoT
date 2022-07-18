@@ -15,7 +15,10 @@
       "problem": "problem_example_4.pddl"
     },
     {
-      "problem": "./generated/problem_2022-07-17T21-02-53.347Z.pddl" 
+      "problem": "problem_example_5.pddl"
+    },
+    {
+      "problem": "./generated/problem_2022-07-18T12-22-25.223Z.pddl"
     }
   ]
 }

@@ -55,9 +55,11 @@
 
     (:metric minimize
         (+
-            (+
-                (current-risk wildfire skp)
-                (current-risk badair svo)
+            (* 6
+                (+
+                    (current-risk wildfire skp)
+                    (current-risk badair svo)
+                )
             )
             (units-at-hub)
         )

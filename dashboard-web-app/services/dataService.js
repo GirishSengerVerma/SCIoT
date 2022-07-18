@@ -1969,6 +1969,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
 const pddlSolverFileName = "../ai-planner/enhsp20-0.9.4/enhsp.jar";
 const pddlDomainFileName = "./services/ai-planner/domain.pddl";
 const pddlProblemTemplateFileContent = readFileSync("./services/ai-planner/problem_template.pddl").toString();
+const pddlSearchStrategy = "WAStar"; 
 
 const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
     const runAIPlanner = async () => {
@@ -1989,6 +1990,7 @@ const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
 
             let goalUnitsPerformedActions = "";
 
+            let totalUnitsAmount = 0;
             let unitsAtHub = 0;
 
             for (const unitType of Object.values(UnitType)) {
@@ -2005,6 +2007,7 @@ const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
                         goalUnitsPerformedActions += "\n            (unit-performed-action " + unitName + ")";
                         unitId++;
 
+                        totalUnitsAmount++; 
                         if (location === Location.AUTHORITIES_HUB) {
                             unitsAtHub++;
                         }
@@ -2093,7 +2096,7 @@ const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
             if (weatherEventsAmount === 0) {
                 metricToMinimize = "\n        (units-at-hub)";
             } else {
-                metricToMinimize = "\n        (+ " + metricToMinimize + " (units-at-hub)\n        )";
+                metricToMinimize = "\n        (+ (* " + totalUnitsAmount + " " + metricToMinimize + " ) (units-at-hub)\n        )";
             }
 
             return pddlProblemTemplateFileContent
@@ -2119,7 +2122,7 @@ const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
 
                 console.log('AI Planner: Executing ENHSP PDDL solver on domain and current problem file..');
 
-                exec('java -jar ' + pddlSolverFileName + ' -o ' + pddlDomainFileName + ' -f ' + pddlProblemFileName, function (err, stdout, stderr) {
+                exec('java -jar ' + pddlSolverFileName + ' -o ' + pddlDomainFileName + ' -f ' + pddlProblemFileName + ' -s ' + pddlSearchStrategy, function (err, stdout, stderr) {
                     if (err) {
                         console.log('AI Planner: Error executing ENHSP PDDL solver:', err);
                         return;
