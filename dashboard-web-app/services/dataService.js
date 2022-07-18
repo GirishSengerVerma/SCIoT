@@ -1331,6 +1331,10 @@ const initializeMQTTClient = async () => {
                     .catch(error => console.error('Data Service: Error persisting new Unit Status JSON data using Prisma: ', error));
             } else if (topic.startsWith(weatherEventInstanceTopicPrefix)) {
                 var weatherEvent = { ...messageJSON };
+                if ('copyWithId' in weatherEvent) {
+                    return; // not needed here anymore
+                }
+
                 if ('initialRiskLevel' in weatherEvent) {
                     delete weatherEvent.initialRiskLevel;
                 }
@@ -1338,6 +1342,8 @@ const initializeMQTTClient = async () => {
                 prisma.weatherEvent.upsert({ create: weatherEvent, update: { end: weatherEvent.end }, where: { location_type_start: { location: weatherEvent.location, type: weatherEvent.type, start: weatherEvent.start ?? timestamp } } })
                     .then(async (data) => {
                         currentWebsocketConnections.forEach(socket => socket.emit(weatherEventInstanceTopicPrefix, JSON.stringify(data)));
+
+                        mqttClient.publish(weatherEventInstanceTopicPrefix + '/' + weatherEvent['location'], JSON.stringify({ ...data, copyWithId: true }));
 
                         const weatherEventId = data.id;
                         const weatherEventType = data.type;
@@ -1971,6 +1977,8 @@ const pddlDomainFileName = "../ai-planner/PDDL/domain.pddl";
 const pddlProblemTemplateFileContent = readFileSync("../ai-planner/PDDL/problem_template.pddl").toString();
 const pddlSearchStrategy = "WAStar"; 
 
+let previousPddlPlan = "";
+
 const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
     const runAIPlanner = async () => {
         const timestamp = dayjs().toISOString();
@@ -2114,7 +2122,7 @@ const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
         const pddlProblemFileContent = await generateProblemFileContent();
         const pddlProblemFileName = '../ai-planner/PDDL/generated/problem_' + timestamp.replaceAll(':', '-') + '.pddl';
 
-        writeFile(pddlProblemFileName, pddlProblemFileContent, (err) => {
+        writeFile(pddlProblemFileName, pddlProblemFileContent, async (err) => {
             if (err) {
                 console.error('Error saving generated PDDL problem file as ' + pddlProblemFileName, err)
             } else {
@@ -2122,16 +2130,113 @@ const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
 
                 console.log('AI Planner: Executing ENHSP PDDL solver on domain and current problem file..');
 
-                exec('java -jar ' + pddlSolverFileName + ' -o ' + pddlDomainFileName + ' -f ' + pddlProblemFileName + ' -s ' + pddlSearchStrategy, function (err, stdout, stderr) {
+                exec('java -jar ' + pddlSolverFileName + ' -o ' + pddlDomainFileName + ' -f ' + pddlProblemFileName + ' -s ' + pddlSearchStrategy, async (err, stdout, stderr) => {
                     if (err) {
-                        console.log('AI Planner: Error executing ENHSP PDDL solver:', err);
+                        console.log('AI Planner: Error executing ENHSP PDDL solver:', err, stderr);
                         return;
                     }
 
                     if (stdout.includes('Found Plan:')) {
                         const plan = stdout.split('Found Plan:')[1].split('Plan-Length:')[0].trim();
                         console.log('AI Planner: Found plan:\n', plan);
-                        // TODO DWA Parse plan if exists and execute 
+
+                        if(previousPddlPlan === plan) {
+                            console.log('      -> No changes, do nothing');
+                            return;
+                        }
+
+                        previousPddlPlan = plan;
+
+                        const moveUnitsRequests = [];
+
+                        for(let line of plan.split(/\r?\n/)) {
+                            const actionParts = line.split(": ")[1].replace("(", "").replace(")", "").split(" ");
+                            const actionName = actionParts[0];
+                            
+                            let moveUnitsType, moveUnitsFromLocation, moveUnitsToLocation, weatherEventId = undefined;
+
+                            if(actionName === 'return-to-hub') {
+                                moveUnitsType = actionParts[1].split("-")[0].toUpperCase();
+                                moveUnitsFromLocation = actionParts[2].toUpperCase();
+                                moveUnitsToLocation = actionParts[3].toUpperCase();
+                            } else if(actionName === 'move-to-event-location') {
+                                moveUnitsType = actionParts[1].split("-")[0].toUpperCase();
+                                moveUnitsFromLocation = actionParts[2].toUpperCase();
+                                moveUnitsToLocation = actionParts[3].toUpperCase();
+                                
+                                const weatherEventType = actionParts[4].toUpperCase();
+                                const weatherEvent = await prisma.weatherEvent.findFirst({ 
+                                    where: { type: weatherEventType, end: null, location: moveUnitsToLocation },  
+                                    orderBy: { start: 'desc' } 
+                                });
+                                weatherEventId = weatherEvent.id;
+                            } else {
+                                continue;
+                            }            
+                            
+                            const currentEntry = moveUnitsRequests.find(r => 
+                                r['moveUnitsType'] === moveUnitsType 
+                                && r['moveUnitsFromLocation'] === moveUnitsFromLocation
+                                && r['moveUnitsToLocation'] === moveUnitsToLocation
+                                && r['weatherEventId'] === weatherEventId
+                            );
+
+                            if(currentEntry) {
+                                currentEntry['moveUnitsAmount'] += 1;
+                            } else {
+                                moveUnitsRequests.push({
+                                    moveUnitsType,
+                                    moveUnitsFromLocation,
+                                    moveUnitsToLocation,
+                                    weatherEventId,
+                                    moveUnitsAmount: 1,
+                                });
+                            }
+                        }
+
+                        console.log("AI Planner: Executing plan..");
+
+                        for(let moveUnitsRequest of moveUnitsRequests) {
+                            const existingRequestsAndResponses = await prisma.weatherEventAction.findMany({
+                                where: { 
+                                    weatherEventId: moveUnitsRequest.weatherEventId, 
+                                    moveUnitsFromLocation: moveUnitsRequest.moveUnitsFromLocation,
+                                    moveUnitsToLocation: moveUnitsRequest.moveUnitsToLocation,
+                                    moveUnitsAmount: moveUnitsRequest.moveUnitsAmount,
+                                    timestamp: {
+                                        gte: dayjs().subtract(3, 'minute').toDate(),
+                                    } 
+                                },
+                                orderBy: {
+                                    timestamp: 'desc'
+                                }
+                            });
+
+                            let shouldCreateNewRequest = true;
+                            if(moveUnitsRequest.weatherEventId) {
+                                for(let requestOrResponse of existingRequestsAndResponses) {
+                                    if(requestOrResponse.type === WeatherEventActionType.COUNTER_MEASURE_MOVE_UNITS_RESPONSE) {
+                                        // same request exists but it was already responsed -> this one is a new request
+                                        shouldCreateNewRequest = true;
+                                        break;
+                                    } else if(requestOrResponse.type === WeatherEventActionType.COUNTER_MEASURE_MOVE_UNITS_REQUEST) {
+                                        // same request exists unresponded -> no need for new request
+                                        shouldCreateNewRequest = false;
+                                        break; 
+                                    }
+                                } 
+                            }
+
+                            if(shouldCreateNewRequest) {
+                                console.log("AI Planner: Creating new move units request..");
+                                mqttClient.publish(weatherEventActionTopicPrefix + '/' + moveUnitsRequest.moveUnitsToLocation, JSON.stringify({
+                                    ...moveUnitsRequest,
+                                    type: WeatherEventActionType.COUNTER_MEASURE_MOVE_UNITS_REQUEST,
+                                    location: moveUnitsRequest.moveUnitsToLocation,
+                                    wasManuallyTaken: false,
+                                }));
+                            }
+                        }
                     } else {
                         console.log('AI Planner: No plan was found.');
                     }

@@ -73,6 +73,8 @@ export const listenToMQTTMessages = (ctx: Context) => {
       const messageString = message.toString();
       const messageJSON = JSON.parse(messageString);
 
+      console.log(topic, JSON.stringify(messageJSON));
+
       if (
         topic.startsWith(weatherEventInstanceTopicName) &&
         messageJSON.hasOwnProperty('id') &&
@@ -83,7 +85,6 @@ export const listenToMQTTMessages = (ctx: Context) => {
         addWeatherEvent(id, location, type);
       } else if (
         topic.startsWith(weatherEventActionTopicName) &&
-        messageJSON.hasOwnProperty('weatherEventId') &&
         messageJSON.hasOwnProperty('type') &&
         messageJSON.hasOwnProperty('location') &&
         messageJSON.hasOwnProperty('moveUnitsType') &&
@@ -92,7 +93,6 @@ export const listenToMQTTMessages = (ctx: Context) => {
         messageJSON.hasOwnProperty('moveUnitsToLocation')
       ) {
         const {
-          weatherEventId,
           type: actionType,
           location: actionLocation,
           moveUnitsType,
@@ -107,37 +107,60 @@ export const listenToMQTTMessages = (ctx: Context) => {
 
         console.log('Processing Move Units Request..');
 
-        const location = getWeatherEventLocationById(weatherEventId)!;
-        const type = getWeatherEventTypeById(weatherEventId)!;
+        if (messageJSON.hasOwnProperty('weatherEventId')) {
+          const weatherEventId = messageJSON['weatherEventId'];
 
-        const weatherEventTypeDisplayName =
-          WEATHER_EVENT_TYPE_DISPLAY_NAME_BY_NAME.get(type)!;
-        const weatherEventLocationDisplayName =
-          LOCATION_DISPLAY_NAME_BY_NAME.get(location)!;
-        const unitsTypeIcon = UNIT_TYPE_ICON_BY_NAME.get(moveUnitsType)!;
-        const moveUnitsFromLocationDisplayName =
-          LOCATION_DISPLAY_NAME_BY_NAME.get(moveUnitsFromLocation)!;
-        const moveUnitsToLocationDisplayName =
-          LOCATION_DISPLAY_NAME_BY_NAME.get(moveUnitsToLocation)!;
+          const location = getWeatherEventLocationById(weatherEventId)!;
+          const type = getWeatherEventTypeById(weatherEventId)!;
 
-        const telegramMessage =
-          '🚨🚨🚨\n\nNew Safety & Health Risk due to a\npossible ' +
-          weatherEventTypeDisplayName +
-          ' at ' +
-          weatherEventLocationDisplayName +
-          '.\n\n🚨🚨🚨\n\nPlease send    ' +
-          moveUnitsAmount +
-          '   ' +
-          unitsTypeIcon +
-          '   from    ' +
-          moveUnitsFromLocationDisplayName +
-          '   to    ' +
-          moveUnitsToLocationDisplayName +
-          '.\n\nRespond using "/moveunits ' +
-          weatherEventId +
-          '" !';
+          const weatherEventTypeDisplayName =
+            WEATHER_EVENT_TYPE_DISPLAY_NAME_BY_NAME.get(type)!;
+          const weatherEventLocationDisplayName =
+            LOCATION_DISPLAY_NAME_BY_NAME.get(location)!;
+          const unitsTypeIcon = UNIT_TYPE_ICON_BY_NAME.get(moveUnitsType)!;
+          const moveUnitsFromLocationDisplayName =
+            LOCATION_DISPLAY_NAME_BY_NAME.get(moveUnitsFromLocation)!;
+          const moveUnitsToLocationDisplayName =
+            LOCATION_DISPLAY_NAME_BY_NAME.get(moveUnitsToLocation)!;
 
-        await ctx.reply(telegramMessage);
+          const telegramMessage =
+            '🚨🚨🚨 New Safety & Health Risk due to a\npossible ' +
+            weatherEventTypeDisplayName +
+            ' at ' +
+            weatherEventLocationDisplayName +
+            '.\n\nPlease send    ' +
+            moveUnitsAmount +
+            '   ' +
+            unitsTypeIcon +
+            '   from    ' +
+            moveUnitsFromLocationDisplayName +
+            '   to    ' +
+            moveUnitsToLocationDisplayName +
+            '.\n\nRespond using "/moveunits ' +
+            weatherEventId +
+            '" !';
+
+          await ctx.reply(telegramMessage);
+        } else {
+          const unitsTypeIcon = UNIT_TYPE_ICON_BY_NAME.get(moveUnitsType)!;
+          const moveUnitsFromLocationDisplayName =
+            LOCATION_DISPLAY_NAME_BY_NAME.get(moveUnitsFromLocation)!;
+          const moveUnitsToLocationDisplayName =
+            LOCATION_DISPLAY_NAME_BY_NAME.get(moveUnitsToLocation)!;
+
+          const telegramMessage =
+            '🔔🔔🔔 Unit no longer needs to be on duty.\n\nPlease send    ' +
+            moveUnitsAmount +
+            '   ' +
+            unitsTypeIcon +
+            '   from    ' +
+            moveUnitsFromLocationDisplayName +
+            '   back to    ' +
+            moveUnitsToLocationDisplayName +
+            '.\n\nRespond using "/moveunits" !';
+
+          await ctx.reply(telegramMessage);
+        }
       } else if (
         topic.startsWith(weatherEventActionTopicName) &&
         messageJSON.hasOwnProperty('weatherEvent')
