@@ -12,7 +12,10 @@
       "problem": "problem_example_3.pddl"
     },
     {
-      "problem": "problem_example_4.pddl"
+      "problem": "problem_example_4a.pddl"
+    },
+    {
+      "problem": "problem_example_4b.pddl"
     },
     {
       "problem": "problem_example_5.pddl"
