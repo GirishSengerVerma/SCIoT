@@ -1967,8 +1967,8 @@ const startDetectWeatherEventsIntervalTask = async () => {
 };
 
 const pddlSolverFileName = "../ai-planner/enhsp20-0.9.4/enhsp.jar";
-const pddlDomainFileName = "./services/ai-planner/domain.pddl";
-const pddlProblemTemplateFileContent = readFileSync("./services/ai-planner/problem_template.pddl").toString();
+const pddlDomainFileName = "../ai-planner/PDDL/domain.pddl";
+const pddlProblemTemplateFileContent = readFileSync("../ai-planner/PDDL/problem_template.pddl").toString();
 const pddlSearchStrategy = "WAStar"; 
 
 const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
@@ -2112,7 +2112,7 @@ const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
         };
 
         const pddlProblemFileContent = await generateProblemFileContent();
-        const pddlProblemFileName = './services/ai-planner/generated/problem_' + timestamp.replaceAll(':', '-') + '.pddl';
+        const pddlProblemFileName = '../ai-planner/PDDL/generated/problem_' + timestamp.replaceAll(':', '-') + '.pddl';
 
         writeFile(pddlProblemFileName, pddlProblemFileContent, (err) => {
             if (err) {
