@@ -26,7 +26,7 @@
 	<div class="w-full border border-accentLight dark:border-accentDark rounded-lg lg:my-2">
 		<table class="w-full text-xs lg:text-sm text-left">
 			<thead
-				class="flex w-full overflow-auto uppercase text-center border-b border-accentLight dark:border-accentDark"
+				class="flex w-full overflow-auto uppercase text-center border-b border-accentLight dark:border-accentDark scrollbar-thin scrollbar-thumb-primary scrollbar-track-gray-100 dark:scrollbar-track-gray-800"
 			>
 				<tr class="flex w-full items-center">
 					<th scope="col" class="w-1/3 lg:px-6 py-1 lg:py-3">Start Date and Time</th>
@@ -34,7 +34,9 @@
 					<th scope="col" class="w-1/3 lg:px-6 py-1 lg:py-3">Risk Level</th>
 				</tr>
 			</thead>
-			<tbody class="flex flex-col items-center justify-between overflow-auto w-full max-h-[200px]">
+			<tbody
+				class="flex flex-col items-center justify-between overflow-auto w-full max-h-[200px] scrollbar-thin scrollbar-thumb-primary scrollbar-track-gray-100 dark:scrollbar-track-gray-800"
+			>
 				{#if !loading && historicWeatherEventData}
 					{#each historicWeatherEventData.risks as weatherEventRisk, i}
 						<tr
@@ -84,19 +86,21 @@
 	<div class="w-full border border-accentLight dark:border-accentDark rounded-lg lg:my-2">
 		<table class="w-full text-xs lg:text-sm text-left">
 			<thead
-				class="flex w-full overflow-auto uppercase text-center border-b border-accentLight dark:border-accentDark"
+				class="flex w-full overflow-auto uppercase text-center border-b border-accentLight dark:border-accentDark scrollbar-thin scrollbar-thumb-primary scrollbar-track-gray-100 dark:scrollbar-track-gray-800"
 			>
 				<tr class="flex w-full">
 					<th scope="col" class="w-1/2 px-6 py-3">Date and Time</th>
 					<th scope="col" class="w-1/2 px-6 py-3">Action</th>
 				</tr>
 			</thead>
-			<tbody class="flex flex-col items-center justify-between overflow-auto w-full max-h-[200px]">
+			<tbody
+				class="flex flex-col items-center justify-between overflow-auto w-full max-h-[200px] scrollbar-thin scrollbar-thumb-primary scrollbar-track-gray-100 dark:scrollbar-track-gray-800"
+			>
 				{#if !loading && historicWeatherEventData}
 					{#each historicWeatherEventData.actions as weatherEventAction, i}
 						<tr
 							class={'flex w-full text-center' +
-								(i < historicWeatherEventData.risks.length - 1
+								(i < historicWeatherEventData.actions.length - 1
 									? ' border-b border-accentLight dark:border-accentDark'
 									: '')}
 						>

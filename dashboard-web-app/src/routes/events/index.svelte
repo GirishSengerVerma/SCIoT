@@ -207,46 +207,50 @@
 				/>
 			{/if}
 		</div>
-		<div class="flex flex-col min-w-[240px] lg:max-h-[75vh] lg:overflow-auto xl:max-w-lg">
-			<SubTitle text="Current Weather Events" clazz="mt-3 md:mt-0" />
-			<div
-				class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-5 justify-between items-start h-fit"
-			>
-				{#if initializingStores}
-					<LoadingSpinner />
-				{:else if weatherEventsAtLocation.size > 0}
-					{#each [...weatherEventsAtLocation] as [key, weatherEvent]}
-						<WeatherEventStatus
-							isPast={false}
-							{weatherEvent}
-							currentWeatherEventRisk={$currentWeatherEventRisk.get(key)}
-							isSelected={key === Number($selectedWeatherEventId)}
-							onClick={() => selectedWeatherEventId.set('' + key)}
-						/>
-					{/each}
-				{:else}
-					None
-				{/if}
-			</div>
-			<SubTitle text="Past Weather Events" clazz="mt-8" />
-			<div
-				class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-5 justify-between items-start h-fit"
-			>
-				{#if initializingStores}
-					<LoadingSpinner />
-				{:else if pastWeatherEventsAtLocation.size > 0}
-					{#each [...pastWeatherEventsAtLocation] as [key, weatherEvent]}
-						<WeatherEventStatus
-							isPast={true}
-							{weatherEvent}
-							currentWeatherEventRisk={$currentWeatherEventRisk.get(key)}
-							isSelected={key === Number($selectedWeatherEventId)}
-							onClick={() => selectedWeatherEventId.set('' + key)}
-						/>
-					{/each}
-				{:else}
-					None
-				{/if}
+		<div
+			class="flex flex-col min-w-[240px] lg:max-h-[75vh] lg:overflow-auto xl:max-w-lg scrollbar-thin scrollbar-thumb-primary scrollbar-track-gray-100 dark:scrollbar-track-gray-800"
+		>
+			<div class="p-5">
+				<SubTitle text="Current Weather Events" clazz="mt-3 md:mt-0" />
+				<div
+					class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-5 justify-between items-start h-fit"
+				>
+					{#if initializingStores}
+						<LoadingSpinner />
+					{:else if weatherEventsAtLocation.size > 0}
+						{#each [...weatherEventsAtLocation] as [key, weatherEvent]}
+							<WeatherEventStatus
+								isPast={false}
+								{weatherEvent}
+								currentWeatherEventRisk={$currentWeatherEventRisk.get(key)}
+								isSelected={key === Number($selectedWeatherEventId)}
+								onClick={() => selectedWeatherEventId.set('' + key)}
+							/>
+						{/each}
+					{:else}
+						None
+					{/if}
+				</div>
+				<SubTitle text="Past Weather Events" clazz="mt-8" />
+				<div
+					class="flex flex-wrap gap-x-1 gap-y-3 md:gap-x-3 md:gap-y-6 mt-3 md:mt-5 justify-between items-start h-fit"
+				>
+					{#if initializingStores}
+						<LoadingSpinner />
+					{:else if pastWeatherEventsAtLocation.size > 0}
+						{#each [...pastWeatherEventsAtLocation] as [key, weatherEvent]}
+							<WeatherEventStatus
+								isPast={true}
+								{weatherEvent}
+								currentWeatherEventRisk={$currentWeatherEventRisk.get(key)}
+								isSelected={key === Number($selectedWeatherEventId)}
+								onClick={() => selectedWeatherEventId.set('' + key)}
+							/>
+						{/each}
+					{:else}
+						None
+					{/if}
+				</div>
 			</div>
 		</div>
 	</div>

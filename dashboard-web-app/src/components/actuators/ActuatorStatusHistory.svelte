@@ -21,7 +21,7 @@
 	<div class="w-full border border-accentLight dark:border-accentDark rounded-lg my-2">
 		<table class="w-full text-xs lg:text-sm text-left">
 			<thead
-				class="flex w-full overflow-auto uppercase text-center border-b border-accentLight dark:border-accentDark"
+				class="flex w-full overflow-auto uppercase text-center border-b border-accentLight dark:border-accentDark scrollbar-thin scrollbar-thumb-primary scrollbar-track-gray-100 dark:scrollbar-track-gray-800"
 			>
 				<tr class="flex w-full items-center">
 					<th scope="col" class="w-1/3 lg:px-6 py-1 lg:py-3">Date and Time</th>
@@ -29,7 +29,9 @@
 					<th scope="col" class="w-1/3 lg:px-6 py-1 lg:py-3">Caused by</th>
 				</tr>
 			</thead>
-			<tbody class="flex flex-col items-center justify-between overflow-auto w-full max-h-[200px]">
+			<tbody
+				class="flex flex-col items-center justify-between overflow-auto w-full max-h-[200px] scrollbar-thin scrollbar-thumb-primary scrollbar-track-gray-100 dark:scrollbar-track-gray-800"
+			>
 				{#if !loading && actuatorHistoricStatusData}
 					{#each actuatorHistoricStatusData as statusData, i}
 						<tr
@@ -53,7 +55,7 @@
 									{statusData.enabled ? 'Enabled' : 'Disabled'}
 								</div>
 							</td>
-							<td class="flex w-1/3 justify-center items-center">
+							<td class="flex w-1/3 justify-center items-center px-4">
 								{statusData.lastChangedBy
 									? formatWeatherEventAction(statusData.lastChangedBy, true, false, false)
 									: '-'}

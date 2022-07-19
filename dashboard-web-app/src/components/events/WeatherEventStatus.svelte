@@ -3,7 +3,7 @@
 	import type { WeatherEvent, WeatherEventRisk } from '@prisma/client';
 
 	import { enumValueToString, stringToEnumValue } from '$root/utils/enumUtil';
-    import { getWeatherEventRiskLevelColor } from '$root/utils/weatherEventUtils';
+	import { getWeatherEventRiskLevelColor } from '$root/utils/weatherEventUtils';
 
 	import { ICON_WEATHER_EVENTS_BY_NAME } from '$root/constants/iconConstants';
 	import LoadingSpinner from '$root/components/core/LoadingSpinner.svelte';
@@ -16,7 +16,7 @@
 </script>
 
 <div
-	class={'flex md:flex-grow md:flex-shrink w-[48%] md:w-60 max-h-36 relative px-4 py-2 md:p-4 border md:border-accentLight md:dark:border-accentDark' +
+	class={'flex md:flex-grow md:flex-shrink w-[48%] md:w-56 max-h-36 relative px-4 py-2 md:p-4 border md:border-accentLight md:dark:border-accentDark' +
 		(isSelected ? ' md:border-primary outline outline-primary outline-1' : '') +
 		' rounded-lg text-center justify-center cursor-pointer hover:bg-accentLight/20 dark:hover:bg-accentDark/15 transition-colors'}
 	on:click={() => onClick()}

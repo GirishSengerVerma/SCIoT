@@ -110,7 +110,7 @@
 			/>
 		</div>
 		<ul
-			class={'absolute left-0 w-full max-h-44 overflow-auto mt-8 lg:mt-11 bg-white dark:bg-black rounded-md border border-accentLight dark:border-accentDark list-none text-center transition duration-200' +
+			class={'absolute left-0 w-full max-h-44 overflow-auto mt-8 lg:mt-11 bg-white dark:bg-black rounded-md border border-accentLight dark:border-accentDark list-none text-center transition duration-200 scrollbar-thin scrollbar-thumb-primary scrollbar-track-gray-100 dark:scrollbar-track-gray-800' +
 				(dropdownMenuOpen ? ' opacity-1 z-20' : ' opacity-0 -z-20')}
 		>
 			{#each options as option, i}
