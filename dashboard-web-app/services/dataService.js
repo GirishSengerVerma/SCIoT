@@ -1678,7 +1678,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
                     if (pressureSensorData && pressureSensorData.value < 990) {
                         if (temperatureSensorData && temperatureSensorData.value <= 1) {
                             weatherEventRisksAtLocation[WeatherEventType.HAIL_STORM] = WeatherEventRiskLevel.HIGH;
-                        } else if (lightSensorData && lightSensorData.value >= 1) {
+                        } else if (lightSensorData && lightSensorData.value > 70) {
                             weatherEventRisksAtLocation[WeatherEventType.THUNDER_STORM] = WeatherEventRiskLevel.HIGH;
                         } else {
                             weatherEventRisksAtLocation[WeatherEventType.STORM] = WeatherEventRiskLevel.HIGH;
@@ -1686,7 +1686,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
                     } else {
                         if (temperatureSensorData && temperatureSensorData.value <= 1) {
                             weatherEventRisksAtLocation[WeatherEventType.HAIL_STORM] = WeatherEventRiskLevel.MEDIUM;
-                        } else if (lightSensorData && lightSensorData.value >= 1) {
+                        } else if (lightSensorData && lightSensorData.value > 70) {
                             weatherEventRisksAtLocation[WeatherEventType.THUNDER_STORM] = WeatherEventRiskLevel.MEDIUM;
                         } else {
                             weatherEventRisksAtLocation[WeatherEventType.STORM] = WeatherEventRiskLevel.MEDIUM;
@@ -1695,7 +1695,7 @@ const startDetectWeatherEventsIntervalTask = async () => {
                 } else if (windSpeedSensorData.value >= 74) {
                     if (temperatureSensorData && temperatureSensorData.value <= 1) {
                         weatherEventRisksAtLocation[WeatherEventType.HAIL_STORM] = WeatherEventRiskLevel.EXTREME;
-                    } else if (lightSensorData && lightSensorData.value >= 1) {
+                    } else if (lightSensorData && lightSensorData.value > 70) {
                         weatherEventRisksAtLocation[WeatherEventType.THUNDER_STORM] = WeatherEventRiskLevel.EXTREME;
                     } else {
                         weatherEventRisksAtLocation[WeatherEventType.STORM] = WeatherEventRiskLevel.EXTREME;
