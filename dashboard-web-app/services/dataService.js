@@ -1416,7 +1416,8 @@ const initializeMQTTClient = async () => {
                         where: {
                             location: weatherEventAction.location,
                             type: ActuatorType.LOCKDOWN,
-                        }
+                        },
+                        distinct: ['instanceId']
                     }).then(result => {
                         const newActuatorStatusData = result.map(item => {
                             return {
@@ -1436,7 +1437,8 @@ const initializeMQTTClient = async () => {
                         where: {
                             location: weatherEventAction.location,
                             type: ActuatorType.WATER_PROTECTION_WALL,
-                        }
+                        },
+                        distinct: ['instanceId']
                     }).then(result => {
                         const newActuatorStatusData = result.map(item => {
                             return {
@@ -1455,7 +1457,8 @@ const initializeMQTTClient = async () => {
                         where: {
                             location: weatherEventAction.location,
                             type: ActuatorType.ALARM_LIGHT,
-                        }
+                        },
+                        distinct: ['instanceId']
                     }).then(result => {
                         const newActuatorStatusData = result.map(item => {
                             return {
@@ -1474,7 +1477,8 @@ const initializeMQTTClient = async () => {
                         where: {
                             location: weatherEventAction.location,
                             type: ActuatorType.ALARM_SOUND,
-                        }
+                        },
+                        distinct: ['instanceId']
                     }).then(result => {
                         const newActuatorStatusData = result.map(item => {
                             return {
