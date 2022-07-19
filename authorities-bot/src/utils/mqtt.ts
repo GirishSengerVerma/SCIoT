@@ -215,6 +215,6 @@ export const sendMoveUnitsResponseMessage = (
   mqttClient.publish(
     weatherEventActionTopicName + '/' + moveUnitsToLocation,
     JSON.stringify(message),
-    { qos: 0 }
+    { qos: 2 }
   );
 };

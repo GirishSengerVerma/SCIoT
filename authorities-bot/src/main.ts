@@ -253,7 +253,7 @@ bot.command('testrequest', async (_) => {
   mqttClient.publish(
     weatherEventInstanceTopicName + '/' + weatherEventLocation,
     JSON.stringify(weatherEventInstanceMessage),
-    { qos: 0 }
+    { qos: 2 }
   );
 
   setTimeout(() => {
@@ -265,7 +265,7 @@ bot.command('testrequest', async (_) => {
     mqttClient.publish(
       weatherEventRiskTopicName + '/' + weatherEventLocation,
       JSON.stringify(weatherEventRiskMessage),
-      { qos: 0 }
+      { qos: 2 }
     );
 
     const moveUnitsType = randomFromMapKeys(UNIT_TYPE_ICON_BY_NAME);
@@ -292,7 +292,7 @@ bot.command('testrequest', async (_) => {
     mqttClient.publish(
       weatherEventActionTopicName + '/' + moveUnitsToLocation,
       JSON.stringify(weatherEventActionRequestUnitsMessage),
-      { qos: 0 }
+      { qos: 2 }
     );
   }, 500);
 });
