@@ -7,5 +7,6 @@ export const SENSOR_UNIT_REPRESENTATION_MAP: Map<SensorUnit, string> = new Map<S
 	[SensorUnit.HPA, 'hPa'],
 	[SensorUnit.RICHTER_MAGNITUDE, 'Ri.'],
 	[SensorUnit.PPM, 'ppm'],
-	[SensorUnit.DB, 'dB']
+	[SensorUnit.DB, 'dB'],
+	[SensorUnit.METERS, 'm']
 ]);
