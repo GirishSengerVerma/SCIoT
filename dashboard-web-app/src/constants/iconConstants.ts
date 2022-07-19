@@ -39,7 +39,7 @@ export const ICON_WEATHER_EVENTS_BY_NAME: Map<string, string> = new Map<string, 
 	['HEAT', ICON_WEATHER_EVENTS_HEAT],
 	['WILD_FIRE', ICON_WEATHER_EVENTS_WILD_FIRE],
 	['EARTH_QUAKE', ICON_WEATHER_EVENTS_EARTH_QUAKE],
-	['BAD_AIR', ICON_WEATHER_EVENTS_BAD_AIR],
+	['BAD_AIR', ICON_WEATHER_EVENTS_BAD_AIR]
 ]);
 
 export const ICON_WEATHER_EVENTS_TYPE = 'weatherevents/type';
@@ -54,6 +54,7 @@ export const ICON_SENSORS_HUMIDITY = 'sensors/droplet';
 export const ICON_SENSORS_WIND_SPEED = 'sensors/wind';
 export const ICON_SENSORS_VIBRATION = 'sensors/activity';
 export const ICON_SENSORS_WATER_LEVEL = 'sensors/water-level';
+export const ICON_SENSORS_LIGHT = 'sensors/light';
 
 export const ICON_SENSORS_BY_NAME: Map<string, string> = new Map<string, string>([
 	['TEMPERATURE', ICON_SENSORS_TEMPERATURE],
@@ -64,6 +65,7 @@ export const ICON_SENSORS_BY_NAME: Map<string, string> = new Map<string, string>
 	['WIND_SPEED', ICON_SENSORS_WIND_SPEED],
 	['VIBRATION', ICON_SENSORS_VIBRATION],
 	['WATER_LEVEL', ICON_SENSORS_WATER_LEVEL],
+	['LIGHT', ICON_SENSORS_LIGHT]
 ]);
 
 export const ICON_SENSORS_SIMULATED = 'sensors/simulated';
