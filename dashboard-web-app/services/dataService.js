@@ -2140,6 +2140,15 @@ const startAuthoritiesUnitAIPlannerIntervalTask = async () => {
                         const plan = stdout.split('Found Plan:')[1].split('Plan-Length:')[0].trim();
                         console.log('AI Planner: Found plan:\n', plan);
 
+                        const pddlSolutionPlanFileName = '../ai-planner/PDDL/generated/solution_plan_' + timestamp.replaceAll(':', '-') + '.txt';
+                        await writeFile(pddlSolutionPlanFileName, plan, async (err) => {
+                            if (err) {
+                                console.error('Error saving PDDL solution plan ' + plan + ' file as ' + pddlSolutionPlanFileName, err)
+                            } else {
+                                console.log('AI Planner: Saved plan as', pddlSolutionPlanFileName);
+                            }
+                        });
+
                         if(previousPddlPlan === plan) {
                             console.log('      -> No changes, do nothing');
                             return;
