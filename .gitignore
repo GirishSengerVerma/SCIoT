@@ -1,1 +1,6 @@
 passwords.txt
+.DS_Store
+
+arduino/max_eyth_see/credentials.h
+
+arduino/stuttgart_killesberg/credentials.h
