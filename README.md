@@ -20,5 +20,8 @@ in the `README.md` file there to setup and start the Dashboard Web App (DWA).
 in the `README.md` file there to setup and start the Authorities Units Notification
 and Response Bot.
 
-5. Navigate to the `sensor-simulator` directory and follow the steps described
+5. Navigate to the `arduino` directory, configure the WiFi connection in the souce code,
+flash the programs onto the Arduino devices and start up the devices.
+
+6. Navigate to the `sensor-simulator` directory and follow the steps described
 in the `README.md` file there to setup and start the Sensor Simulator program.
